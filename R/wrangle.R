@@ -7,7 +7,7 @@
 #' @export
 #' @examples
 #' make_nz_datetime(1555555555, -125.357, 23.556)
-make_nz_datetime <- function(timestamp, long = 0, lat = 0) {
+make_nz_datetime <- function(timestamp, lat, long) {
   checkmate::assert_numeric(timestamp)
   checkmate::assert_numeric(long)
   checkmate::assert_numeric(lat)
@@ -17,8 +17,8 @@ make_nz_datetime <- function(timestamp, long = 0, lat = 0) {
   # convert-to-local-time-zone-from-latitude-and-longitude-r
   # --------------------------------------------------------
   # timestamp = 1655112631
-  # lat = -40.9006
-  # long = 174.8860
+  lat = -40.9006
+  long = 174.8860
 
   # Get local timezone baesd on lat & long
   local_tz = tz_lookup_coords(lat = lat, lon = long, method = "accurate")
