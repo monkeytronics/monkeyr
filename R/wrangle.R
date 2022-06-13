@@ -21,7 +21,7 @@ make_nz_datetime <- function(timestamp, lat, long) {
   long = 174.8860
 
   # Get local timezone baesd on lat & long
-  local_tz = tz_lookup_coords(lat = lat, lon = long, method = "accurate")
+  local_tz = lutz::tz_lookup_coords(lat = lat, lon = long, method = "accurate")
 
   # convert to local time plus timezone format
   local_date <- timestamp %>%
