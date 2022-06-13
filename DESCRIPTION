@@ -6,8 +6,8 @@ Authors@R:
     person("Al", "Brennan", , "al@monkeytronics.co.nz", role = c("aut", "cre"))
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: 
-	R Package {monkeyr} contains the code needed to consume and use Sensor Node
-	data for flex dashboards and RMarkdown analytics reports
+    R Package {monkeyr} contains the code needed to consume and use Sensor Node
+    data for flex dashboards and RMarkdown analytics reports
 License: `use_mit_license()`
 Imports: 
     aws.s3 (>= 0.3.21),
