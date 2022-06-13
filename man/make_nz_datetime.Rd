@@ -4,14 +4,14 @@
 \alias{make_nz_datetime}
 \title{Unix timestamp to local timezone datetime}
 \usage{
-make_nz_datetime(timestamp, long = 0, lat = 0)
+make_nz_datetime(timestamp, lat, long)
 }
 \arguments{
 \item{timestamp}{Unix time stamp vector}
 
-\item{long}{Longitude! as vector}
-
 \item{lat}{Latitude! as vector}
+
+\item{long}{Longitude! as vector}
 }
 \value{
 Returns "POSIXct", "POSIXt" vector in NZ time zone

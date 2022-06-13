@@ -29,3 +29,25 @@ make_nz_datetime <- function(timestamp, lat, long) {
     lubridate::with_tz(tz = local_tz)
 }
 
+#' Print a formatted from-to sentence
+#' @description Takes 2 time stamps and prints a formatted from-to sentence.
+#' @param from_timetamp,to_timestamp ts - begin and end of the report.
+#' @return Character string
+#' @examples
+#' report_period(1555555555, 1666666666)
+#' @export
+report_period <- function(from_timestamp, to_timestamp) {
+
+  checkmate::assert_number(from_timestamp)
+  checkmate::assert_number(to_timestamp)
+
+  fromTime <- from_timestamp %>%
+    as.POSIXct(origin = "1970-01-01") %>%
+    format("%b %d")
+
+  toTime <- to_timestamp %>%
+    as.POSIXct(origin = "1970-01-01") %>%
+    format('%b %d, %Y')
+
+  return(paste("from", fromTime, "to", toTime))
+}
