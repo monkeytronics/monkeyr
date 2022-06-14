@@ -1,0 +1,225 @@
+---
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  flexdashboard::flex_dashboard:
+    social: [ "menu" ]
+    logo: logo.png
+    favicon: logo.png
+    orientation: rows
+
+# paths with `inst` will only work in `dev` setting. 
+# in `production` setting, please use real data
+# or call installed files with `system.file`
+# see example in `?knit_home_report()`
+params:
+  filtered_obs:             "../inst/data/filtered_obs.csv"
+  filtered_weather:         "../inst/data/filtered_weather.csv"
+  filtered_devices:         "../inst/data/filtered_devices.csv"
+  filtered_interventions:   "../inst/data/filtered_interventions.csv"
+  report_params:            "-"                                            
+  fromTimeStamp:            1627639151
+  toTimeStamp:              1630317551
+---
+
+```{r}
+ENABLE_DEBUG <- FALSE
+```
+
+```{r setup }
+# load monkeytronics.reports package
+library(monkeyr)
+
+# other dependencies loaded through namespace
+```
+
+
+```{r wrangle_data }
+# generate tables and values used later in the report
+
+wrangled_devices <- wrangle_devices(params$filtered_devices)
+
+wrangled_weather <- wrangle_weather(
+  filtered_weather = params$filtered_weather,
+  from_timestamp = params$fromTimeStamp,
+  to_timestamp = params$toTimeStamp
+)
+
+wrangled_obs <- wrangle_observations(
+  filtered_obs = params$filtered_obs,
+  from_timestamp = params$fromTimeStamp,
+  to_timestamp = params$toTimeStamp,
+  devices = wrangled_devices,
+  weather = wrangled_weather
+)
+
+data_volume <- get_data_volume(
+  observations = wrangled_obs,
+  from_timestamp = params$fromTimeStamp,
+  to_timestamp = params$toTimeStamp
+)
+
+devices_for_map <- get_devices_for_map(
+  devices = wrangled_devices, 
+  data_volume = data_volume
+  )
+
+wrangled_devices <- remove_excluded_devices(
+  target_data = wrangled_devices,
+  data_volume = data_volume
+)
+
+wrangled_obs <- remove_excluded_devices(
+  target_data = wrangled_obs,
+  data_volume = data_volume
+)
+
+
+# green_area <- make_polygon_area(wrangled_obs, "temp", severity = 1)
+
+nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
+
+report_type <- "Home"
+
+# set R options for monkey reports
+set_options(observations = wrangled_obs)
+monkey_palettes(devices = wrangled_devices)
+```
+
+---
+title: "`r report_type` Report"
+---
+
+```{r check_data, results = "hide"} 
+
+# Bail if nothing in data. Returns empty report.
+if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
+  cat("No data present for the requested devices and timespan. Aborting report.")
+  knitr::knit_exit("</body></html>")
+}
+  
+```
+
+
+# Healthy Homes Performance {data-icon="fa-chart-bar"}
+
+## Column 1
+
+### Performance Against World Health Organisation Guidelines
+
+```{r}
+who_threshold_data(observations = wrangled_obs) %>%
+  who_threshold_chart(from_timestamp = params$fromTimeStamp, params$toTimeStamp)
+```
+
+### World Health Organisation Guidelines
+
+Low indoor temperatures are associated with increased risks of respiratory and cardiovascular diseases. The below table summarises the impact of indoor temperature on health, and the graph opposite shows the the percentage of time each of your rooms spends below each of the temperature thresholds defined. He Kainga Oranga recommends that we look at night time temperatures when we are considering health impact. The night-time is defined as between 11 pm and 7 am.
+
+----------
+
+```{r}
+who_guidance_kable()
+```
+
+----------
+
+## Column 2
+
+### Hours each night below 18 °C
+
+```{r}
+totals <-
+  who_threshold_data(observations = wrangled_obs) %>%
+  get_who_totals()
+
+below_18 <- sum(unlist(totals))
+
+
+flexdashboard::valueBox(paste0(round(8 * below_18, 1), " hrs (",scales::percent(below_18),")"),
+                        icon = "fa-thermometer-half",
+                        # color = ifelse(below_18 > 0.40, "warning", "primary"),
+                        color = "#B7DFCB")
+```
+
+### Hours each night below 16 °C
+
+```{r}
+below_16 <- sum(totals$below_16 + totals$below_12)
+flexdashboard::valueBox(paste0(round(8 * below_16, 1) , " hrs (", scales::percent(below_16), ")"),
+                        icon = "fa-thermometer-quarter",
+                        # color = color = ifelse(below_16 > 0.20, "warning", "primary")
+                        color = "#5ABAD1")
+```
+
+### Hours each night below 12 °C
+
+```{r}
+flexdashboard::valueBox(paste0(
+  round(8 * totals$below_12, 1) ,
+  " hrs (",
+  scales::percent(totals$below_12),
+  ")"
+),
+icon = "fa-thermometer-empty",
+# color = ifelse(below_12 > 0.01, "danger", "primary")
+color = "#3984B6")
+```
+
+# Raw Timeseries Data {data-icon="fa-chart-line"}
+
+## Column 1 {.tabset}
+
+### Temperature
+
+```{r} 
+# if (getOption("TEMP_ENABLE")) {
+ts_chart(
+  observations = wrangled_obs,
+  from_timestamp = test_params()$fromTimeStamp,
+  to_timestamp = test_params()$toTimeStamp,
+  target_variable = "temp"
+)
+# }
+```
+
+### Humidity
+
+```{r} 
+ts_chart(
+  observations = wrangled_obs,
+  from_timestamp = test_params()$fromTimeStamp,
+  to_timestamp = test_params()$toTimeStamp,
+  target_variable = "hum"
+)
+``` 
+
+## Column 2 
+
+### Highest Ever Temperature
+
+```{r}
+extremes_temp <- get_extreme_vals(
+  observations = wrangled_obs, 
+  target_variable = "temp")
+
+flexdashboard::valueBox(extremes_temp$highest_val, 
+         icon = "fa-thermometer-full",
+         color = ifelse(extremes_temp$highest_val > 29, "warning", "primary"))
+```
+
+### Lowest Ever Temperature
+
+```{r}
+flexdashboard::valueBox(extremes_temp$lowest_val, 
+         icon = "fa-thermometer-empty",
+         color = ifelse(extremes_temp$lowest_val < 12, "warning", "primary"))
+```
+
+### Mean Termperature
+
+```{r}
+flexdashboard::valueBox(extremes_temp$mean_val, 
+         icon = "fa-thermometer-half",
+         color = ifelse(extremes_temp$mean_val < 16, "warning", "primary"))
+```
+
