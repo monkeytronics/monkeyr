@@ -7,12 +7,13 @@ who_threshold_data <- function(observations) {
   ## Arrange WHO Threshold Data
   observations %>%
     # only intereted in 11pm - 7am
-    dplyr::filter(as.numeric(h) %in% c(23, 0:6)) %>%
+    dplyr::filter(as.numeric(hour) %in% c(23, 0:6)) %>%
     # pull out temp only & rename col
     dplyr::filter(reading == "temp" & !is.na(ts)) %>%
     dplyr::rename(temp = val) %>%
     # threshold comparison
-    dplyr::select(device_id, temp, name) %>%
+    # dplyr::select(device_id, temp, name) %>%
+    dplyr::select(device_id, temp) %>%
     dplyr::mutate(
       sum_29   = dplyr::if_else(temp < 29 & temp >= 21, 1, 0),
       sum_21   = dplyr::if_else(temp < 21 & temp >= 18, 1, 0),
@@ -23,7 +24,8 @@ who_threshold_data <- function(observations) {
       sum_high = dplyr::if_else(temp >= 29, 1, 0)
     ) %>%
     # summarise by device_id
-    dplyr::group_by(device_id, name) %>%
+    # dplyr::group_by(device_id, name) %>%
+    dplyr::group_by(device_id) %>%
     dplyr::summarise(
       sum_high = sum(sum_high) / dplyr::n(),
       sum_29 = sum(sum_29) / dplyr::n(),
@@ -45,7 +47,7 @@ degrees_below_18_score <- function(observations) {
   browser()
   score <- observations %>%
     # only intereted in 11pm - 7am
-    dplyr::filter(as.numeric(h) %in% c(23, 0:6)) %>%
+    dplyr::filter(as.numeric(hour) %in% c(23, 0:6)) %>%
     dplyr::mutate(cap_temp = ifelse(temp > 18, 18, temp)) %>%
     dplyr::summarise(sum(18 - cap_temp)) / nrow(.)
 
@@ -91,7 +93,8 @@ who_threshold_chart <- function(who_threshold_data, from_timestamp, to_timestamp
   report_period <- report_period(from_timestamp , to_timestamp)
   who_chart <- who_threshold_data %>%
     dplyr::ungroup() %>%
-    tidyr::gather("sum_temp", "hours", -c(device_id, name)) %>%
+    # tidyr::gather("sum_temp", "hours", -c(device_id, name)) %>%
+    tidyr::gather("sum_temp", "hours", -c(device_id)) %>%
     dplyr::mutate(sum_temp = forcats::fct_rev(factor(sum_temp))) %>%
     ggplot2::ggplot(ggplot2::aes(
       x = device_id,
@@ -105,7 +108,6 @@ who_threshold_chart <- function(who_threshold_data, from_timestamp, to_timestamp
       colour = "#e9ecef"
     ) +
     ggplot2::scale_y_continuous(limits = c(0, 1.0), labels = scales::percent_format()) +
-    #ggplot2::scale_x_discrete(labels = who_threshold_data$name) +
     hrbrthemes::theme_ipsum() +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(
@@ -115,31 +117,32 @@ who_threshold_chart <- function(who_threshold_data, from_timestamp, to_timestamp
       ),
       axis.text.y = ggplot2::element_text(size = 9),
       plot.title  = ggplot2::element_text(size = 9),
-      legend.position = "bottom",
+      # legend.position = "bottom",
+      legend.position = "right",
       legend.title = ggplot2::element_text(size = 9),
       legend.text = ggplot2::element_text(size = 8)
     ) +
     ggplot2::guides(
-      fill = ggplot2::guide_legend(title = "Night-time temperatures", title.position = "top"),
+      fill = ggplot2::guide_legend(title = "Temp", title.position = "top"),
       drop = "none"
     ) +
     ggplot2::scale_fill_manual(
       name = "",
       values = heatcols,
       labels = c(
-        "Above 29°C",
-        "Above 21°C",
-        "Below 21°C",
-        "Below 18°C",
-        "Below 16°C",
-        "Below 12°C"
+        "> 29°C",
+        "> 21°C",
+        "< 21°C",
+        "< 18°C",
+        "< 16°C",
+        "< 12°C"
       )
     ) +
     ggplot2::labs(title = paste0("Night time temperature ", report_period)) +
     ggplot2::xlab("") +
     ggplot2::ylab("of total night-time hours")
 
-  plotly::ggplotly(who_chart)
+  # plotly::ggplotly(who_chart)
 }
 
 #' who_guidance_kable

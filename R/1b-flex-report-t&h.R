@@ -61,6 +61,7 @@ ts_chart <-
     blue_zone_2 <- make_polygon_area(observations, target_variable, severity = 2)
     blue_zone_3 <- make_polygon_area(observations, target_variable, severity = 3)
 
+
     report_period <- report_period(from_timestamp , to_timestamp)
     target_colours <-
       getOption(paste0(toupper(target_variable), "_COLOURS"))
@@ -91,16 +92,16 @@ ts_chart <-
 
     axis_high <- max(y_lim[[2]], max(as.numeric(observations$val), na.rm = TRUE))
     axis_low  <- min(y_lim[[1]],  min(as.numeric(observations$val), na.rm = TRUE))
-
+    observations
     ts_chart <- observations %>%
       ggplot2::ggplot(ggplot2::aes(
-        x = nzdt,
+        x = local_time,
         y = val,
-        colour = name
+        colour = device_id
       )) +
-      ggplot2::geom_polygon(data = blue_zone_1, colour = "white", alpha = 0.10, fill = "royalblue") +
+      ggplot2::geom_polygon(data = blue_zone_1, colour = "white", alpha = 0.20, fill = "royalblue") +
       ggplot2::geom_polygon(data = blue_zone_2, colour = "white", alpha = 0.30, fill = "royalblue") +
-      ggplot2::geom_polygon(data = blue_zone_3, colour = "white", alpha = 0.50, fill = "royalblue") +
+      ggplot2::geom_polygon(data = blue_zone_3, colour = "white", alpha = 0.40, fill = "royalblue") +
       ggplot2::geom_line() +
       ggplot2::scale_color_manual(values = target_colours) +
       ggplot2::labs(title = paste0(t_lab, report_period),
@@ -124,7 +125,7 @@ ts_chart <-
 
     # Turn it interactive with ggplotly
     plotly::ggplotly(ts_chart, tooltip = c("x", "y", "colour")) %>%
-      plotly::style(hoverinfo = "skip", traces = 1)
+    plotly::style(hoverinfo = "skip", traces = 1)
   }
 
 

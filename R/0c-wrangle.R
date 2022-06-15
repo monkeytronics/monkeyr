@@ -169,12 +169,6 @@ wrangle_weather <- function(filtered_weather) {
     weather <- filtered_weather
   }
 
-  # # use timezone to get Local time (based on average location!)
-  # local_tz = lutz::tz_lookup_coords(
-  #   lat = mean(weather$lat),
-  #   lon = mean(weather$lon),
-  #   method = "accurate")
-
   weather %>%
     janitor::clean_names() %>%
     dplyr::filter(!is.na(dt)) %>%
@@ -394,7 +388,7 @@ get_devices_for_map <- function(devices, data_volume) {
 
   devices %>%
     dplyr::mutate(connected = device_id %in% data_volume$device_id) %>%
-    dplyr::select(c(device_id, long, lat, rental_type, connected, city)) %>%
+    dplyr::select(c(device_id, long, lat, tenure, connected, city)) %>%
     dplyr::filter(!is.na(long)) %>%
     dplyr::filter(!is.na(lat))
 }
@@ -429,7 +423,7 @@ make_polygon_area <- function(observations, target_variable, severity) {
 
   # len <- length(observations)
   corner = c("bottom-left", "top-left", "top-right", "bottom-right")
-  nzdt = c(min(observations$nzdt), min(observations$nzdt), max(observations$nzdt), max(observations$nzdt))
+  local_time = c(min(observations$local_time), min(observations$local_time), max(observations$local_time), max(observations$local_time))
 
   # define limits from least severe.
   temp_limits <- c(18,   16,   12,     0)
@@ -444,7 +438,10 @@ make_polygon_area <- function(observations, target_variable, severity) {
   } else if (target_variable == "co2") {
     val <- co2_limits[c(severity, severity+1, severity+1, severity)]
   }
-  tibble::tibble(corner, nzdt, val)
+  poly <- tibble::tibble(corner, local_time, val)
+
+  poly
+
 }
 
 

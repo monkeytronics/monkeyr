@@ -3,8 +3,8 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     social: [ "menu" ]
-    logo: logo.png
-    favicon: logo.png
+    logo: "../png/logo.png"
+    favicon: "../png/logo.png"
     orientation: rows
 
 # paths with `inst` will only work in `dev` setting. 
@@ -12,10 +12,10 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_home_report()`
 params:
-  filtered_obs:             "../inst/data/filtered_obs.csv"
-  filtered_weather:         "../inst/data/filtered_weather.csv"
-  filtered_devices:         "../inst/data/filtered_devices.csv"
-  filtered_interventions:   "../inst/data/filtered_interventions.csv"
+  filtered_obs:             "../test-data/monkey_a/obs.csv"
+  filtered_weather:         "../test-data/monkey_a/weather.csv"
+  filtered_devices:         "../test-data/monkey_a/dev.csv"
+  filtered_interventions:   "../test-data/monkey_a/interv.csv"
   report_params:            "-"                                            
   fromTimeStamp:            1627639151
   toTimeStamp:              1630317551
@@ -25,29 +25,26 @@ params:
 ENABLE_DEBUG <- FALSE
 ```
 
+
 ```{r setup }
-# load monkeytronics.reports package
+# load monkeyr package
 library(monkeyr)
+library(dplyr)
+library(magrittr)
 
 # other dependencies loaded through namespace
 ```
-
 
 ```{r wrangle_data }
 # generate tables and values used later in the report
 
 wrangled_devices <- wrangle_devices(params$filtered_devices)
 
-wrangled_weather <- wrangle_weather(
-  filtered_weather = params$filtered_weather,
-  from_timestamp = params$fromTimeStamp,
-  to_timestamp = params$toTimeStamp
-)
+wrangled_weather <- wrangle_weather(params$filtered_weather)
+
 
 wrangled_obs <- wrangle_observations(
   filtered_obs = params$filtered_obs,
-  from_timestamp = params$fromTimeStamp,
-  to_timestamp = params$toTimeStamp,
   devices = wrangled_devices,
   weather = wrangled_weather
 )
@@ -59,7 +56,7 @@ data_volume <- get_data_volume(
 )
 
 devices_for_map <- get_devices_for_map(
-  devices = wrangled_devices, 
+  devices = wrangled_devices,
   data_volume = data_volume
   )
 
@@ -72,9 +69,6 @@ wrangled_obs <- remove_excluded_devices(
   target_data = wrangled_obs,
   data_volume = data_volume
 )
-
-
-# green_area <- make_polygon_area(wrangled_obs, "temp", severity = 1)
 
 nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
 
@@ -99,7 +93,6 @@ if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
   
 ```
 
-
 # Healthy Homes Performance {data-icon="fa-chart-bar"}
 
 ## Column 1
@@ -107,9 +100,12 @@ if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
 ### Performance Against World Health Organisation Guidelines
 
 ```{r}
-who_threshold_data(observations = wrangled_obs) %>%
+who_chart <- who_threshold_data(observations = wrangled_obs) %>%
   who_threshold_chart(from_timestamp = params$fromTimeStamp, params$toTimeStamp)
+
+who_chart
 ```
+
 
 ### World Health Organisation Guidelines
 
@@ -133,7 +129,6 @@ totals <-
   get_who_totals()
 
 below_18 <- sum(unlist(totals))
-
 
 flexdashboard::valueBox(paste0(round(8 * below_18, 1), " hrs (",scales::percent(below_18),")"),
                         icon = "fa-thermometer-half",
@@ -165,6 +160,7 @@ icon = "fa-thermometer-empty",
 color = "#3984B6")
 ```
 
+
 # Raw Timeseries Data {data-icon="fa-chart-line"}
 
 ## Column 1 {.tabset}
@@ -193,16 +189,16 @@ ts_chart(
 )
 ``` 
 
-## Column 2 
+## Column 2
 
 ### Highest Ever Temperature
 
 ```{r}
 extremes_temp <- get_extreme_vals(
-  observations = wrangled_obs, 
+  observations = wrangled_obs,
   target_variable = "temp")
 
-flexdashboard::valueBox(extremes_temp$highest_val, 
+flexdashboard::valueBox(extremes_temp$highest_val,
          icon = "fa-thermometer-full",
          color = ifelse(extremes_temp$highest_val > 29, "warning", "primary"))
 ```
@@ -210,7 +206,7 @@ flexdashboard::valueBox(extremes_temp$highest_val,
 ### Lowest Ever Temperature
 
 ```{r}
-flexdashboard::valueBox(extremes_temp$lowest_val, 
+flexdashboard::valueBox(extremes_temp$lowest_val,
          icon = "fa-thermometer-empty",
          color = ifelse(extremes_temp$lowest_val < 12, "warning", "primary"))
 ```
@@ -218,8 +214,9 @@ flexdashboard::valueBox(extremes_temp$lowest_val,
 ### Mean Termperature
 
 ```{r}
-flexdashboard::valueBox(extremes_temp$mean_val, 
+flexdashboard::valueBox(extremes_temp$mean_val,
          icon = "fa-thermometer-half",
          color = ifelse(extremes_temp$mean_val < 16, "warning", "primary"))
 ```
+
 
