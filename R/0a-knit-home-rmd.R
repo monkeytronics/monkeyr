@@ -113,7 +113,7 @@ knit_home_report <-
            ) {
     ## Get directory of report markdown template
     report_rmd <-
-      system.file("home.rmd", package = "monkeyr")
+      system.file("/rmd/", "home.rmd", package = "monkeyr")
 
     ## Render report into html
     rmarkdown::render(
