@@ -1,3 +1,33 @@
+run_test_report <- function (
+    report         = "home",
+    test_data_dir  = "monkey_a",
+    test_params    = "params_1.txt"
+) {
+
+  ## Get test file paths from folder name
+  test_params <- test_params(
+    data_folder = test_data_dir,
+    params_file = test_params
+  )
+
+  # build params list (is this necessary?)
+  par_list <- monkeyr::make_params_list(
+    filtered_obs           = test_params$obs,
+    filtered_devices       = test_params$dev,
+    filtered_weather       = test_params$weather,
+    filtered_interventions = test_params$interv,
+    fromTimeStamp          = test_params$from_ts,
+    toTimeStamp            = test_params$to_ts
+  )
+
+  # run the rmd report
+  monkeyr::knit_home_report(
+    # param_list = test_params   # why won't this just work?
+    param_list = par_list
+  )
+}
+
+
 #' Param list
 #' @description Create a list of parameters for knitting rmd
 #' @param .list A named list of key-value pairs
@@ -31,6 +61,8 @@ make_params_list <- function(.list = NULL, ...) {
   lapply(names(list(...)), checkmate::assert_choice, unlist(fields))
   c(.list, list(...))
 }
+
+
 
 #' Compile the home report
 #'
