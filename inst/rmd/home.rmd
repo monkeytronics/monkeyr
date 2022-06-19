@@ -3,8 +3,8 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     social: [ "menu" ]
-    logo: "../png/logo.png"
-    favicon: "../png/logo.png"
+    # logo: "../png/logo.png"
+    # favicon: "../png/logo.png"
     orientation: rows
 
 # paths with `inst` will only work in `dev` setting. 
