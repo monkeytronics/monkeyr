@@ -118,8 +118,17 @@ wrangle_devices <-
   }
 
   ## Get most common City & Country for weather data joining.
-    common_city    <- tail(names(sort(table(filtered_devices$city))), 1)
-    common_country <- tail(names(sort(table(filtered_devices$country))), 1)
+    tryCatch (
+      expr = {
+        common_city    <- tail(names(sort(table(filtered_devices$city))), 1)
+        common_country <- tail(names(sort(table(filtered_devices$country))), 1)
+      },
+      error = function(e){
+        common_city     <- "unknown"
+        common_country  <- "unknown"
+      },
+  )
+
 
   devices <-
     filtered_devices %>%
