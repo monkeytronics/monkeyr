@@ -3,8 +3,8 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     social: [ "menu" ]
-    # logo: "../png/logo.png"
-    # favicon: "../png/logo.png"
+    logo: !expr system.file("png", "logo.png", package = "monkeyr")
+    favicon: !expr system.file("png", "favicon.png", package = "monkeyr")
     orientation: rows
 
 # paths with `inst` will only work in `dev` setting. 
@@ -80,17 +80,17 @@ monkey_palettes(devices = wrangled_devices)
 ```
 
 ---
-title: "`r report_type` Report"
+title: "`r report_type ` Report"
 ---
 
-```{r check_data, results = "hide"} 
+```{r check_data, results = "hide"}
 
 # Bail if nothing in data. Returns empty report.
 if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
   cat("No data present for the requested devices and timespan. Aborting report.")
   knitr::knit_exit("</body></html>")
 }
-  
+
 ```
 
 # Healthy Homes Performance {data-icon="fa-chart-bar"}
@@ -101,11 +101,9 @@ if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
 
 ```{r}
 who_chart <- who_threshold_data(observations = wrangled_obs) %>%
-  who_threshold_chart(from_timestamp = params$fromTimeStamp, params$toTimeStamp)
-
+ who_threshold_chart(from_timestamp = params$fromTimeStamp, params$toTimeStamp)
 who_chart
 ```
-
 
 ### World Health Organisation Guidelines
 
@@ -128,36 +126,39 @@ totals <-
   who_threshold_data(observations = wrangled_obs) %>%
   get_who_totals()
 
-below_18 <- sum(unlist(totals))
+below_12 <- totals$below_12
+below_16 <- totals$below_16
+below_18 <- totals$below_18
+
+palette <- get_heat_palette(6)
 
 flexdashboard::valueBox(paste0(round(8 * below_18, 1), " hrs (",scales::percent(below_18),")"),
                         icon = "fa-thermometer-half",
                         # color = ifelse(below_18 > 0.40, "warning", "primary"),
-                        color = "#B7DFCB")
+                        color = palette[4])
 ```
 
 ### Hours each night below 16 °C
 
 ```{r}
-below_16 <- sum(totals$below_16 + totals$below_12)
 flexdashboard::valueBox(paste0(round(8 * below_16, 1) , " hrs (", scales::percent(below_16), ")"),
                         icon = "fa-thermometer-quarter",
                         # color = color = ifelse(below_16 > 0.20, "warning", "primary")
-                        color = "#5ABAD1")
+                        color = palette[5])
 ```
 
 ### Hours each night below 12 °C
 
 ```{r}
 flexdashboard::valueBox(paste0(
-  round(8 * totals$below_12, 1) ,
+  round(8 * below_12, 1) ,
   " hrs (",
-  scales::percent(totals$below_12),
+  scales::percent(below_12),
   ")"
 ),
 icon = "fa-thermometer-empty",
 # color = ifelse(below_12 > 0.01, "danger", "primary")
-color = "#3984B6")
+color = palette[6])
 ```
 
 
@@ -167,7 +168,7 @@ color = "#3984B6")
 
 ### Temperature
 
-```{r} 
+```{r}
 # if (getOption("TEMP_ENABLE")) {
 ts_chart(
   observations = wrangled_obs,
@@ -180,14 +181,14 @@ ts_chart(
 
 ### Humidity
 
-```{r} 
+```{r}
 ts_chart(
   observations = wrangled_obs,
   from_timestamp = test_params()$fromTimeStamp,
   to_timestamp = test_params()$toTimeStamp,
   target_variable = "hum"
 )
-``` 
+```
 
 ## Column 2
 
