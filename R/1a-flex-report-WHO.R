@@ -115,7 +115,7 @@ degrees_below_18_score <- function(observations) {
 #' @param who_threshold_data data.frame, the output from `?who_threshold_data()`
 #' @export
 get_who_totals <- function(who_threshold_data) {
-  who_totals <- who_threshold_data(observations = wrangled_obs) %>%
+  who_totals <- who_threshold_data %>%
     dplyr::group_by(temp_band) %>%
     dplyr::summarise_at(c("fraction"), mean)
 
