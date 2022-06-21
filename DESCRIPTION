@@ -38,7 +38,19 @@ Imports:
     tidyr,
     unikn,
     sf,
-    lutz
+    lutz,
+    Rcpp,
+    rgdal,
+    "viridis",
+    "geojsonio",
+    "cowplot",
+    "ggrepel",
+    "ggspatial",
+    "rmarkdown",
+    "rgeos",
+    "rnaturalearth",
+    "rnaturalearthdata",
+    "rnaturalearthhires"
 Suggests:
     knitr,
     rmarkdown,
