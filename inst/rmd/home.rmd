@@ -14,10 +14,10 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_home_report()`
 params:
-  filtered_obs:             "../test-data/monkey_a/obs.csv"
-  filtered_weather:         "../test-data/monkey_a/weather.csv"
-  filtered_devices:         "../test-data/monkey_a/dev.csv"
-  filtered_interventions:   "../test-data/monkey_a/interv.csv"
+  filtered_obs:             "../test-data/monkey_b/obs.csv"
+  filtered_weather:         "../test-data/monkey_b/weather.csv"
+  filtered_devices:         "../test-data/monkey_b/dev.csv"
+  filtered_interventions:   "../test-data/monkey_b/interv.csv"
   report_params:            "-map-"                                            
   fromTimeStamp:            1627639151
   toTimeStamp:              1630317551
@@ -85,7 +85,7 @@ monkey_palettes(devices = wrangled_devices)
 title: "`r report_type ` Report"
 ---
 
-```{r check_data, results = "hide"}
+```{r check_data, results='asis'}
 
 # Bail if nothing in data. Returns empty report.
 if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
