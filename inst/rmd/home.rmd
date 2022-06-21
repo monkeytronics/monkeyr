@@ -3,8 +3,10 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     social: [ "menu" ]
-    # logo: !expr system.file("www", "logo.png", package = "monkeyr")
-    # favicon: !expr system.file("www", "favicon.png", package = "monkeyr")
+    # logo: !expr system.file("app/www", "logo.png", package = "monkeyr")
+    # favicon: !expr system.file("app/www", "favicon.png", package = "monkeyr")
+    logo: "www/logo.png"
+    favicon: "www/favicon.png"
     orientation: rows
 
 # paths with `inst` will only work in `dev` setting. 
@@ -16,7 +18,7 @@ params:
   filtered_weather:         "../test-data/monkey_a/weather.csv"
   filtered_devices:         "../test-data/monkey_a/dev.csv"
   filtered_interventions:   "../test-data/monkey_a/interv.csv"
-  report_params:            "-"                                            
+  report_params:            "-map-"                                            
   fromTimeStamp:            1627639151
   toTimeStamp:              1630317551
 ---
