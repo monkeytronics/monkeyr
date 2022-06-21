@@ -174,8 +174,8 @@ color = palette[6])
 # if (getOption("TEMP_ENABLE")) {
 ts_chart(
   observations = wrangled_obs,
-  from_timestamp = test_params()$fromTimeStamp,
-  to_timestamp = test_params()$toTimeStamp,
+  from_timestamp = params$fromTimeStamp,
+  to_timestamp = params$toTimeStamp,
   target_variable = "temp"
 )
 # }
@@ -186,8 +186,8 @@ ts_chart(
 ```{r}
 ts_chart(
   observations = wrangled_obs,
-  from_timestamp = test_params()$fromTimeStamp,
-  to_timestamp = test_params()$toTimeStamp,
+  from_timestamp = params$fromTimeStamp,
+  to_timestamp = params$toTimeStamp,
   target_variable = "hum"
 )
 ```

@@ -1,4 +1,4 @@
-#' test_params
+#' make_test_params
 #' @description Test Data! Data-sets include obs.csv; devices.csv;
 #' weather.csv & intreventions.csv. Plus report params as txt file.
 #' We will collect data-sets from real world tests as we go.
@@ -10,7 +10,10 @@
 #' @param folder folder located in inst/extdata/{folder}
 #' @param params_file params txt file located at inst/extdata/params/{params_file}
 #' @export
-test_params <- function(data_folder = "monkey_a", params_file = "params_1.txt") {
+make_test_params <- function(
+    data_folder = "monkey_a",
+    params_file = "params_1.txt",
+    ...) {
   list(
 
     ## May only work in dev
@@ -29,7 +32,7 @@ test_params <- function(data_folder = "monkey_a", params_file = "params_1.txt") 
 
 
     # replace these with text files with standard options.
-    fromTimeStamp = 1627639151,  # not necessary
-    toTimeStamp = 1630317551     # not necessary
+    fromTimeStamp = 1627639151,    # not necessary
+    toTimeStamp   = 1630317551     # not necessary
   )
 }

@@ -1,13 +1,29 @@
+#' run_test_report
+#'
+#' @description Test Report Locally with Dummy Test Data
+#' and Dummy Test Parameters. Uses library of test cases in inst.
+#'
+#' @param report The report name
+#' @param dummy_data_dir The Dummy data set which can be considered as a test case
+#' @param dummy_params_file The Dummy parameter set - rmd params into report
+#'
+#' @examples
+#' # run_test_report("home", "monkey_a", "params_1.txt")
+#' # run_test_report("flexi", "org_full", "map-room.txt")
+#' # run_test_report("full", "org_corner1", "map-tenure.txt")
+#' # run_test_report("hhi", "org_corner2", "map.txt")
+#'
+#' @export
 run_test_report <- function (
-    report         = "home",
-    test_data_dir  = "monkey_a",
-    test_params    = "params_1.txt"
+    report            = "home",
+    dummy_data_dir    = "monkey_a",
+    dummy_params_file = "params_1.txt"
 ) {
 
   ## Get test file paths from folder name
-  test_params <- test_params(
-    data_folder = test_data_dir,
-    params_file = test_params
+  test_params <- make_test_params(
+    data_folder = dummy_data_dir,
+    params_file = dummy_params_file
   )
 
   # build params list (is this necessary?)
@@ -16,22 +32,26 @@ run_test_report <- function (
     filtered_devices       = test_params$dev,
     filtered_weather       = test_params$weather,
     filtered_interventions = test_params$interv,
-    fromTimeStamp          = test_params$from_ts,
-    toTimeStamp            = test_params$to_ts
+    fromTimeStamp          = test_params$fromTimeStamp,
+    toTimeStamp            = test_params$toTimeStamp
   )
 
   # run the rmd report
   monkeyr::knit_home_report(
-    # param_list = test_params   # why won't this just work?
-    param_list = par_list
+    param_list  = par_list,
+    output_dir  = report,
+    output_file = dummy_data_dir
   )
 }
 
 
 #' Param list
+#'
 #' @description Create a list of parameters for knitting rmd
+#'
 #' @param .list A named list of key-value pairs
 #' @param ... Unquoted key-value pairs
+#'
 #' @details Field options are:
 #'   filtered_obs,
 #'   filtered_weather,
@@ -46,6 +66,7 @@ run_test_report <- function (
 #' create_param_list(filtered_obs = "inst/data/filtered_obs.csv")
 #' # convenient for programming
 #' create_param_list(.list = list(filtered_obs = "inst/data/filtered_obs.csv"))
+#'
 #' @export
 make_params_list <- function(.list = NULL, ...) {
   fields <- c(
@@ -152,7 +173,7 @@ knit_home_report <-
       input = report_rmd,
       params = param_list,
       output_file = output_file,
-      output_dir = output_dir,
+      output_dir  = paste0("html/", output_dir),
       ...
     )
   }
