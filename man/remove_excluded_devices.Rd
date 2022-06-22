@@ -11,6 +11,9 @@ remove_excluded_devices(target_data, data_volume)
 
 \item{data_volume}{the data volume data frame as output by \code{get_data_volume}}
 }
+\value{
+the same dataframe but filtered to exclude flagged cases
+}
 \description{
 Remove rows from \code{target_data} if they are flagged to \code{exclude}
 in the data_volume calculation - works for dev, interv and obs data frames!

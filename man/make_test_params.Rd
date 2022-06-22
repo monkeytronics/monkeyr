@@ -2,7 +2,7 @@
 % Please edit documentation in R/0b-test-params.R
 \name{make_test_params}
 \alias{make_test_params}
-\title{make_test_params}
+\title{Create a List of Parameters to Test}
 \usage{
 make_test_params(data_folder = "monkey_a", params_file = "params_1.txt", ...)
 }
@@ -10,6 +10,9 @@ make_test_params(data_folder = "monkey_a", params_file = "params_1.txt", ...)
 \item{params_file}{params txt file located at inst/extdata/params/{params_file}}
 
 \item{folder}{folder located in inst/extdata/{folder}}
+}
+\value{
+a list of parameters that may be used for generating a report
 }
 \description{
 Test Data! Data-sets include obs.csv; devices.csv;

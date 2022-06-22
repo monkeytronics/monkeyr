@@ -20,8 +20,11 @@ knit_home_report(
 
 \item{...}{additional named arguments passed onto \code{rmarkdown::render}}
 }
+\value{
+a compiled document written into the output file and the path of the output file is returned
+}
 \description{
-Create a the home report
+Create a home report with a given set of pameters.
 }
 \examples{
 obs  <- system.file("data/filtered_obs.csv", package="monkeytronics.reports")

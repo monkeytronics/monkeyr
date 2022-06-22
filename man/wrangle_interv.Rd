@@ -12,7 +12,7 @@ wrangle_interv(filtered_interv, obs)
 \item{obs}{Wrangled observations df as output by \code{wrangle_obs}}
 }
 \value{
-Obs Data Frame Joined with Weather & Devices & interv
+Observation Data Frame Joined with Weather & Devices & intervention data
 }
 \description{
 Wrangle intervention data\cr

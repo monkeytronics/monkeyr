@@ -1,4 +1,5 @@
-#' make_test_params
+#' Create a List of Parameters to Test
+#'
 #' @description Test Data! Data-sets include obs.csv; devices.csv;
 #' weather.csv & intreventions.csv. Plus report params as txt file.
 #' We will collect data-sets from real world tests as we go.
@@ -7,8 +8,12 @@
 #'   * Only 1-2 devices in data-set. Mimic home user.
 #'   * Lots of devices. Lots of data. Mimic DHB data.
 #'   * etc... Expand the cases as they arise.
+#'
 #' @param folder folder located in inst/extdata/{folder}
 #' @param params_file params txt file located at inst/extdata/params/{params_file}
+#'
+#' @return a list of parameters that may be used for generating a report
+#'
 #' @export
 make_test_params <- function(
     data_folder = "monkey_a",

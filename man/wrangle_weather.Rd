@@ -22,4 +22,5 @@ Wrangle weather data.\cr
 }
 \examples{
 wrangle_weather(filtered_weather = test_params("monkey_a")$weather)
+
 }
