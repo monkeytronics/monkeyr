@@ -13,18 +13,19 @@ Install the latest development version of monkeyr from github:
 ``` r
 # clone the repo and `Install and Restart`
 # or `devtools::load_all()`
+
 #remotes::install_bitbucket(repo = "monkeytronics/r-analytics", subdir = "monkeyr")
 devtools::install_github("monkeytronics/monkeyr", build_vignettes = TRUE)
 ```
 
-## Example
+## Example Usage in your Rmd File
 
 ``` r
 library(monkeyr)
 ```
 
-Monkeyr is structured as pure functions. The library `setup` is in the
-package `DESCRIPTION` file. This along with `roxygen` creates the
+Monkeyr is structured as pure functions. The library dependencies are
+listed in the `DESCRIPTION` file. This along with `roxygen` creates the
 `NAMESPACE` with all imports/exports.
 
 For ease of testing, I’ve wrapped some test params in a function:
@@ -33,35 +34,54 @@ For ease of testing, I’ve wrapped some test params in a function:
 test_params()
 ```
 
-The `wrangle` chunk now can be run as follows:
+Within your rmd file, The `wrangle` chunks are run as follows. This
+takes the 4 raw input csv files:
+
+-   obs.csv
+-   dev.csv
+-   weather.csv
+-   interv.csv
+
+And it outputs a wrangled and joined data set ready to use.
+
+-   `wrangled_obs` : the joined data set
+-   `wrangled_devices` : devices list minus excluded devices
+-   `devices_for_map` : a list used to populate a deployment map
+
+(If you need to copy and paste this, make sure you remove
+`eval = FALSE`!)
 
 ``` r
-# wrangled_devices <- wrangle_devices(test_params()$filtered_devices)
-# wrangled_weather <- wrangle_weather(
-#  filtered_weather = test_params()$filtered_weather,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp
-# )
-# wrangled_obs <- wrangle_observations(
-#  filtered_obs = test_params()$filtered_obs,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp,
-#  devices = wrangled_devices,
-#  weather = wrangled_weather
-#)
-# data_volume <- get_data_volume(
-#  observations = wrangled_obs,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp
-#  )
-# wrangled_devices <- remove_excluded_devices(
-#  target_data = wrangled_devices,
-#  data_volume = data_volume
-# )
-# wrangled_obs <- remove_excluded_devices(
-#  target_data = wrangled_obs,
-#  data_volume = data_volume
-# )
+wrangled_devices <- wrangle_devices(params$filtered_devices)
+
+wrangled_weather <- wrangle_weather(params$filtered_weather)
+
+wrangled_obs    <- wrangle_observations(
+  filtered_obs   = params$filtered_obs,
+  devices        = wrangled_devices,
+  weather        = wrangled_weather
+)
+
+data_volume     <- get_data_volume(
+  observations   = wrangled_obs,
+  from_timestamp = params$fromTimeStamp,
+  to_timestamp   = params$toTimeStamp
+)
+
+devices_for_map <- get_devices_for_map(
+  devices        = wrangled_devices,
+  data_volume    = data_volume
+)
+
+wrangled_devices<- remove_excluded_devices(
+  target_data    = wrangled_devices,
+  data_volume    = data_volume
+)
+
+wrangled_obs    <- remove_excluded_devices(
+  target_data    = wrangled_obs,
+  data_volume    = data_volume
+)
 ```
 
 Next, we can set some options for available data and colors:
