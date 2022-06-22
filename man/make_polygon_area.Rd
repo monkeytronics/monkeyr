@@ -13,6 +13,9 @@ make_polygon_area(observations, target_variable, severity)
 
 \item{severity}{This can be {1, 2, 3} which band it defines.}
 }
+\value{
+a tibble dataframe of polygon data
+}
 \description{
 Make little coloured area in plot
 }

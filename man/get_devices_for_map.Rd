@@ -11,6 +11,9 @@ get_devices_for_map(devices, data_volume)
 
 \item{data_volume}{the data volume data frame as output by \code{get_data_volume}}
 }
+\value{
+the same dataframe but filtered for appropirate volumes of data
+}
 \description{
 Filter the wrangled devices dataset to keep only devices with sufficient
 volume for the map. This step has to go before exclusions so disconnected devices show.

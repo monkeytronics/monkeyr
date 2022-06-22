@@ -17,4 +17,5 @@ Takes 2 time stamps and prints a formatted from-to sentence.
 }
 \examples{
 report_period(1555555555, 1666666666)
+
 }

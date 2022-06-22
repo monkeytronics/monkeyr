@@ -1,11 +1,15 @@
-#' run_test_report
+#' Run a Test Report
 #'
 #' @description Test Report Locally with Dummy Test Data
-#' and Dummy Test Parameters. Uses library of test cases in inst.
+#' and Dummy Test Parameters. Uses library of test cases. Run this function first
+#' to ensure everything is working properly and to see an example of the output.
+#' Please note that the pameters for test reports are preset.
 #'
 #' @param report The report name
 #' @param dummy_data_dir The Dummy data set which can be considered as a test case
 #' @param dummy_params_file The Dummy parameter set - rmd params into report
+#'
+#' @return an html document printed out to a file and the path of the output file is returned
 #'
 #' @examples
 #' # run_test_report("home", "monkey_a", "params_1.txt")
@@ -45,27 +49,30 @@ run_test_report <- function (
 }
 
 
-#' Param list
+#' Make a list of parameters for the report
 #'
-#' @description Create a list of parameters for knitting rmd
+#' @description Create a list of parameters for building the report. Params determine the data and time
+#' period used in each report. Review the details below for a list of fields to pass as parameters
 #'
 #' @param .list A named list of key-value pairs
 #' @param ... Unquoted key-value pairs
 #'
-#' @details Field options are:
-#'   filtered_obs,
-#'   filtered_weather,
-#'   filtered_devices,
-#'   filtered_interventions,
-#'   report_params,
-#'   fromTimeStamp,
-#'   toTimeStamp
+#' @details Field options are:\cr
+#'   * filtered_obs (a dataframe or filepath to a csv),
+#'   * filtered_weather (a dataframe or filepath to a csv),
+#'   * filtered_devices (a dataframe or filepath to a csv),
+#'   * filtered_interventions (a dataframe or filepath to a csv),
+#'   * report_params,
+#'   * fromTimeStamp,
+#'   * toTimeStamp
+#'
+#' @return A list of RMD parameters that may be passed to a report generating function
 #'
 #' @examples
 #' # convenient for interactive typing
-#' create_param_list(filtered_obs = "inst/data/filtered_obs.csv")
+#' make_params_list(filtered_obs = "inst/data/filtered_obs.csv")
 #' # convenient for programming
-#' create_param_list(.list = list(filtered_obs = "inst/data/filtered_obs.csv"))
+#' make_params_list(.list = list(filtered_obs = "inst/data/filtered_obs.csv"))
 #'
 #' @export
 make_params_list <- function(.list = NULL, ...) {
@@ -87,11 +94,14 @@ make_params_list <- function(.list = NULL, ...) {
 
 #' Compile the home report
 #'
-#' @description Create a the home report
+#' @description Create a home report with a given set of pameters.
+#'
 #' @param param_list named list of parameters, see `?make_param_list`
 #' @param output_dir path to folder to save the html (default: current work dir)
 #' @param output_file name of the output html (default: home-{timestamp}.html)
 #' @param ... additional named arguments passed onto `rmarkdown::render`
+#'
+#' @return a compiled document written into the output file and the path of the output file is returned
 #'
 #' @examples
 #' obs  <- system.file("data/filtered_obs.csv", package="monkeytronics.reports")

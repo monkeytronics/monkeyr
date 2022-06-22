@@ -11,6 +11,9 @@ nrow_values(devices, observations)
 
 \item{observations}{data.frame, the output of \code{wrange_observations}}
 }
+\value{
+a list of row counts
+}
 \description{
 calculate number of rows of some datasets
 }

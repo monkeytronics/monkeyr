@@ -42,4 +42,5 @@ Wrangle devices data.\cr
 }
 \examples{
 wrangle_devices(test_params("monkey_a")$dev)
+
 }

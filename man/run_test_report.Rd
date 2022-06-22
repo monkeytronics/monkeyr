@@ -2,7 +2,7 @@
 % Please edit documentation in R/0a-knit-home-rmd.R
 \name{run_test_report}
 \alias{run_test_report}
-\title{run_test_report}
+\title{Run a Test Report}
 \usage{
 run_test_report(
   report = "home",
@@ -17,13 +17,19 @@ run_test_report(
 
 \item{dummy_params_file}{The Dummy parameter set - rmd params into report}
 }
+\value{
+an html document printed out to a file and the path of the output file is returned
+}
 \description{
 Test Report Locally with Dummy Test Data
-and Dummy Test Parameters. Uses library of test cases in inst.
+and Dummy Test Parameters. Uses library of test cases. Run this function first
+to ensure everything is working properly and to see an example of the output.
+Please note that the pameters for test reports are preset.
 }
 \examples{
 # run_test_report("home", "monkey_a", "params_1.txt")
 # run_test_report("flexi", "org_full", "map-room.txt")
 # run_test_report("full", "org_corner1", "map-tenure.txt")
 # run_test_report("hhi", "org_corner2", "map.txt")
+
 }

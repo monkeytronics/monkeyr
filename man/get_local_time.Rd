@@ -21,4 +21,5 @@ Convert time stamp to local timezone datetime
 }
 \examples{
 get_local_time(1555555555, -125.357, 23.556)
+
 }

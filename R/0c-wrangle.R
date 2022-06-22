@@ -1,12 +1,16 @@
 #' Unix timestamp to local timezone datetime
+#'
 #' @description Convert time stamp to local timezone datetime
+#'
 #' @param timestamp Unix time stamp vector
 #' @param long Longitude as vector
 #' @param lat   Latitude as vector
+#'
 #' @return Returns "POSIXct", "POSIXt" vector in local time zone
-#' @export
 #' @examples
 #' get_local_time(1555555555, -125.357, 23.556)
+#'
+#' @export
 get_local_time <- function(timestamp, lat, long) {
   # checkmate::assert_numeric(timestamp)
   # checkmate::assert_numeric(lat)
@@ -35,11 +39,16 @@ get_local_time <- function(timestamp, lat, long) {
 
 
 #' Print a formatted from-to sentence
+#'
 #' @description Takes 2 time stamps and prints a formatted from-to sentence.
+#'
 #' @param from_timetamp,to_timestamp ts - begin and end of the report.
+#'
 #' @return Character string
+#'
 #' @examples
 #' report_period(1555555555, 1666666666)
+#'
 #' @export
 report_period <- function(from_timestamp, to_timestamp) {
 
@@ -60,20 +69,26 @@ report_period <- function(from_timestamp, to_timestamp) {
 
 
 #' wrangle_devices
+#'
 #' @description Wrangle devices data.\cr
 #' * Replacing missing parameters with 'unknown' \cr
 #' * Create room_type { living room / bedroom } \cr
 #' * Fill in City and Country with best guess (to join with weather) \cr
+#'
 #' @param filtered_devices A data.frame or path to file
 #' @param data_type_filter List of date_types to include
 #' @param na.strings List of things to ignore, for fread().
 #' @param integer_columns Columns with integer type.
 #' @param double_columns Columns with double type.
 #' @param character_columns Columns with character type.
+#'
 #' @return Devices Data Frame
+#'
 #' @importFrom readr col_character col_integer col_double
+#'
 #' @examples
 #' wrangle_devices(test_params("monkey_a")$dev)
+#'
 #' @export
 wrangle_devices <-
   function( filtered_devices,
@@ -159,14 +174,19 @@ wrangle_devices <-
 
 
 #' wrangle_weather
+#'
 #' @description Wrangle weather data.\cr
 #' * Round ts and add hour, date, month, year (to join with obs) \cr
 #' * Rename city_name -> city \cr
 #' * Rename to outdoor_hum & outdoor_temp \cr
+#'
 #' @param weather data.frame or path to file
+#'
 #' @return Weather Data Frame
+#'
 #' @examples
 #' wrangle_weather(filtered_weather = test_params("monkey_a")$weather)
+#'
 #' @export
 wrangle_weather <- function(filtered_weather) {
   # checkmate::assert_choice(x = class(filtered_weather), choices = c("data.frame", "character"))
@@ -227,6 +247,7 @@ wrangle_weather <- function(filtered_weather) {
 
 
 #' wrangle_interventions and join with obs
+#'
 #' @description Wrangle intervention data\cr
 #' * Expects obs df (joined with devices & weather) \cr
 #' * To show the effect of an intervention, only monitors which ultimately receive
@@ -235,9 +256,12 @@ wrangle_weather <- function(filtered_weather) {
 #'   * data post-interv 'draft-proof' flagged 'post-draft-proof' \cr
 #' * Comparing devices with an intervention to those without is apples & oranges. \cr
 #' * Ideally, we want a volume of data: half pre ; half post... \cr
+#'
 #' @param filtered_interv data.frame or path to file
 #' @param obs Wrangled observations df as output by `wrangle_obs`
-#' @return Obs Data Frame Joined with Weather & Devices & interv
+#'
+#' @return Observation Data Frame Joined with Weather & Devices & intervention data
+#'
 #' @examples
 #' obs <- wrangle_interv(
 #'   test_params("monkey_a")$interv,
@@ -265,15 +289,19 @@ wrangle_interv <- function(filtered_interv, obs) {
 
 
 #' wrangle_observations
+#'
 #' @description Wrangle measurement data\cr
 #' * Filter & dedup (not actually necessary) \cr
 #' * Join with devices - remove addr & email \cr
 #' * Fill in missing lat / long - Gen local time\cr
 #' * Add hour, date, month, year (to join with weather) \cr
+#'
 #' @param filtered_obs data.frame or path to file
 #' @param devices Wrangled devices df as output by `wrangle_devices`
 #' @param weather Wrangled outdoor weather df as output by `wrangle_weather`
+#'
 #' @return Obs Data Frame Joined with Weather & Devices
+#'
 #' @examples
 #' wrangled_devices <- wrangle_devices(test_params("monkey_a")$dev)
 #' wrangled_weather <- wrangle_weather(test_params("monkey_a")$weather)
@@ -282,6 +310,7 @@ wrangle_interv <- function(filtered_interv, obs) {
 #'   devices = wrangled_devices,
 #'   weather = wrangled_weather
 #' )
+#'
 #' @export
 wrangle_observations <-
   function(filtered_obs, devices, weather) {
@@ -342,20 +371,25 @@ wrangle_observations <-
 
 
 #' get_data_volume
+#'
 #' @description Check data volume and flag to exclude devices with < 10% data
+#'
 #' @param observations from `wrangle_observations`
 #' @param from_timetamp,to_timestamp timestamps for beginning & end of the report
+#'
 #' @returns compact data frame with : \cr
 #' * device_id,  \cr
 #' * n() records,  \cr
 #' * r % expected,  \cr
 #' * exclude. \cr
+#'
 #' @examples
 #' data_volume <- get_data_volume(
 #'   observations = wrangled_obs,
 #'   from_timestamp = test_params()$fromTimeStamp,
 #'   to_timestamp = test_params()$toTimeStamp
 #'   )
+#'
 #' @export
 get_data_volume <- function(observations, from_timestamp, to_timestamp) {
 
@@ -385,10 +419,15 @@ get_data_volume <- function(observations, from_timestamp, to_timestamp) {
 
 
 #' get_devices_for_map
+#'
 #' @description Filter the wrangled devices dataset to keep only devices with sufficient
 #' volume for the map. This step has to go before exclusions so disconnected devices show.
+#'
 #' @param devices a wrangled devices data frame as output by `wrangle_devices`
 #' @param data_volume the data volume data frame as output by `get_data_volume`
+#'
+#' @return the same dataframe but filtered for appropirate volumes of data
+#'
 #' @export
 get_devices_for_map <- function(devices, data_volume) {
 
@@ -405,10 +444,15 @@ get_devices_for_map <- function(devices, data_volume) {
 
 
 #' remove_excluded_devices
+#'
 #' @description Remove rows from `target_data` if they are flagged to `exclude`
 #' in the data_volume calculation - works for dev, interv and obs data frames!
+#'
 #' @param target_data data.frame, either the devices or observations tables
 #' @param data_volume the data volume data frame as output by `get_data_volume`
+#'
+#' @return the same dataframe but filtered to exclude flagged cases
+#'
 #' @export
 remove_excluded_devices <- function(target_data, data_volume) {
   checkmate::assert_data_frame(target_data)
@@ -419,10 +463,15 @@ remove_excluded_devices <- function(target_data, data_volume) {
 
 
 #' make_polygon_area
+#'
 #' @description Make little coloured area in plot
+#'
 #' @param observations data.frame, the output of `wrange_observations`
 #' @param target_variable This can be {"hum", "temp", "co2" ...}
 #' @param severity This can be {1, 2, 3} which band it defines.
+#'
+#' @return a tibble dataframe of polygon data
+
 #' @export
 make_polygon_area <- function(observations, target_variable, severity) {
 
@@ -456,9 +505,14 @@ make_polygon_area <- function(observations, target_variable, severity) {
 
 
 #' misc_values
+#'
 #' @description calculate number of rows of some datasets
+#'
 #' @param observations data.frame, the output of `wrange_observations`
 #' @param devices a wrangled devices data frame as output by `wrangle_devices`
+#'
+#' @return a list of row counts
+#'
 #' @export
 nrow_values <- function(devices, observations) {
 
