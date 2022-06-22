@@ -1,16 +1,38 @@
+---
+title: "monkeyr"
+output: 
+  md_document:
+    variant: markdown_github
+vignette: >
+  %\VignetteIndexEntry{monkeyr vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of `monkeyr` is to package up and share the R code needed to
-produce flexdashboards and Rmarkdown reports from Monkeytronics
-monitoring data. The input data format is consistent with the
-Monkeytronics Sensor Node mobile app and web portal reporting functions.
+The goal of `monkeyr` is to package up and share the R code needed to produce
+flexdashboards and Rmarkdown reports from Monkeytronics monitoring data. The input 
+data format is consistent with the Monkeytronics Sensor Node mobile app and web 
+portal reporting functions. 
 
 ## Installation
 
-Install the latest development version of monkeyr from github:
+Install the latest development version of monkeyr from github :
 
-``` r
+```{r, eval = FALSE}
 # clone the repo and `Install and Restart`
 # or `devtools::load_all()`
 
@@ -18,40 +40,29 @@ Install the latest development version of monkeyr from github:
 devtools::install_github("monkeytronics/monkeyr", build_vignettes = TRUE)
 ```
 
-## Example Usage in your Rmd File
+Monkeyr is structured as pure functions. The library dependencies are listed in the
+`DESCRIPTION` file. This along with `roxygen` creates the `NAMESPACE` with all imports/exports.
 
-``` r
+## Example Set Up of an Rmd File (using home report example)
+
+We start with a Monkeytronics Sensor Node data set :\cr
+
+* obs.csv
+* dev.csv
+* weather.csv
+* interv.csv
+
+And we use the wrangling functions to create the following sanitised, wrangled data :
+
+* `wrangled_obs`     : the joined data set
+* `wrangled_devices` : devices list minus excluded devices
+* `devices_for_map`  : a list used to populate a deployment map
+
+(If you need to copy and paste this, make sure you remove `eval = FALSE`!)
+
+```{r, eval = FALSE}
 library(monkeyr)
-```
 
-Monkeyr is structured as pure functions. The library dependencies are
-listed in the `DESCRIPTION` file. This along with `roxygen` creates the
-`NAMESPACE` with all imports/exports.
-
-For ease of testing, I’ve wrapped some test params in a function:
-
-``` r
-test_params()
-```
-
-Within your rmd file, The `wrangle` chunks are run as follows. This
-takes the 4 raw input csv files:
-
--   obs.csv
--   dev.csv
--   weather.csv
--   interv.csv
-
-And it outputs a wrangled and joined data set ready to use.
-
--   `wrangled_obs` : the joined data set
--   `wrangled_devices` : devices list minus excluded devices
--   `devices_for_map` : a list used to populate a deployment map
-
-(If you need to copy and paste this, make sure you remove
-`eval = FALSE`!)
-
-``` r
 wrangled_devices <- wrangle_devices(params$filtered_devices)
 
 wrangled_weather <- wrangle_weather(params$filtered_weather)
@@ -86,53 +97,99 @@ wrangled_obs    <- remove_excluded_devices(
 
 Next, we can set some options for available data and colors:
 
-``` r
-# monkey_palettes(devices = wrangled_devices)
-# set_options(observations = wrangled_obs)
+```{r, eval = FALSE}
+monkey_palettes(devices = wrangled_devices)
+set_options(observations = wrangled_obs)
 ```
 
-Finally, we should have everything to make a time series plot for
-humidity:
+## Now Run Analysis Code (Home report example) 
 
-``` r
-# ts_chart(
-#   observations = wrangled_obs,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp,
-#  target_variable = "hum"
-# )
+We have everything we need to make a time series plot for humidity :
+
+```{r, eval = FALSE}
+ts_chart(
+  observations = wrangled_obs,
+ from_timestamp = test_params()$fromTimeStamp,
+ to_timestamp = test_params()$toTimeStamp,
+ target_variable = "hum"
+)
 ```
 
-And temperature:
+or temperature :
 
-``` r
-# ts_chart(
-#  observations = wrangled_obs,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp,
-#  target_variable = "temp"
-# )
+```{r, eval = FALSE}
+ts_chart(
+ observations = wrangled_obs,
+ from_timestamp = test_params()$fromTimeStamp,
+ to_timestamp = test_params()$toTimeStamp,
+ target_variable = "temp"
+)
 ```
 
-# Creating the flexdash report
+# Test Data & Params
 
-We have a function `?knit_home_report` that takes - a list of parameters
-(paths to data and timestamps)  
-- output file name (so we can keep track of requests if needed) - output
-directory (we need this to tell the docker container where on the host
-to drop the files)
+We want to store dummy data sets in the package to speed up testing. There are 2
+sources to consider. Firstly the raw csv files which we put into `dummy-data` 
+and secondly the parameters which go in `dummy-params`.
+
+```
+├── inst
+│   ├── dummy-data
+│   │   ├── monkey_a
+│   │   |   ├── dev.csv
+│   │   |   ├── interv.csv
+│   │   |   ├── obs.csv
+│   │   |   ├── weather.csv
+│   │   ├── monkey_b
+│   │   |   ├── **.csv
+│   ├── dummy-params
+│   │   ├── params_1.txt
+│   │   ├── params_2.txt
+│   ├── rmd
+│   │   ├── home.rmd
+│   │   ├── my-report.rmd
+
+```
+
+# Testing your Flexdash Report in the Local Environment
+
+During development of your flexdash report or for use with new datasets, 
+you should put the rmd file into the inst/rmd folder. And add new data sets into 
+`inst/dummy-daa/{data-set-name}/*.csv`. Now you can test your code
+using the `run_test_report` function. The following parameters are needed :
+
+* report       = "home.rmd" \t: the rmd file!
+* dummy_data   = "monkey_a" \t: the dummy data set we want to use. In inst/dummy-data
+* dummy_params = "params_1.txt" \t: the dummy parameter file we want to use. In inst/dummy-params
+
+```{r, eval = FALSE}
+run_test_report(
+    report       = "home",
+    dummy_data   = "monkey_a",
+    dummy_params = "params_1.txt"
+)
+```
+
+
+
+The output will be generated as a html file in html/{report}/{dummy_data}.html
+
+We have a function `?knit_home_report` that takes 
+    - a list of parameters (paths to data and timestamps)  
+    - output file name (so we can keep track of requests if needed)
+    - output directory (we need this to tell the docker container where on the host to drop the files)
 
 We run this like so:
 
-``` r
+```{r, eval = FALSE}
 # the system.file calls are to access the example data installed with the package
 # in production, the list of parameters will be generated by the script calling this
 # report
 
-obs  <- system.file("data/filtered_obs.csv", package = "monkeytronics.reports")
-dev  <- system.file("data/filtered_devices.csv", package = "monkeytronics.reports")
-wea  <- system.file("data/filtered_weather.csv", package = "monkeytronics.reports")
-int  <- system.file("data/filtered_interventions.csv", package = "monkeytronics.reports")
+obs  <- system.file("data/filtered_obs.csv", package = "monkeyr")
+dev  <- system.file("data/filtered_devices.csv", package = "monkeyr")
+wea  <- system.file("data/filtered_weather.csv", package = "monkeyr")
+int  <- system.file("data/filtered_interventions.csv", package = "monkeyr")
 from <- 1627639151
 to   <- 1630317551
 
@@ -146,28 +203,37 @@ par_list <- make_params_list(
 )
 
 # knit with default file name and output dir
-# knit_home_report(par_list)
+knit_home_report(par_list)
 ```
 
 # Creating the report from docker
 
-The package comes with an `R` script that calls `knit_home_report`
-(`run-home-report.R`) and a bash wrapper that calls this `R` script
-(`home.sh`). These are copied inside the docker container on build.
-`home.sh` becomes the `ENTRYPOINT` which is the script run every time we
-start the container. `home.sh` and `run-home-report.R` take two command
-line arguments: the file name and output dir.
+The package comes with an `R` script that calls `knit_home_report` (`run-home-report.R`)
+and a bash wrapper that calls this `R` script (`home.sh`). These are copied inside the
+docker container on build. `home.sh` becomes the `ENTRYPOINT` which is the script run
+every time we start the container. `home.sh` and `run-home-report.R` take two command line
+arguments: the file name and output dir. 
 
-``` bash
+```{bash, eval = FALSE}
 # home.sh my_report.html my_reports_folder
 ```
 
-In a docker setting `my_reports_folder` should be a host folder mounted
-on the container. This makes sure the html output will be available
-outside the container after the latter has finished the job.
+In a docker setting `my_reports_folder` should be a host folder mounted on the container. 
+This makes sure the html output will be available outside the container after the latter 
+has finished the job.
 
-``` bash
+```{bash, eval = FALSE}
 # docker build -t mtr .
 # mkdir reports_folder
 # docker run -v /full/path/to/reports/folder:/home/reports_folder mtr report.html /home/report_folder
+```
+
+
+
+
+
+For ease of testing, I've wrapped some test params in a function:
+
+```{r, eval = FALSE}
+test_params()
 ```
