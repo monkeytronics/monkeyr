@@ -6,18 +6,18 @@
 set_options <- function(observations) {
   checkmate::assert_data_frame(observations)
 
-  options(TEMP_ENABLE  = "temp"  %in% colnames(observations))
-  options(HUM_ENABLE   = "hum"   %in% colnames(observations))
-  options(CO2_ENABLE   = "co2"   %in% colnames(observations))
-  options(LUX_ENABLE   = "lux"   %in% colnames(observations))
-  options(DBA_ENABLE   = "dba"   %in% colnames(observations))
-  options(VOC_ENABLE   = "voc"   %in% colnames(observations))
-  options(HCHO_ENABLE  = "hcho"  %in% colnames(observations))
-  options(PM1_ENABLE   = "pm1"   %in% colnames(observations))
-  options(PM2_5_ENABLE = "pm2_5" %in% colnames(observations))
-  options(PM10_ENABLE  = "pm10"  %in% colnames(observations))
-
+  options(TEMP_ENABLE  = "temp"  %in% observations$reading)
+  options(HUM_ENABLE   = "hum"   %in% observations$reading)
+  options(CO2_ENABLE   = "co2"   %in% observations$reading)
+  options(LUX_ENABLE   = "lux"   %in% observations$reading)
+  options(DBA_ENABLE   = "dba"   %in% observations$reading)
+  options(VOC_ENABLE   = "voc"   %in% observations$reading)
+  options(HCHO_ENABLE  = "hcho"  %in% observations$reading)
+  options(PM1_ENABLE   = "pm1"   %in% observations$reading)
+  options(PM2_5_ENABLE = "pm2_5" %in% observations$reading)
+  options(PM10_ENABLE  = "pm10"  %in% observations$reading)
 }
+
 
 #' monkey_palettes
 #' @description define some color palettes and set them as R options to be globally available
@@ -28,10 +28,15 @@ monkey_palettes <- function(devices) {
   checkmate::assert_data_frame(devices)
   ## Colors with unikn package
   # https://cran.r-project.org/web/packages/unikn/vignettes/colors.html
-  options(TEMP_COLOURS = unikn::usecol(pal = pal_seeblau, n = nrow(devices)))
-  options(HUM_COLOURS  = unikn::usecol(pal = pal_pinky, n = nrow(devices)))
-  options(CO2_COLOURS  = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
+  options(TEMP_COLOURS   = unikn::usecol(pal = pal_seeblau,  n = nrow(devices)))
+  options(HUM_COLOURS    = unikn::usecol(pal = pal_pinky,    n = nrow(devices)))
+  options(CO2_COLOURS    = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
+  options(PM1_COLOURS    = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
+  options(PM2_5_COLOURS  = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
+  options(PM10_COLOURS   = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
+  options(HCHO_COLOURS   = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
 }
+
 
 #' ts_chart
 #' @description make a ggplotly time series chart for temperature, CO2, ...
@@ -57,6 +62,12 @@ ts_chart <-
     checkmate::assert_number(to_timestamp)
     checkmate::assert_data_frame(observations)
 
+    # for testing!
+    # observations <- wrangled_obs
+    # from_timestamp <- params$fromTimeStamp
+    # to_timestamp <- params$toTimeStamp
+    # target_variable <- "pm1"
+
     blue_zone_1 <- make_polygon_area(observations, target_variable, severity = 1)
     blue_zone_2 <- make_polygon_area(observations, target_variable, severity = 2)
     blue_zone_3 <- make_polygon_area(observations, target_variable, severity = 3)
@@ -68,23 +79,35 @@ ts_chart <-
 
     y_lim <- switch(
       target_variable,
-      "temp" = c(0, 30),
-      "hum"  = c(30, 100),
-      "co2"  = c(250, 2000)
+      "temp"  = c(0, 30),
+      "hum"   = c(30, 100),
+      "co2"   = c(250, 2000),
+      "pm1"   = c(0, 50),
+      "pm2_5" = c(0, 50),
+      "pm10"  = c(0, 50),
+      "hcho"  = c(0, 100),
     )
 
     y_lab <- switch(
       target_variable,
-      "temp" = "Temperature (°C)",
-      "hum"  = "Humidity (%)",
-      "co2"  = "CO2 (ppm)"
+      "temp"  = "Temperature (°C)",
+      "hum"   = "Humidity (%)",
+      "co2"   = "CO2 (ppm)",
+      "pm1"   = "PM 1 (ppm)",
+      "pm2_5" = "PM 2.5 (ppm)",
+      "pm10"  = "PM 10 (ppm)",
+      "hcho"  = "Formaldehyde (ppb)"
     )
 
     t_lab <- switch(
       target_variable,
-      "temp" = "Temperature Time Series ",
-      "hum"  = "Rel. Humidity Time Series ",
-      "co2"  = "Carbon Dioxide Time Series "
+      "temp"  = "Temperature Time Series ",
+      "hum"   = "Rel. Humidity Time Series ",
+      "co2"   = "Carbon Dioxide Time Series ",
+      "pm1"   = "PM 1 Time Series ",
+      "pm2_5" = "PM 2.5 Time Series ",
+      "pm10"  = "PM 10 Time Series ",
+      "hcho"  = "Formldehyde Time Series "
     )
 
     observations <- observations %>%
@@ -92,7 +115,7 @@ ts_chart <-
 
     axis_high <- max(y_lim[[2]], max(as.numeric(observations$val), na.rm = TRUE))
     axis_low  <- min(y_lim[[1]],  min(as.numeric(observations$val), na.rm = TRUE))
-    observations
+    # observations
     ts_chart <- observations %>%
       ggplot2::ggplot(ggplot2::aes(
         x = local_time,

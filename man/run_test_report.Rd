@@ -6,16 +6,16 @@
 \usage{
 run_test_report(
   report = "home",
-  dummy_data_dir = "monkey_a",
-  dummy_params_file = "params_1.txt"
+  dummy_data = "monkey_a",
+  dummy_params = "params_1.txt"
 )
 }
 \arguments{
 \item{report}{The report name}
 
-\item{dummy_data_dir}{The Dummy data set which can be considered as a test case}
+\item{dummy_data}{The Dummy data set which can be considered as a test case}
 
-\item{dummy_params_file}{The Dummy parameter set - rmd params into report}
+\item{dummy_params}{The Dummy parameter set - rmd params into report}
 }
 \value{
 an html document printed out to a file and the path of the output file is returned

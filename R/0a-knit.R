@@ -6,8 +6,8 @@
 #' Please note that the pameters for test reports are preset.
 #'
 #' @param report The report name
-#' @param dummy_data_dir The Dummy data set which can be considered as a test case
-#' @param dummy_params_file The Dummy parameter set - rmd params into report
+#' @param dummy_data The Dummy data set which can be considered as a test case
+#' @param dummy_params The Dummy parameter set - rmd params into report
 #'
 #' @return an html document printed out to a file and the path of the output file is returned
 #'
@@ -19,15 +19,15 @@
 #'
 #' @export
 run_test_report <- function (
-    report            = "home",
-    dummy_data_dir    = "monkey_a",
-    dummy_params_file = "params_1.txt"
+    report       = "home",
+    dummy_data   = "monkey_a",
+    dummy_params = "params_1.txt"
 ) {
 
   ## Get test file paths from folder name
   test_params <- make_test_params(
-    data_folder = dummy_data_dir,
-    params_file = dummy_params_file
+    dummy_data   = dummy_data,
+    dummy_params = dummy_params
   )
 
   # build params list (is this necessary?)
@@ -44,7 +44,52 @@ run_test_report <- function (
   monkeyr::knit_home_report(
     param_list  = par_list,
     output_dir  = report,
-    output_file = dummy_data_dir
+    output_file = dummy_data
+  )
+}
+
+
+#' Create a List of Parameters to Test
+#'
+#' @description Test Data! Data-sets include obs.csv; devices.csv;
+#' weather.csv & intreventions.csv. Plus report params as txt file.
+#' We will collect data-sets from real world tests as we go.
+#' Example data-sets might be : \cr
+#'   * All devices in data-set have no data.
+#'   * Only 1-2 devices in data-set. Mimic home user.
+#'   * Lots of devices. Lots of data. Mimic DHB data.
+#'   * etc... Expand the cases as they arise.
+#'
+#' @param folder folder located in inst/extdata/{folder}
+#' @param params_file params txt file located at inst/extdata/params/{params_file}
+#'
+#' @return a list of parameters that may be used for generating a report
+#'
+#' @export
+make_test_params <- function(
+    dummy_data   = "monkey_a",
+    dummy_params = "params_1.txt",
+    ...) {
+  list(
+
+    ## May only work in dev
+    # obs           = paste0("inst/dummy-data/",   dummy_data, "/obs.csv"),
+    # weather       = paste0("inst/dummy-data/",   dummy_data, "/weather.csv"),
+    # dev           = paste0("inst/dummy-data/",   dummy_data, "/dev.csv"),
+    # interv        = paste0("inst/dummy-data/",   dummy_data, "/interv.csv"),
+    # params        = paste0("inst/dummy_params/", dummy_params),
+
+    ## Using sysdata - production - USE THIS CODE!
+    obs           = system.file("dummy-data", paste0(dummy_data, "/obs.csv"),     package = "monkeyr"),
+    weather       = system.file("dummy-data", paste0(dummy_data, "/weather.csv"), package = "monkeyr"),
+    dev           = system.file("dummy-data", paste0(dummy_data, "/dev.csv"),     package = "monkeyr"),
+    interv        = system.file("dummy-data", paste0(dummy_data, "/interv.csv"),  package = "monkeyr"),
+    params        = system.file("dummy-params", dummy_params,                     package = "monkeyr"),
+
+
+    # replace these with text files with standard options.
+    fromTimeStamp = 1627639151,    # not necessary
+    toTimeStamp   = 1630317551     # not necessary
   )
 }
 
@@ -121,50 +166,6 @@ make_params_list <- function(.list = NULL, ...) {
 #' )
 #' knit_home_report(par_list)
 #'
-#' \dontrun{
-#' # using the database
-#' # assumes DB credentials are set as environmental variables
-#' # see `?dynamo_connect`
-#' dev <- dynamo_query(
-#' .con = dynamo_connect(),
-#' .table = "sn-v1-devices",
-#' .partition_key = "device_owner",
-#' .partition_value = "al@monkeytronics.co.nz"
-#' )
-#'
-#' int <- dynamo_query(
-#'   .con = dynamo_connect(),
-#'   .table = "sn-v1-interventions",
-#'   .partition_key = "device_id",
-#'   .partition_value = "W000011"
-#' )
-#'
-#' wea <- dynamo_query(
-#'   .con = dynamo_connect(),
-#'   .table = "sn-v1-weather-db",
-#'   .partition_key = "city",
-#'   .partition_value = "Wellington"
-#' )
-#'
-#' obs <- dynamo_query(
-#'   .con = dynamo_connect(),
-#'   .table = "SensorNodeData",
-#'   .partition_key = "device_id",
-#'   .partition_value = "W000011"
-#' )
-#' from <- 1627639151
-#' to   <- 1630317551
-#'
-#' par_list <- make_params_list(
-#'   filtered_obs = obs,
-#'   filtered_devices = dev,
-#'   filtered_weather = wea,
-#'   filtered_interventions = int,
-#'   fromTimeStamp = from,
-#'   toTimeStamp = to
-#' )
-#' knit_home_report(par_list)
-#'
 #' }
 #'
 #' @export
@@ -180,7 +181,7 @@ knit_home_report <-
 
     ## Render report into html
     rmarkdown::render(
-      input = report_rmd,
+      input  = report_rmd,
       params = param_list,
       output_file = output_file,
       output_dir  = paste0("html/", output_dir),

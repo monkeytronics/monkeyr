@@ -19,9 +19,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 <!-- badges: start -->
 <!-- badges: end -->
+
+# Monkeyr 
 
 The goal of `monkeyr` is to package up and share the R code needed to produce
 flexdashboards and Rmarkdown reports from Monkeytronics monitoring data. The input 
@@ -30,91 +31,147 @@ portal reporting functions.
 
 ## Installation
 
-Install the latest development version of monkeyr from github:
+Install the latest development version of monkeyr from github :
 
 ```{r, eval = FALSE}
 # clone the repo and `Install and Restart`
 # or `devtools::load_all()`
+
 #remotes::install_bitbucket(repo = "monkeytronics/r-analytics", subdir = "monkeyr")
 devtools::install_github("monkeytronics/monkeyr", build_vignettes = TRUE)
 ```
 
-## Example
+Monkeyr is structured as pure functions. The library dependencies are listed in the
+`DESCRIPTION` file. This along with `roxygen` creates the `NAMESPACE` with all imports/exports.
+
+## Example Set Up of an Rmd File (using home report example)
+
+We start with a Monkeytronics Sensor Node data set :\cr
+
+* obs.csv
+* dev.csv
+* weather.csv
+* interv.csv
+
+And we use the wrangling functions to create the following sanitised, wrangled data :
+
+* `wrangled_obs`     : the joined data set
+* `wrangled_devices` : devices list minus excluded devices
+* `devices_for_map`  : a list used to populate a deployment map
+
+(If you need to copy and paste this, make sure you remove `eval = FALSE`!)
 
 ```{r, eval = FALSE}
 library(monkeyr)
-```
 
-Monkeyr is structured as pure functions. The library `setup` is in the package 
-`DESCRIPTION` file. This along with `roxygen` creates the `NAMESPACE` with all imports/exports.
+wrangled_devices <- wrangle_devices(params$filtered_devices)
 
-For ease of testing, I've wrapped some test params in a function:
+wrangled_weather <- wrangle_weather(params$filtered_weather)
 
-```{r, eval = FALSE}
-test_params()
-```
+wrangled_obs    <- wrangle_observations(
+  filtered_obs   = params$filtered_obs,
+  devices        = wrangled_devices,
+  weather        = wrangled_weather
+)
 
-The `wrangle` chunk now can be run as follows:
+data_volume     <- get_data_volume(
+  observations   = wrangled_obs,
+  from_timestamp = params$fromTimeStamp,
+  to_timestamp   = params$toTimeStamp
+)
 
-```{r, eval = FALSE}
-# wrangled_devices <- wrangle_devices(test_params()$filtered_devices)
-# wrangled_weather <- wrangle_weather(
-#  filtered_weather = test_params()$filtered_weather,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp
-# )
-# wrangled_obs <- wrangle_observations(
-#  filtered_obs = test_params()$filtered_obs,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp,
-#  devices = wrangled_devices,
-#  weather = wrangled_weather
-#)
-# data_volume <- get_data_volume(
-#  observations = wrangled_obs,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp
-#  )
-# wrangled_devices <- remove_excluded_devices(
-#  target_data = wrangled_devices,
-#  data_volume = data_volume
-# )
-# wrangled_obs <- remove_excluded_devices(
-#  target_data = wrangled_obs,
-#  data_volume = data_volume
-# )
+devices_for_map <- get_devices_for_map(
+  devices        = wrangled_devices,
+  data_volume    = data_volume
+)
+
+wrangled_devices<- remove_excluded_devices(
+  target_data    = wrangled_devices,
+  data_volume    = data_volume
+)
+
+wrangled_obs    <- remove_excluded_devices(
+  target_data    = wrangled_obs,
+  data_volume    = data_volume
+)
 ```
 
 Next, we can set some options for available data and colors:
 
 ```{r, eval = FALSE}
-# monkey_palettes(devices = wrangled_devices)
-# set_options(observations = wrangled_obs)
+monkey_palettes(devices = wrangled_devices)
+set_options(observations = wrangled_obs)
 ```
 
-Finally, we should have everything to make a time series plot for humidity:
+## Now Run Analysis Code (Home report example) 
+
+We have everything we need to make a time series plot for humidity :
 
 ```{r, eval = FALSE}
-# ts_chart(
-#   observations = wrangled_obs,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp,
-#  target_variable = "hum"
-# )
+ts_chart(
+  observations = wrangled_obs,
+  from_timestamp = test_params()$fromTimeStamp,
+  to_timestamp = test_params()$toTimeStamp,
+  target_variable = "hum"
+)
 ```
 
-And temperature:
+or temperature :
 
 ```{r, eval = FALSE}
-# ts_chart(
-#  observations = wrangled_obs,
-#  from_timestamp = test_params()$fromTimeStamp,
-#  to_timestamp = test_params()$toTimeStamp,
-#  target_variable = "temp"
-# )
+ts_chart(
+  observations = wrangled_obs,
+  from_timestamp = test_params()$fromTimeStamp,
+  to_timestamp = test_params()$toTimeStamp,
+  target_variable = "temp"
+)
 ```
 
-# Creating the flexdash report
+# Test Data & Params
+
+We want to store dummy data sets in the package to speed up testing. There are 2
+sources to consider. Firstly the raw csv files which we put into `dummy-data` 
+and secondly the parameters which go in `dummy-params`.
+
+```
+├── inst
+│   ├── dummy-data
+│   │   ├── monkey_a
+│   │   |   ├── dev.csv
+│   │   |   ├── interv.csv
+│   │   |   ├── obs.csv
+│   │   |   ├── weather.csv
+│   │   ├── monkey_b
+│   │   |   ├── **.csv
+│   ├── dummy-params
+│   │   ├── params_1.txt
+│   │   ├── params_2.txt
+│   ├── rmd
+│   │   ├── home.rmd
+│   │   ├── my-report.rmd
+
+```
+
+# Testing your Flexdash Report in the Local Environment
+
+During development of your flexdash report or for use with new datasets, 
+you should put the rmd file into the inst/rmd folder. And add new data sets into 
+`inst/dummy-data/{data-set-name}/*.csv`. Now you can test your code
+using the `run_test_report` function. The following parameters are needed :
+
+```{r, eval = FALSE}
+run_test_report(
+    report       = "home",           ## rmd file!
+    dummy_data   = "monkey_a",       ## dummy data from inst/dummy-data
+    dummy_params = "params_1.txt"    ## dummy params from inst/dummy-params
+)
+```
+
+
+The output will be generated as a html file in `html/{report}/{dummy_data}.html`
+
+
+# Running an Analysis from inside a Docker Container
 
 We have a function `?knit_home_report` that takes 
     - a list of parameters (paths to data and timestamps)  
@@ -128,45 +185,32 @@ We run this like so:
 # in production, the list of parameters will be generated by the script calling this
 # report
 
-obs  <- system.file("data/filtered_obs.csv", package = "monkeytronics.reports")
-dev  <- system.file("data/filtered_devices.csv", package = "monkeytronics.reports")
-wea  <- system.file("data/filtered_weather.csv", package = "monkeytronics.reports")
-int  <- system.file("data/filtered_interventions.csv", package = "monkeytronics.reports")
-from <- 1627639151
-to   <- 1630317551
-
-par_list <- make_params_list(
-  filtered_obs = obs,
-  filtered_devices = dev,
-  filtered_weather = wea,
-  filtered_interventions = int,
-  fromTimeStamp = from,
-  toTimeStamp = to
-)
+  obs           <- "/tmp/obs.csv"
+  dev           <- "/tmp/dev.csv"
+  weather       <- "/tmp/weather.csv"
+  interv        <- "/tmp/interv.csv"
+  from          <- 1627639151
+  to            <- 1630317551
+  
+  par_list <- monkeyr::make_params_list(
+    filtered_obs           = obs,
+    filtered_devices       = dev,
+    filtered_weather       = weather,
+    filtered_interventions = interv,
+    fromTimeStamp          = from_ts,
+    toTimeStamp            = to_ts
+  )
+  
+  temporary_directory      <- Sys.getenv("TMPDIR", "/tmp")
+  outfile                  <- file.path(temporary_directory, paste0("flexi", ".html"))
 
 # knit with default file name and output dir
-# knit_home_report(par_list)
-```
-
-# Creating the report from docker
-
-The package comes with an `R` script that calls `knit_home_report` (`run-home-report.R`)
-and a bash wrapper that calls this `R` script (`home.sh`). These are copied inside the
-docker container on build. `home.sh` becomes the `ENTRYPOINT` which is the script run
-every time we start the container. `home.sh` and `run-home-report.R` take two command line
-arguments: the file name and output dir. 
-
-```{bash, eval = FALSE}
-# home.sh my_report.html my_reports_folder
-```
-
-In a docker setting `my_reports_folder` should be a host folder mounted on the container. 
-This makes sure the html output will be available outside the container after the latter 
-has finished the job.
-
-```{bash, eval = FALSE}
-# docker build -t mtr .
-# mkdir reports_folder
-# docker run -v /full/path/to/reports/folder:/home/reports_folder mtr report.html /home/report_folder
+  monkeyr::knit_home_report(
+    param_list = par_list,
+    output_file = outfile,
+    output_dir = temporary_directory,
+    intermediates_dir = temporary_directory,
+    envir = new.env()
+  )
 ```
 

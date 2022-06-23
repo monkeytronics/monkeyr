@@ -484,9 +484,13 @@ make_polygon_area <- function(observations, target_variable, severity) {
   local_time = c(min(observations$local_time), min(observations$local_time), max(observations$local_time), max(observations$local_time))
 
   # define limits from least severe.
-  temp_limits <- c(18,   16,   12,     0)
-  hum_limits  <- c(70,   80,   90,   100)
-  co2_limits  <- c(850, 1200, 1500, 3000)
+  temp_limits  <- c(18,   16,   12,     0)
+  hum_limits   <- c(70,   80,   90,   100)
+  co2_limits   <- c(850, 1200, 1500, 3000)
+  pm1_limits   <- c(10, 20, 30, 40)
+  pm2_5_limits <- c(10, 20, 30, 40)
+  pm10_limits  <- c(10, 20, 30, 40)
+  hcho_limits  <- c(10, 20, 30, 40)
 
   # need to name limits as 'val' to match up with obs dataset %>% usage
   if (target_variable == "temp") {
@@ -495,6 +499,14 @@ make_polygon_area <- function(observations, target_variable, severity) {
     val <- hum_limits[c(severity, severity+1, severity+1, severity)]
   } else if (target_variable == "co2") {
     val <- co2_limits[c(severity, severity+1, severity+1, severity)]
+  } else if (target_variable == "pm1") {
+    val <- pm1_limits[c(severity, severity+1, severity+1, severity)]
+  } else if (target_variable == "pm2_5") {
+    val <- pm2_5_limits[c(severity, severity+1, severity+1, severity)]
+  } else if (target_variable == "pm10") {
+    val <- pm10_limits[c(severity, severity+1, severity+1, severity)]
+  } else if (target_variable == "hcho") {
+    val <- hcho_limits[c(severity, severity+1, severity+1, severity)]
   }
   poly <- tibble::tibble(corner, local_time, val)
 

@@ -42,15 +42,10 @@ Imports:
     Rcpp,
     rgdal,
     viridis,
-    geojsonio,
+    geojson,
     cowplot,
     ggrepel,
-    ggspatial,
-    rmarkdown,
-    rgeos,
-    rnaturalearth,
-    rnaturalearthdata,
-    rnaturalearthhires
+    rmarkdown
 Suggests:
     knitr,
     rmarkdown,
