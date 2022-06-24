@@ -43,7 +43,7 @@ run_test_report <- function (
   # run the rmd report
   monkeyr::knit_home_report(
     param_list  = par_list,
-    output_dir  = report,
+    output_dir  = paste0("html/", report),
     output_file = dummy_data
   )
 }
@@ -184,7 +184,7 @@ knit_home_report <-
       input  = report_rmd,
       params = param_list,
       output_file = output_file,
-      output_dir  = paste0("html/", output_dir),
+      output_dir  = output_dir,
       ...
     )
   }

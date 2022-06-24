@@ -221,9 +221,10 @@ for (i in 3 : length(unique_readings)) {
     target_variable = unique_readings[i]
   ) 
   
-  plotlist[[i]] = ts_chart
-  # print(htmltools::tagList(ts_chart))
+  plotlist[[2*i]] = ts_chart
+  print(htmltools::tagList(ts_chart))
   cat("gfdsfsdgfsdgsgfds")
+  plotlist[[2*i+1]] = ts_chart
   print(htmltools::tagList(ts_chart))
   
 }

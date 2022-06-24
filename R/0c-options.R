@@ -58,7 +58,7 @@ monkey_palettes <- function(devices) {
   checkmate::assert_data_frame(devices)
   ## Colors with unikn package
   # https://cran.r-project.org/web/packages/unikn/vignettes/colors.html
-  options(TEMP_COLOURS   = unikn::usecol(pal = pal_seegruen,    n = nrow(devices)))
+  options(TEMP_COLOURS   = unikn::usecol(pal = pal_unikn_dark,    n = nrow(devices)))
   options(HUM_COLOURS    = unikn::usecol(pal = pal_karpfenblau, n = nrow(devices)))
   options(CO2_COLOURS    = unikn::usecol(pal = pal_bordeaux,    n = nrow(devices)))
   options(PM1_COLOURS    = unikn::usecol(pal = pal_seegruen,    n = nrow(devices)))
@@ -67,5 +67,5 @@ monkey_palettes <- function(devices) {
   options(HCHO_COLOURS   = unikn::usecol(pal = pal_grau,        n = nrow(devices)))
   options(DBA_COLOURS    = unikn::usecol(pal = pal_petrol,      n = nrow(devices)))
   options(LUX_COLOURS    = unikn::usecol(pal = pal_seegruen,    n = nrow(devices)))
-  options(VOC_COLOURS    = unikn::usecol(pal = pal_grau,        n = nrow(devices)))
+  options(VOC_COLOURS    = unikn::usecol(pal = pal_unikn_dark,        n = nrow(devices)))
 }
