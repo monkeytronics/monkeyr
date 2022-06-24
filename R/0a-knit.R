@@ -25,7 +25,7 @@ run_test_report <- function (
 ) {
 
   ## Get test file paths from folder name
-  test_params <- make_test_params(
+  test_params <- monkeyr::make_test_params(
     dummy_data   = dummy_data,
     dummy_params = dummy_params
   )
@@ -149,10 +149,10 @@ make_params_list <- function(.list = NULL, ...) {
 #' @return a compiled document written into the output file and the path of the output file is returned
 #'
 #' @examples
-#' obs  <- system.file("data/filtered_obs.csv", package="monkeytronics.reports")
-#' dev  <- system.file("data/filtered_devices.csv", package="monkeytronics.reports")
-#' wea  <- system.file("data/filtered_weather.csv", package="monkeytronics.reports")
-#' int  <- system.file("data/filtered_interventions.csv", package="monkeytronics.reports")
+#' obs  <- system.file("data/filtered_obs.csv", package="monkeyr")
+#' dev  <- system.file("data/filtered_devices.csv", package="monkeyr")
+#' wea  <- system.file("data/filtered_weather.csv", package="monkeyr")
+#' int  <- system.file("data/filtered_interventions.csv", package="monkeyr")
 #' from <- 1627639151
 #' to   <- 1630317551
 #'
@@ -163,7 +163,7 @@ make_params_list <- function(.list = NULL, ...) {
 #'   filtered_interventions = int,
 #'   fromTimeStamp = from,
 #'   toTimeStamp = to
-#' )
+#' ) {
 #' knit_home_report(par_list)
 #'
 #' }

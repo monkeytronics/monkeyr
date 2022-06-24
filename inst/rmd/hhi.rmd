@@ -1,13 +1,23 @@
 ---
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+title: "Indoor Environment Monitoring"
+date: "`r format(Sys.time(), '%b %d %Y')`"
+
+author:
+  - name: "Saera Chun"
+    affiliation: "He Kāinga Oranga, University of Otago"
+    affiliation_url: https://www.healthyhousing.org.nz/
+  - name: "Al Brennan"
+    affiliation: "Monkeytronics, Wellington, NZ"
+    affiliation_url: https://www.monkeytronics.co.nz/    
+
+# orcid_id: 0000-0003-0645-5666
+# bibliography: biblio.bib
+
 output: 
-  flexdashboard::flex_dashboard:
-    social: [ "menu" ]
-    # logo: !expr system.file("app/www", "logo.png", package = "monkeyr")
-    # favicon: !expr system.file("app/www", "favicon.png", package = "monkeyr")
-    logo: "../www/logo.png"
-    favicon: "../www/favicon.png"
-    orientation: rows
+  distill::distill_article:
+    toc: true
+    toc_depth: 2
+    theme: theme.css
 
 # paths with `inst` will only work in `dev` setting. 
 # in `production` setting, please use real data
@@ -76,9 +86,9 @@ nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
 report_type <- "Home"
 
 # set R options for monkey reports
-monkeyr::set_options(wrangled_obs = wrangled_obs)
+monkeyr::set_options(observations = wrangled_obs)
 monkeyr::monkey_palettes(devices = wrangled_devices)
-unique_readings <- monkeyr::unique_readings(wrangled_obs = wrangled_obs)
+
 ```
 
 ---
@@ -176,7 +186,7 @@ color = palette[6])
 ### Temperature
 
 ```{r}
-if (getOption("temp")) {
+if (getOption("TEMP_ENABLE")) {
   monkeyr::ts_chart(
     observations = wrangled_obs,
     from_timestamp = params$fromTimeStamp,
@@ -191,7 +201,7 @@ if (getOption("temp")) {
 ### Humidity
 
 ```{r}
-if (getOption("hum")) {
+if (getOption("HUM_ENABLE")) {
   monkeyr::ts_chart(
     observations = wrangled_obs,
     from_timestamp = params$fromTimeStamp,
@@ -203,31 +213,67 @@ if (getOption("hum")) {
 }
 ```
 
-```{r echo=FALSE, results="asis"}
-
-# All the rest are present when data is available!
-# ------------------------------------------------
-
-unique_readings <- unique_readings(wrangled_obs)
-
-plotlist = list()
-
-for (i in 3 : length(unique_readings)) {
-  cat("\n", "\n### ", toupper(unique_readings[i]), "\n")
-  ts_chart <- monkeyr::ts_chart(
+`r if(getOption("CO2_ENABLE")){"### CO2"}`
+```{r}
+if (getOption("CO2_ENABLE")) {
+  monkeyr::ts_chart(
     observations = wrangled_obs,
     from_timestamp = params$fromTimeStamp,
     to_timestamp = params$toTimeStamp,
-    target_variable = unique_readings[i]
+    target_variable = "co2"
   ) 
-  
-  plotlist[[i]] = ts_chart
-  # print(htmltools::tagList(ts_chart))
-  cat("gfdsfsdgfsdgsgfds")
-  print(htmltools::tagList(ts_chart))
-  
 }
 ```
+
+`r if(getOption("PM1_ENABLE")){"### PM 1"}`
+```{r}
+if (getOption("PM1_ENABLE")) {
+  monkeyr::ts_chart(
+    observations = wrangled_obs,
+    from_timestamp = params$fromTimeStamp,
+    to_timestamp = params$toTimeStamp,
+    target_variable = "pm1"
+  )
+}
+```
+
+`r if(getOption("PM2_5_ENABLE")){"### PM 2.5"}`
+```{r}
+if (getOption("PM2_5_ENABLE")) {
+  monkeyr::ts_chart(
+    observations = wrangled_obs,
+    from_timestamp = params$fromTimeStamp,
+    to_timestamp = params$toTimeStamp,
+    target_variable = "pm2_5"
+  )
+}
+```
+
+`r if(getOption("PM10_ENABLE")){"### PM 10"}`
+```{r}
+if (getOption("PM10_ENABLE")) {
+  monkeyr::ts_chart(
+    observations = wrangled_obs,
+    from_timestamp = params$fromTimeStamp,
+    to_timestamp = params$toTimeStamp,
+    target_variable = "pm10"
+  )
+}
+```
+
+`r if(getOption("HCHO_ENABLE")){"### Formaldehyde"}`
+```{r}
+if (getOption("HCHO_ENABLE")) {
+  monkeyr::ts_chart(
+    observations = wrangled_obs,
+    from_timestamp = params$fromTimeStamp,
+    to_timestamp = params$toTimeStamp,
+    target_variable = "hcho"
+  )
+}
+```
+
+
 
 
 ## Column 2
@@ -252,7 +298,7 @@ flexdashboard::valueBox(extremes_temp$lowest_val,
          color = ifelse(extremes_temp$lowest_val < 12, "warning", "primary"))
 ```
 
-### Mean Temperature
+### Mean Termperature
 
 ```{r}
 flexdashboard::valueBox(extremes_temp$mean_val,

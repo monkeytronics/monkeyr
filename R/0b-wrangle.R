@@ -491,6 +491,8 @@ make_polygon_area <- function(observations, target_variable, severity) {
   pm2_5_limits <- c(10, 20, 30, 40)
   pm10_limits  <- c(10, 20, 30, 40)
   hcho_limits  <- c(10, 20, 30, 40)
+  nox_limits   <- c(100, 200, 300, 500)
+  voc_limits   <- c(150, 250, 350, 500)
 
   # need to name limits as 'val' to match up with obs dataset %>% usage
   if (target_variable == "temp") {
@@ -507,7 +509,12 @@ make_polygon_area <- function(observations, target_variable, severity) {
     val <- pm10_limits[c(severity, severity+1, severity+1, severity)]
   } else if (target_variable == "hcho") {
     val <- hcho_limits[c(severity, severity+1, severity+1, severity)]
+  } else if (target_variable == "nox") {
+    val <- nox_limits[c(severity, severity+1, severity+1, severity)]
+  } else if (target_variable == "voc") {
+    val <- voc_limits[c(severity, severity+1, severity+1, severity)]
   }
+
   poly <- tibble::tibble(corner, local_time, val)
 
   poly

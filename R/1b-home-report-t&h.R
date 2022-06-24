@@ -1,43 +1,3 @@
-#' set_options : Need to update this to work with tidy data structure
-#' @description Set options for downstream charts based on available data
-#' @param observations data.frame, the wrangled observations data frame as output by
-#' `wrangle_observations` and further filtered by `remove_excluded_devices`
-#' @export
-set_options <- function(observations) {
-  checkmate::assert_data_frame(observations)
-
-  options(TEMP_ENABLE  = "temp"  %in% observations$reading)
-  options(HUM_ENABLE   = "hum"   %in% observations$reading)
-  options(CO2_ENABLE   = "co2"   %in% observations$reading)
-  options(LUX_ENABLE   = "lux"   %in% observations$reading)
-  options(DBA_ENABLE   = "dba"   %in% observations$reading)
-  options(VOC_ENABLE   = "voc"   %in% observations$reading)
-  options(HCHO_ENABLE  = "hcho"  %in% observations$reading)
-  options(PM1_ENABLE   = "pm1"   %in% observations$reading)
-  options(PM2_5_ENABLE = "pm2_5" %in% observations$reading)
-  options(PM10_ENABLE  = "pm10"  %in% observations$reading)
-}
-
-
-#' monkey_palettes
-#' @description define some color palettes and set them as R options to be globally available
-#' @param devices data.frame, the wrangled devices data as output by `wrangle_devices`,
-#' and further filtered by `remove_excluded_devices`
-#' @export
-monkey_palettes <- function(devices) {
-  checkmate::assert_data_frame(devices)
-  ## Colors with unikn package
-  # https://cran.r-project.org/web/packages/unikn/vignettes/colors.html
-  options(TEMP_COLOURS   = unikn::usecol(pal = pal_seeblau,  n = nrow(devices)))
-  options(HUM_COLOURS    = unikn::usecol(pal = pal_pinky,    n = nrow(devices)))
-  options(CO2_COLOURS    = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
-  options(PM1_COLOURS    = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
-  options(PM2_5_COLOURS  = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
-  options(PM10_COLOURS   = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
-  options(HCHO_COLOURS   = unikn::usecol(pal = pal_seegruen, n = nrow(devices)))
-}
-
-
 #' ts_chart
 #' @description make a ggplotly time series chart for temperature, CO2, ...
 #' @param observations data.frame, the wrangled observations data frame as output by
@@ -86,6 +46,8 @@ ts_chart <-
       "pm2_5" = c(0, 50),
       "pm10"  = c(0, 50),
       "hcho"  = c(0, 100),
+      "nox"   = c(0, 500),
+      "voc"   = c(0, 500),
     )
 
     y_lab <- switch(
@@ -96,7 +58,9 @@ ts_chart <-
       "pm1"   = "PM 1 (ppm)",
       "pm2_5" = "PM 2.5 (ppm)",
       "pm10"  = "PM 10 (ppm)",
-      "hcho"  = "Formaldehyde (ppb)"
+      "hcho"  = "Formaldehyde (ppb)",
+      "nox"   = "NOx (Index)",
+      "voc"   = "VOC (Index)",
     )
 
     t_lab <- switch(
@@ -107,7 +71,9 @@ ts_chart <-
       "pm1"   = "PM 1 Time Series ",
       "pm2_5" = "PM 2.5 Time Series ",
       "pm10"  = "PM 10 Time Series ",
-      "hcho"  = "Formldehyde Time Series "
+      "hcho"  = "Formldehyde Time Series ",
+      "nox"   = "Nitrogen Dioxide Time Series ",
+      "voc"   = "VOC Time Series ",
     )
 
     observations <- observations %>%
