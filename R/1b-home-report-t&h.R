@@ -48,6 +48,9 @@ ts_chart <-
       "hcho"  = c(0, 100),
       "nox"   = c(0, 500),
       "voc"   = c(0, 500),
+      "lux"   = c(0, 1000),
+      "t60"   = c(0, 10000),
+      "dba"   = c(25, 100),
     )
 
     y_lab <- switch(
@@ -61,6 +64,9 @@ ts_chart <-
       "hcho"  = "Formaldehyde (ppb)",
       "nox"   = "NOx (Index)",
       "voc"   = "VOC (Index)",
+      "lux"   = "Lighting Level (Lux)",
+      "t60"   = "T60 Reverberation (ms)",
+      "dba"   = "Sound Pressure Level (dB A-Weighted)",
     )
 
     t_lab <- switch(
@@ -74,6 +80,9 @@ ts_chart <-
       "hcho"  = "Formldehyde Time Series ",
       "nox"   = "Nitrogen Dioxide Time Series ",
       "voc"   = "VOC Time Series ",
+      "lux"   = "Lighting Level Time Series ",
+      "t60"   = "T60 Reverb Time Series ",
+      "dba"   = "Sound Pressure Level Time Series ",
     )
 
     observations <- observations %>%

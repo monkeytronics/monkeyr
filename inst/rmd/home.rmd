@@ -14,13 +14,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_home_report()`
 params:
-  filtered_obs:             "../dummy-data/monkey_a/obs.csv"
-  filtered_weather:         "../dummy-data/monkey_a/weather.csv"
-  filtered_devices:         "../dummy-data/monkey_a/dev.csv"
-  filtered_interventions:   "../dummy-data/monkey_a/interv.csv"
+  filtered_obs:             "../dummy-data/moe_1/obs.csv"
+  filtered_weather:         "../dummy-data/moe_1/weather.csv"
+  filtered_devices:         "../dummy-data/moe_1/dev.csv"
+  filtered_interventions:   "../dummy-data/moe_1/interv.csv"
   report_params:            "-map-"                                            
-  fromTimeStamp:            1627639151
-  toTimeStamp:              1630317551
+  fromTimeStamp:            1655892909
+  toTimeStamp:              1656065715
 ---
 
 ```{r}
@@ -208,17 +208,20 @@ if (getOption("hum")) {
 # All the rest are present when data is available!
 # ------------------------------------------------
 
-unique_readings <- unique_readings(wrangled_obs)
+# unique_readings <- unique_readings(wrangled_obs)
+valid_readings <- monkeyr::filter_list(unique_readings, permitted_readings())
+valid_readings <- valid_readings[valid_readings != "temp"]
+valid_readings <- valid_readings[valid_readings != "hum"]
 
 plotlist = list()
 
-for (i in 3 : length(unique_readings)) {
-  cat("\n", "\n### ", toupper(unique_readings[i]), "\n")
+for (i in 1 : length(valid_readings)) {
+  cat("\n", "\n### ", toupper(valid_readings[i]), "\n")
   ts_chart <- monkeyr::ts_chart(
     observations = wrangled_obs,
     from_timestamp = params$fromTimeStamp,
     to_timestamp = params$toTimeStamp,
-    target_variable = unique_readings[i]
+    target_variable = valid_readings[i]
   ) 
   
   plotlist[[2*i]] = ts_chart

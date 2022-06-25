@@ -70,6 +70,12 @@ make_test_params <- function(
     dummy_data   = "monkey_a",
     dummy_params = "params_1.txt",
     ...) {
+
+  ## Pull Timestamps out of args file
+  dummy_data   = "moe_1"
+  args_file = system.file("dummy-data", paste0(dummy_data, "/args.csv"), package = "monkeyr")
+  args <- readr::read_csv(args_file, col_types = "iic")
+
   list(
 
     ## May only work in dev
@@ -86,10 +92,9 @@ make_test_params <- function(
     interv        = system.file("dummy-data", paste0(dummy_data, "/interv.csv"),  package = "monkeyr"),
     params        = system.file("dummy-params", dummy_params,                     package = "monkeyr"),
 
-
     # replace these with text files with standard options.
-    fromTimeStamp = 1627639151,    # not necessary
-    toTimeStamp   = 1630317551     # not necessary
+    fromTimeStamp = args$fromTimeStamp[1],
+    toTimeStamp = args$toTimeStamp[1]
   )
 }
 

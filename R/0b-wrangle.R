@@ -92,7 +92,7 @@ report_period <- function(from_timestamp, to_timestamp) {
 #' @export
 wrangle_devices <-
   function( filtered_devices,
-            data_type_filter = c("CD", "TH", "PM", "FO"), # not really used.
+            data_type_filter = c("CD", "TH", "PM", "FO", "CL"), # not really used.
             na.strings = c("",NA),
             integer_columns = c("floor"),
             double_columns = c("long", "lat"),
@@ -120,6 +120,8 @@ wrangle_devices <-
                 "classRoom",
                 "deployment_id")) {
   # checkmate::assert_class(x = filtered_devices, classes = c("data.frame", "character"))
+
+  # filtered_devices <-  paste0("inst/dummy-data/", params$filtered_devices)
 
   if (checkmate::test_character(filtered_devices)) {
     filtered_devices <-
@@ -493,6 +495,9 @@ make_polygon_area <- function(observations, target_variable, severity) {
   hcho_limits  <- c(10, 20, 30, 40)
   nox_limits   <- c(100, 200, 300, 500)
   voc_limits   <- c(150, 250, 350, 500)
+  t60_limits   <- c(1000, 4000, 8000, 10000)
+  dba_limits   <- c(50, 60, 80, 100)
+  lux_limits   <- c(0, 200, 400, 800)
 
   # need to name limits as 'val' to match up with obs dataset %>% usage
   if (target_variable == "temp") {
@@ -504,7 +509,7 @@ make_polygon_area <- function(observations, target_variable, severity) {
   } else if (target_variable == "pm1") {
     val <- pm1_limits[c(severity, severity+1, severity+1, severity)]
   } else if (target_variable == "pm2_5") {
-    val <- pm2_5_limits[c(severity, severity+1, severity+1, severity)]
+    val <- pm2_5_limits[c(severity,severity+1, severity+1, severity)]
   } else if (target_variable == "pm10") {
     val <- pm10_limits[c(severity, severity+1, severity+1, severity)]
   } else if (target_variable == "hcho") {
@@ -513,6 +518,12 @@ make_polygon_area <- function(observations, target_variable, severity) {
     val <- nox_limits[c(severity, severity+1, severity+1, severity)]
   } else if (target_variable == "voc") {
     val <- voc_limits[c(severity, severity+1, severity+1, severity)]
+  } else if (target_variable == "t60") {
+    val <- t60_limits[c(severity, severity+1, severity+1, severity)]
+  } else if (target_variable == "dba") {
+    val <- dba_limits[c(severity, severity+1, severity+1, severity)]
+  } else if (target_variable == "lux") {
+    val <- lux_limits[c(severity, severity+1, severity+1, severity)]
   }
 
   poly <- tibble::tibble(corner, local_time, val)

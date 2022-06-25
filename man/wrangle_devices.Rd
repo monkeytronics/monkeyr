@@ -6,7 +6,7 @@
 \usage{
 wrangle_devices(
   filtered_devices,
-  data_type_filter = c("CD", "TH", "PM", "FO"),
+  data_type_filter = c("CD", "TH", "PM", "FO", "CL"),
   na.strings = c("", NA),
   integer_columns = c("floor"),
   double_columns = c("long", "lat"),

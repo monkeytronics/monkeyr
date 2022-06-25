@@ -19,8 +19,36 @@ set_options <- function(wrangled_obs) {
 #' @param wrangled_obs data.frame, as output by `wrangle_observations`
 #' @export
 unique_readings <- function(wrangled_obs) {
-    as.vector(wrangled_obs$reading) %>%
+  as.vector(wrangled_obs$reading) %>%
     unique()
+}
+
+
+#' valid_readings
+#' @description returns the list of permitted readings types
+#' @export
+permitted_readings <- function() {
+  permitted_readings <- c(
+    "temp",  "hum",   "co2"         # std
+    ,"voc",   "nox",   "hcho"        # chem
+    ,"pm1",   "pm2_5", "pm10"        # PM
+    ,"dba",   "t60",   "lux"          # schools
+  )
+}
+
+
+#' filter_list
+#' @description returns the valid readings. Of those available, it filters against
+#' the list of permitted values - stops propogation of unexpected values.
+#' @param available list, readings we have in our dataset
+#' @param permitted list, list of permitted readings types
+#' @export
+filter_list <- function(available, permitted) {
+  # available <- c("dba", "fdasfdas", "fdasfdasfas")
+  # permitted <- c("dba", "temp", "hum")
+  tib <- as_tibble(available) %>%
+    filter(value %in% permitted)
+  return (tib$value)
 }
 
 
@@ -58,7 +86,7 @@ monkey_palettes <- function(devices) {
   checkmate::assert_data_frame(devices)
   ## Colors with unikn package
   # https://cran.r-project.org/web/packages/unikn/vignettes/colors.html
-  options(TEMP_COLOURS   = unikn::usecol(pal = pal_unikn_dark,    n = nrow(devices)))
+  options(TEMP_COLOURS   = unikn::usecol(pal = pal_unikn_dark,  n = nrow(devices)))
   options(HUM_COLOURS    = unikn::usecol(pal = pal_karpfenblau, n = nrow(devices)))
   options(CO2_COLOURS    = unikn::usecol(pal = pal_bordeaux,    n = nrow(devices)))
   options(PM1_COLOURS    = unikn::usecol(pal = pal_seegruen,    n = nrow(devices)))
@@ -67,5 +95,8 @@ monkey_palettes <- function(devices) {
   options(HCHO_COLOURS   = unikn::usecol(pal = pal_grau,        n = nrow(devices)))
   options(DBA_COLOURS    = unikn::usecol(pal = pal_petrol,      n = nrow(devices)))
   options(LUX_COLOURS    = unikn::usecol(pal = pal_seegruen,    n = nrow(devices)))
-  options(VOC_COLOURS    = unikn::usecol(pal = pal_unikn_dark,        n = nrow(devices)))
+  options(VOC_COLOURS    = unikn::usecol(pal = pal_unikn_dark,  n = nrow(devices)))
+  options(T60_COLOURS    = unikn::usecol(pal = pal_unikn_dark,  n = nrow(devices)))
+  options(DBA_COLOURS    = unikn::usecol(pal = pal_unikn_dark,  n = nrow(devices)))
+  options(LUX_COLOURS    = unikn::usecol(pal = pal_unikn_dark,  n = nrow(devices)))
 }
