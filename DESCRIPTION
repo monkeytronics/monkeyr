@@ -38,13 +38,23 @@ Imports:
     tidyr,
     unikn,
     sf,
-    lutz
+    lutz,
+    Rcpp,
+    rgdal,
+    viridis,
+    geojson,
+    cowplot,
+    ggrepel,
+    rmarkdown,
+    htmltools
 Suggests:
-	knitr,
-	rmarkdown
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
 VignetteBuilder:
-	knitr
+	  knitr
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.0.9000
+Config/testthat/edition: 3

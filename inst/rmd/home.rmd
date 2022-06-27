@@ -3,8 +3,10 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     social: [ "menu" ]
-    logo: !expr system.file("png", "logo.png", package = "monkeyr")
-    favicon: !expr system.file("png", "favicon.png", package = "monkeyr")
+    logo: !expr system.file("app/www", "logo.png", package = "monkeyr")
+    favicon: !expr system.file("app/www", "favicon.png", package = "monkeyr")
+    # logo: "../www/logo.png"
+    # favicon: "../www/favicon.png"
     orientation: rows
 
 # paths with `inst` will only work in `dev` setting. 
@@ -12,13 +14,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_home_report()`
 params:
-  filtered_obs:             "../test-data/monkey_a/obs.csv"
-  filtered_weather:         "../test-data/monkey_a/weather.csv"
-  filtered_devices:         "../test-data/monkey_a/dev.csv"
-  filtered_interventions:   "../test-data/monkey_a/interv.csv"
-  report_params:            "-"                                            
-  fromTimeStamp:            1627639151
-  toTimeStamp:              1630317551
+  filtered_obs:             "../dummy-data/moe_1/obs.csv"
+  filtered_weather:         "../dummy-data/moe_1/weather.csv"
+  filtered_devices:         "../dummy-data/moe_1/dev.csv"
+  filtered_interventions:   "../dummy-data/moe_1/interv.csv"
+  report_params:            "-map-"                                            
+  fromTimeStamp:            1655892909
+  toTimeStamp:              1656065715
 ---
 
 ```{r}
@@ -38,36 +40,35 @@ library(magrittr)
 ```{r wrangle_data }
 # generate tables and values used later in the report
 
-wrangled_devices <- wrangle_devices(params$filtered_devices)
+wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
 
-wrangled_weather <- wrangle_weather(params$filtered_weather)
+wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
 
-
-wrangled_obs <- wrangle_observations(
-  filtered_obs = params$filtered_obs,
-  devices = wrangled_devices,
-  weather = wrangled_weather
+wrangled_obs <- monkeyr::wrangle_observations(
+  filtered_obs   = params$filtered_obs,
+  devices        = wrangled_devices,
+  weather        = wrangled_weather
 )
 
-data_volume <- get_data_volume(
-  observations = wrangled_obs,
+data_volume <- monkeyr::get_data_volume(
+  observations   = wrangled_obs,
   from_timestamp = params$fromTimeStamp,
-  to_timestamp = params$toTimeStamp
+  to_timestamp   = params$toTimeStamp
 )
 
-devices_for_map <- get_devices_for_map(
-  devices = wrangled_devices,
-  data_volume = data_volume
-  )
-
-wrangled_devices <- remove_excluded_devices(
-  target_data = wrangled_devices,
-  data_volume = data_volume
+devices_for_map <- monkeyr::get_devices_for_map(
+  devices        = wrangled_devices,
+  data_volume    = data_volume
 )
 
-wrangled_obs <- remove_excluded_devices(
-  target_data = wrangled_obs,
-  data_volume = data_volume
+wrangled_devices <- monkeyr::remove_excluded_devices(
+  target_data    = wrangled_devices,
+  data_volume    = data_volume
+)
+
+wrangled_obs <- monkeyr::remove_excluded_devices(
+  target_data    = wrangled_obs,
+  data_volume    = data_volume
 )
 
 nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
@@ -75,15 +76,16 @@ nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
 report_type <- "Home"
 
 # set R options for monkey reports
-set_options(observations = wrangled_obs)
-monkey_palettes(devices = wrangled_devices)
+monkeyr::set_options(wrangled_obs = wrangled_obs)
+monkeyr::monkey_palettes(devices = wrangled_devices)
+unique_readings <- monkeyr::unique_readings(wrangled_obs = wrangled_obs)
 ```
 
 ---
 title: "`r report_type ` Report"
 ---
 
-```{r check_data, results = "hide"}
+```{r check_data, results='asis'}
 
 # Bail if nothing in data. Returns empty report.
 if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
@@ -100,9 +102,14 @@ if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
 ### Performance Against World Health Organisation Guidelines
 
 ```{r}
-who_chart <- who_threshold_data(observations = wrangled_obs) %>%
- who_threshold_chart(from_timestamp = params$fromTimeStamp, params$toTimeStamp)
+
+who_chart <- 
+  monkeyr::who_threshold_data(observations = wrangled_obs) %>%
+  monkeyr::who_threshold_chart(from_timestamp = params$fromTimeStamp, params$toTimeStamp)
+
 who_chart
+
+
 ```
 
 ### World Health Organisation Guidelines
@@ -123,14 +130,14 @@ who_guidance_kable()
 
 ```{r}
 totals <-
-  who_threshold_data(observations = wrangled_obs) %>%
-  get_who_totals()
+  monkeyr::who_threshold_data(observations = wrangled_obs) %>%
+  monkeyr::get_who_totals()
 
 below_12 <- totals$below_12
 below_16 <- totals$below_16
 below_18 <- totals$below_18
 
-palette <- get_heat_palette(6)
+palette <- monkeyr::get_heat_palette(6)
 
 flexdashboard::valueBox(paste0(round(8 * below_18, 1), " hrs (",scales::percent(below_18),")"),
                         icon = "fa-thermometer-half",
@@ -169,33 +176,70 @@ color = palette[6])
 ### Temperature
 
 ```{r}
-# if (getOption("TEMP_ENABLE")) {
-ts_chart(
-  observations = wrangled_obs,
-  from_timestamp = test_params()$fromTimeStamp,
-  to_timestamp = test_params()$toTimeStamp,
-  target_variable = "temp"
-)
-# }
+if (getOption("temp")) {
+  monkeyr::ts_chart(
+    observations = wrangled_obs,
+    from_timestamp = params$fromTimeStamp,
+    to_timestamp = params$toTimeStamp,
+    target_variable = "temp"
+  )
+} else {
+  cat("No Temperature Data Available!")
+}
 ```
 
 ### Humidity
 
 ```{r}
-ts_chart(
-  observations = wrangled_obs,
-  from_timestamp = test_params()$fromTimeStamp,
-  to_timestamp = test_params()$toTimeStamp,
-  target_variable = "hum"
-)
+if (getOption("hum")) {
+  monkeyr::ts_chart(
+    observations = wrangled_obs,
+    from_timestamp = params$fromTimeStamp,
+    to_timestamp = params$toTimeStamp,
+    target_variable = "hum"
+  ) 
+} else {
+  cat("No Humidity Data Available!")
+}
 ```
+
+```{r echo=FALSE, results="asis"}
+
+# All the rest are present when data is available!
+# ------------------------------------------------
+
+# unique_readings <- unique_readings(wrangled_obs)
+valid_readings <- monkeyr::filter_list(unique_readings, permitted_readings())
+valid_readings <- valid_readings[valid_readings != "temp"]
+valid_readings <- valid_readings[valid_readings != "hum"]
+
+plotlist = list()
+
+for (i in 1 : length(valid_readings)) {
+  cat("\n", "\n### ", toupper(valid_readings[i]), "\n")
+  ts_chart <- monkeyr::ts_chart(
+    observations = wrangled_obs,
+    from_timestamp = params$fromTimeStamp,
+    to_timestamp = params$toTimeStamp,
+    target_variable = valid_readings[i]
+  ) 
+  
+  plotlist[[2*i]] = ts_chart
+  print(htmltools::tagList(ts_chart))
+  cat("gfdsfsdgfsdgsgfds")
+  plotlist[[2*i+1]] = ts_chart
+  print(htmltools::tagList(ts_chart))
+  
+}
+```
+
 
 ## Column 2
 
 ### Highest Ever Temperature
 
 ```{r}
-extremes_temp <- get_extreme_vals(
+extremes_temp <- monkeyr::get_extreme_vals(
   observations = wrangled_obs,
   target_variable = "temp")
 
@@ -212,7 +256,7 @@ flexdashboard::valueBox(extremes_temp$lowest_val,
          color = ifelse(extremes_temp$lowest_val < 12, "warning", "primary"))
 ```
 
-### Mean Termperature
+### Mean Temperature
 
 ```{r}
 flexdashboard::valueBox(extremes_temp$mean_val,
