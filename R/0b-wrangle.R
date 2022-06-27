@@ -381,8 +381,8 @@ wrangle_observations <-
 #'
 #' @returns compact data frame with : \cr
 #' * device_id,  \cr
-#' * n() records,  \cr
-#' * r % expected,  \cr
+#' * n() records total,  \cr
+#' * r % records present,  \cr
 #' * exclude. \cr
 #'
 #' @examples
@@ -408,7 +408,7 @@ get_data_volume <- function(observations, from_timestamp, to_timestamp) {
 
   ## How many are there? Exclude those with < 10%
   observations %>%
-    dplyr::group_by(device_id) %>%
+    dplyr::group_by(device_id, hhi, tenure) %>%
     dplyr::summarise(
       n = dplyr::n(),
       r = dplyr::n()/fullvol*100 %>% round(., digits = 1),

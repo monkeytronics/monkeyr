@@ -8,6 +8,7 @@ knit_home_report(
   param_list,
   output_file = paste0("home-", as.numeric(Sys.time()), ".html"),
   output_dir = getwd(),
+  rmd_file = "home.rmd",
   ...
 )
 }

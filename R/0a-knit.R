@@ -12,14 +12,12 @@
 #' @return an html document printed out to a file and the path of the output file is returned
 #'
 #' @examples
-#' # run_test_report("home", "monkey_a", "params_1.txt")
-#' # run_test_report("flexi", "org_full", "map-room.txt")
-#' # run_test_report("full", "org_corner1", "map-tenure.txt")
-#' # run_test_report("hhi", "org_corner2", "map.txt")
+#' # run_test_report("home", "monkey_a",    "params_1.txt")
+#' # run_test_report("hhi",  "org_corner2", "map.txt")
 #'
 #' @export
 run_test_report <- function (
-    report       = "home",
+    report       = "hhi",
     dummy_data   = "monkey_a",
     dummy_params = "params_1.txt"
 ) {
@@ -44,7 +42,8 @@ run_test_report <- function (
   monkeyr::knit_home_report(
     param_list  = par_list,
     output_dir  = paste0("html/", report),
-    output_file = dummy_data
+    output_file = dummy_data,
+    rmd_file    = paste0(report, ".rmd")
   )
 }
 
@@ -177,12 +176,13 @@ make_params_list <- function(.list = NULL, ...) {
 knit_home_report <-
   function(param_list,
            output_file = paste0("home-", as.numeric(Sys.time()), ".html"),
-           output_dir = getwd(),
+           output_dir  = getwd(),
+           rmd_file    = "home.rmd",
            ...
            ) {
     ## Get directory of report markdown template
     report_rmd <-
-      system.file("/rmd/", "home.rmd", package = "monkeyr")
+      system.file("/rmd/", rmd_file, package = "monkeyr")
 
     ## Render report into html
     rmarkdown::render(

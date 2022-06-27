@@ -2,18 +2,7 @@
 % Please edit documentation in R/0c-options.R
 \name{monkey_palettes}
 \alias{monkey_palettes}
-\title{#' segment_list
-#' @description matches requested report params to available segments for reporting
-#' @param wrangled_obs data.frame, as output by \code{wrangle_observations}
-#' @param param_list list, report parameters from param_list
-#' @export
-segment_list <- function(wrangled_obs, param_list) {param_list <- c("map", "room", "room_type")
-
-tib <- as_tibble(colnames(wrangled_obs)) \%>\%
-filter(value \%in\% param_list)
-return (tib$value)
-}
-monkey_palettes}
+\title{monkey_palettes}
 \usage{
 monkey_palettes(devices)
 }

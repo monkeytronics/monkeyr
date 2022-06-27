@@ -15,8 +15,8 @@ get_data_volume(observations, from_timestamp, to_timestamp)
 compact data frame with : \cr
 \itemize{
 \item device_id,  \cr
-\item n() records,  \cr
-\item r \% expected,  \cr
+\item n() records total,  \cr
+\item r \% records present,  \cr
 \item exclude. \cr
 }
 }
