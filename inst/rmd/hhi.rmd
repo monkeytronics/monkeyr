@@ -131,11 +131,15 @@ if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
 ```{r echo=FALSE} 
   device_excluded_kable(data_volume)
 ```
+
 #### Table 1.3.   Summary of device locations by room type
 <br />
 
+#### Map 1.4: Device Map
 
+```{r child='map_regional.rmd'}
 
+```
 
 ## 2. Temperature Analysis Introduction
 
