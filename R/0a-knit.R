@@ -71,7 +71,7 @@ make_test_params <- function(
     ...) {
 
   ## Pull Timestamps out of args file
-  dummy_data   = "moe_1"
+  # dummy_data   = "moe_1"
   args_file = system.file("dummy-data", paste0(dummy_data, "/args.csv"), package = "monkeyr")
   args <- readr::read_csv(args_file, col_types = "iic")
 
@@ -93,7 +93,7 @@ make_test_params <- function(
 
     # replace these with text files with standard options.
     fromTimeStamp = args$fromTimeStamp[1],
-    toTimeStamp = args$toTimeStamp[1]
+    toTimeStamp   = args$toTimeStamp[1]
   )
 }
 
