@@ -14,7 +14,7 @@ library(RColorBrewer)
 library(countrycode)
 data(world.cities)
   
-
+sf::sf_use_s2(FALSE)
 
   
   ##testing with UK datasets 
@@ -47,9 +47,9 @@ data(world.cities)
   
   #### Convert to SF objects and generate centroids
   nz <- sf::st_as_sf(nz)
-  nz <- cbind(nz, st_coordinates(st_centroid(nz)))
+  nz <- cbind(nz, sf::st_coordinates(sf::st_centroid(nz)))
   nz_regions <- sf::st_as_sf(nz_regions)
-  nz_regions <- cbind(nz_regions, st_coordinates(st_centroid(nz_regions)))
+  nz_regions <- cbind(nz_regions, sf::st_coordinates(sf::st_centroid(nz_regions)))
 
   
 ###### Australia ########  
@@ -59,10 +59,10 @@ data(world.cities)
   
   #### Convert to SF objects and generate centroids
   aus <- sf::st_as_sf(aus)
-  aus <- cbind(aus, st_coordinates(st_centroid(aus)))
+  aus <- cbind(aus, sf::st_coordinates(sf::st_centroid(aus)))
   aus_regions <- sf::st_as_sf(aus_regions)
   aus_regions <- sf::st_make_valid(aus_regions)
-  # aus_regions<- cbind(aus_regions, st_coordinates(st_centroid(aus_regions)))
+  # aus_regions<- cbind(aus_regions, sf::st_coordinates(sf::st_centroid(aus_regions)))
 
 ###### Grab CountryName from Devices (New Zealand -> NZ; Australia -> AU, Ireland -> IE; etc. )
   countryName <- names(which.max(table(wrangled_devices$country)))

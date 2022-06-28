@@ -436,11 +436,16 @@ get_devices_for_map <- function(devices, data_volume) {
   checkmate::assert_data_frame(devices)
   checkmate::assert_data_frame(data_volume)
 
+  # ## Test Code
+  # devices        = wrangled_devices
+
   devices %>%
     dplyr::mutate(connected = device_id %in% data_volume$device_id) %>%
     dplyr::select(c(device_id, long, lat, tenure, connected, city)) %>%
     dplyr::filter(!is.na(long)) %>%
-    dplyr::filter(!is.na(lat))
+    dplyr::filter(!(long == 0)) %>%
+    dplyr::filter(!is.na(lat))  %>%
+    dplyr::filter(!(lat == 0))
 }
 
 
