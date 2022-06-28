@@ -101,7 +101,7 @@ get_reg_kable <- function(reg_data, target_var) {
     relocate(city, .after = hhi) %>%
 
     kable(col.names = c("HHI provider", "City", target_var, "Device Id", "Correlation")) %>%
-    kable_material(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    kableExtra::kable_material(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
                    html_font = "sans-serif") %>%
 
     collapse_rows(columns = 1:3, valign = "middle") %>%
@@ -168,7 +168,23 @@ get_reg_boxplot <- function(reg_data, target_var) {
     # scale_color_gradient(name = "P Value")
 
     theme_light() +
-    labs(x = "Estimated Correlation", y = target_var)
+    labs(x = "Estimated Correlation", y = target_var) +
+
+    hrbrthemes::theme_ipsum_ps() #+
+
+    #theme(plot.margin = margin(0.0, 0.0, 0.0, 0.0, "cm"))#,
+
+          # strip.text.x = element_text(angle = 0, hjust = 0.3),
+          #
+          # legend.title = element_text(size = 9),
+          # legend.position = "right",
+          #
+          # axis.title.x = element_blank(),
+          # axis.text.x = element_blank(),
+          # axis.text.y = element_blank(),
+          #
+          # panel.grid.major = element_blank(),
+          # panel.grid.minor = element_blank())
 }
 
 

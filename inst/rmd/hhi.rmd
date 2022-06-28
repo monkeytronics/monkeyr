@@ -28,68 +28,72 @@ params:
   filtered_weather:         "../dummy-data/monkey_a/weather.csv"
   filtered_devices:         "../dummy-data/monkey_a/dev.csv"
   filtered_interventions:   "../dummy-data/monkey_a/interv.csv"
-  report_params:            "-map-"                                            
+  report_params:            "-map-tenure-room-"                                            
   fromTimeStamp:            1627639151
   toTimeStamp:              1630317551
 ---
 
 ```{r setup, include=FALSE}
-ENABLE_DEBUG <- FALSE
-
-# load monkeyr package
-library(monkeyr)
-library(dplyr)
-library(magrittr)
-library(kableExtra)
-library(ggplot2)
-
-# other dependencies loaded through namespace
+  ENABLE_DEBUG <- FALSE
+  
+  # load monkeyr package
+  library(monkeyr)
+  library(dplyr)
+  library(magrittr)
+  library(kableExtra)
+  library(ggplot2)
+  
+  # other dependencies loaded through namespace
 ```
 
 
 ```{r WRANGLE_DATA, include=FALSE}
 
-## STANDARD DATA WRANGLING & JOINING
-## ---------------------------------
-
-wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
-
-wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
-
-wrangled_obs <- monkeyr::wrangle_observations(
-  filtered_obs   = params$filtered_obs,
-  devices        = wrangled_devices,
-  weather        = wrangled_weather
-)
-
-data_volume <- monkeyr::get_data_volume(
-  observations   = wrangled_obs,
-  from_timestamp = params$fromTimeStamp,
-  to_timestamp   = params$toTimeStamp
-)
-
-devices_for_map <- monkeyr::get_devices_for_map(
-  devices        = wrangled_devices,
-  data_volume    = data_volume
-)
-
-wrangled_devices <- monkeyr::remove_excluded_devices(
-  target_data    = wrangled_devices,
-  data_volume    = data_volume
-)
-
-wrangled_obs <- monkeyr::remove_excluded_devices(
-  target_data    = wrangled_obs,
-  data_volume    = data_volume
-)
-
-nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
-
-report_type <- "Home"
-
-# set R options for monkey reports
-monkeyr::set_options(wrangled_obs = wrangled_obs)
-monkeyr::monkey_palettes(devices = wrangled_devices)
+  ## STANDARD DATA WRANGLING & JOINING
+  ## ---------------------------------
+  
+  wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
+  
+  wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
+  
+  wrangled_obs <- monkeyr::wrangle_observations(
+    filtered_obs   = params$filtered_obs,
+    devices        = wrangled_devices,
+    weather        = wrangled_weather
+  )
+  
+  data_volume <- monkeyr::get_data_volume(
+    observations   = wrangled_obs,
+    from_timestamp = params$fromTimeStamp,
+    to_timestamp   = params$toTimeStamp
+  )
+  
+  devices_for_map <- monkeyr::get_devices_for_map(
+    devices        = wrangled_devices,
+    data_volume    = data_volume
+  )
+  
+  wrangled_devices <- monkeyr::remove_excluded_devices(
+    target_data    = wrangled_devices,
+    data_volume    = data_volume
+  )
+  
+  wrangled_obs <- monkeyr::remove_excluded_devices(
+    target_data    = wrangled_obs,
+    data_volume    = data_volume
+  )
+  
+  nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
+  
+  report_type <- "Home"
+  
+  # set R options for monkey reports
+  monkeyr::set_options(wrangled_obs = wrangled_obs)
+  monkeyr::monkey_palettes(devices = wrangled_devices)
+  
+  # pull out report params
+  param_list      <- param_list(params$report_params)
+  target_var_list <- target_var_list(wrangled_obs, param_list)
 
 ```
 
@@ -101,18 +105,33 @@ title: "`r org_string(wrangled_devices)` Indoor Sensor Report"
 ---
 
 ```{r check_data, include=FALSE}
-# Bail if nothing in data. Returns empty report.
+  # Bail if nothing in data. Returns empty report.
+  
+  if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
+    cat("No data present for the requested devices and timespan. Aborting report.")
+    knitr::knit_exit("</body></html>")
+  }
+```
 
-if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
-  cat("No data present for the requested devices and timespan. Aborting report.")
-  knitr::knit_exit("</body></html>")
+```{r  echo=FALSE, results="asis"}
+if (TRUE) {
+  cat(paste0("\n", "### 2.1   The Health Standards\n"))
+  cat("\nLow indoor temperatures are associated with increased risks of respiratory")   
+  data(airquality)
+
+  # creates a table of the first six (6) rows of "airquality"
+  myKable <- kable(head(airquality), format = "markdown", digits = 2)
+  print(myKable)
+  cat(paste0("\n", "### 2.1   The Health Standards\n"))
+
+  # monkeyr::who_guidance_kable()
 }
 ```
 
 
-
-
 ## 1. Device Summary
+
+<!------------------>
 
 `r device_summary_string(data_volume) `
 
@@ -139,12 +158,14 @@ if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
 
 ## 2. Temperature Analysis Introduction
 
+<!------------------------------------>
+
 ### 2.1   The Health Standards
 Low indoor temperatures are associated with increased risks of respiratory and cardiovascular diseases. The below table summarises the impact of indoor temperature on health, and Figure 2.1.1 shows the ratio of devices by the lowest night-time temperature ever experienced during the reporting period. The night-time is defined as between 11 pm and 7 am.
 <br />
 
 ```{r echo=FALSE}
-who_guidance_kable()
+  monkeyr::who_guidance_kable()
 ```
 #### Table 2.1.1. Impact of indoor temperature on health
 <br />
@@ -162,6 +183,13 @@ We will use an artificial data set to show what various homes look like - from t
 To determine the likely health impact of the home, we compare the temperature data against the WHO guidelines. In the ideal case, every home should remain above 18 °C all the time. The following example data set shows a range of scenarios from the ideal where the temperature is consistently above 18 °C to a home where the temperature falls below 12 °C for significant periods, which constitutes a potentially serious risk to children's health.
 
 
+```{r echo=FALSE}
+  ## Demo Box Plot
+  example_exposure_data <- readr::read_csv(system.file("dummy-data", "example/example_exposure.csv", package = "monkeyr"))
+  example_exposure_plot <- monkeyr::get_exposure_plot(example_exposure_data, "room_type")
+  print(example_exposure_plot)
+```
+#### 2.2.1 Example - Night-time Temperature Below Threshold
 
 #### 2.2.2 Example Data Set : Building Performance
 A linear regression analysis of night time data is used to estimate the relationship between the indoor and outdoor temperatures. The result is the ‘estimated correlation’. This can be positive, zero or negative, where a positive value indicates that the outdoor temperature is affecting the indoor temperature. The higher the estimated correlation factor, the stronger the effect. A lower estimated correlation means that the building is performing well by providing shelter from the effects of the outdoor weather.
@@ -171,72 +199,86 @@ To compare the estimated correlation for different test cases, we use box plots.
 To understand the correlation factor: below 0.4 is good; below 0.7 is average; below 1.0 is poor; above 1.0 is very poor. The following example plot should help to illustrates this.
 
 ```{r echo=FALSE}
-section_number = 3
-target_var <- "room"
-mytempVarTitle <- stringi::stri_trans_totitle(target_var)
+  ## Demo Box Plot
+  example_boxplot_data  <- readr::read_csv(system.file("dummy-data", "example/example_boxplot.csv",  package = "monkeyr"))
+  example_boxplot       <- monkeyr::get_reg_boxplot(example_boxplot_data, "performance")
+  print(example_boxplot)
+```
+#### 2.2.2 Example - Indoor-Outdoor Estimated Correlation Box Plot
+
+
+
+```{r  echo=FALSE, results="asis", out.width="80%"}
+  section_number <- 3
+
+  i = 1 ## for testing
+  for (i in 1:length(target_var_list)) {
+    
+    target_var       <- target_var_list[i]
+    target_var_Title <- stringi::stri_trans_totitle(target_var_list[i])
+    cat(paste0("\n", "## ", section_number, ". Temperature Analysis by ", target_var_Title))
+    
+    
+  # Regression
+  # ----------  
+    cat(paste0("\n", "### ", section_number, ".1 Indoor-Outdoor Temperature Corellation by ", target_var_Title), " (n = ", nrow_vals$included_n, ")")
+    reg_data   <- monkeyr::get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
+    boxplot <- monkeyr::get_reg_boxplot(reg_data, target_var)
+    print(boxplot)
+    cat(paste0("\n", "#### Figure ", section_number, ".1.1 Estimated Correlation Segmented by ", target_var_Title)) 
+    cat("\n\n***") 
+    
+    reg_kable  <- monkeyr::get_reg_kable(reg_data, target_var)
+    print(reg_kable)
+    cat(paste0("\n", "#### Figure ", section_number, ".1.2 Estimated Correlation Tabulated by ", target_var_Title))
+    cat("\n***")
+    
+  # WHO Thresholds
+  # --------------
+    cat(paste0("\n", "### ", section_number, ".2 Time Spent Below The Health Standard by ", target_var_Title), " (n = ", nrow_vals$included_n, ")")
+    exposure_chart_data <- monkeyr::get_exposure_chart_data(wrangled_obs, wrangled_devices, target_var)
+    exposure_plot       <- monkeyr::get_exposure_plot(exposure_chart_data, target_var)
+    print(exposure_plot)
+    cat(paste0("\n", "#### Figure ", section_number, ".2.1 Night-time Temperature Below Threshold by ", target_var_Title))
+    cat("\n***")
+
+    temp_exposure      <- monkeyr::get_temp_exposure(wrangled_obs, wrangled_devices, target_var)
+    exposure_kable_var <- monkeyr::get_exposure_kable_var(temp_exposure, target_var)
+    print(exposure_kable_var)
+    cat(paste0("\n", "#### Figure ", section_number, ".2.2 Time Spent Below the Minimum Health Standard ", target_var_Title))
+    cat("\n***")
+    
+    exposure_kable_dev <- monkeyr::get_exposure_kable_dev(temp_exposure, target_var)
+    print(exposure_kable_dev)
+    cat(paste0("\n", "#### Figure ", section_number, ".2.3 Summary of All Devices "))
+    cat("\n***")
+    
+  # Lowest Temp Ever
+  # ----------------
+    cat(paste0("\n", "### ", section_number, ".3 Lowest Temperature Experienced  by ", target_var_Title, " (n = ", nrow_vals$included_n, ")"))
+
+    lowtemp_chart_data <- monkeyr::get_lowtemp_chart_data(wrangled_obs, wrangled_devices, target_var)
+    lowtemp_chart      <- monkeyr::get_exposure_plot(lowtemp_chart_data, target_var)
+    print(lowtemp_chart)
+    cat(paste0("\n", "#### Figure ", section_number, ".1.1 Lowest night-time temperature  ever experienced by ", target_var_Title))
+    cat("\n***")
+    
+  ## Break After Section
+  ## -------------------
+    section_number <- section_number + 1
+    cat("\n\n\n")
+  }
+
+  # # BAIL TO FOCUS ON TEST
+  # knitr::knit_exit("</body></html>")
 ```
 
+```{r  echo=FALSE, results="asis", out.width="100%"}
 
+    cat(paste0("\n", "## ", section_number, ". Intervention Analysis"))
 
-## `r section_number` Temerature Analysis for `r mytempVarTitle`
-
-### `r section_number`.1 Indoor-Outdoor Corellation (`r mytempVarTitle`)
-
-```{r  echo=FALSE}
-## test
-target_var <- "room"
-reg_data  <- get_reg_data(wranged_devices, wrangled_obs, target_reading = "temp")
-boxplot <- get_reg_boxplot(reg_data, target_var)
-boxplot
 ```
-#### Figure `r section_number`.1.1. Estimated Temperature Correlation of Indoor - Outdoor by `r mytempVarTitle` 
-<br />
 
-```{r  echo=FALSE}
-reg_kable <- get_reg_kable(reg_data, target_var)
-reg_kable
-```
-#### Figure `r section_number`.1.2. Estimated Temperature Correlation Tabulated by `r mytempVarTitle`
-<br />
-
-
-### `r section_number`.2 Time Spent Below The Health Standard by (`r mytempVarTitle`)
-
-```{r echo=FALSE}
-exposure_chart_data <- get_exposure_chart_data(wrangled_obs, wrangled_devices, target_var)
-exposure_plot <- get_exposure_plot(exposure_chart_data, target_var)
-exposure_plot
-```
-#### Figure `r section_number`.2.1. Percentage of night-time temperature below Threshold by (`r mytempVarTitle`) (n = `r nrow_vals$included_n`)
-<br />
-
-```{r echo=FALSE}
-temp_exposure      <- get_temp_exposure(wrangled_obs, wrangled_devices, target_var)
-exposure_kable_var <- get_exposure_kable_var(temp_exposure, target_var)
-exposure_kable_var
-```
-#### Table `r section_number`.2.1. Percentage of time spent below the minimum health standard
-<br />
-
-```{r echo=FALSE}
-exposure_kable_dev <- get_exposure_kable_dev(temp_exposure, target_var)
-exposure_kable_dev
-```
-#### Table `r section_number`.2.2 Summary of all devices
-<br />
-
-
-### `r section_number`.3 Lowest Temperature Experienced (`r mytempVarTitle`)
-
-```{r echo=FALSE}
-lowtemp_chart_data <- get_lowtemp_chart_data(wrangled_obs, wrangled_devices, target_var)
-lowtemp_chart      <- get_exposure_plot(lowtemp_chart_data, target_var)
-lowtemp_chart
-```
-#### Figure `r section_number`.3.1 Lowest night-time temperature  ever experienced by (`r mytempVarTitle`) (n = `r nrow_vals$included_n`)
-<br />
-
-`r section_number <- section_number + 1`
-
+Currently Being Reconstructed
 
 
