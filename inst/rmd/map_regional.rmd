@@ -1,4 +1,4 @@
-```{r   }
+```{r   include=FALSE}
 library(rgdal)
 library(dplyr)
 library(viridis)
@@ -141,6 +141,7 @@ data(world.cities)
   {
     
   ### ? I wonder what this bit does ?
+      ### Ryan: it sets the gradient limits on the fill color
       min <- min(country[[fill_col_district]])
       max <- max(country[[fill_col_district]])
       # print(min)
@@ -221,7 +222,6 @@ data(world.cities)
         )
       }
   
-      
   ### MAIN MAP
       main_map <- country %>%
         ggplot() +
@@ -352,7 +352,7 @@ data(world.cities)
             label.hjust = 0.7))
   
   ### Combine Maps
-      gg_inset_map1 = ggdraw() +
+      gg_inset_map1 <- ggdraw() +
       draw_plot(main_map) +
       #draw_plot(inset, x = insert_x, y = insert_y, width = insert_width, height = insert_height)
       #draw_plot(inset, x = 0.05, y = 0.5, width = 0.5, height = 0.5)
@@ -393,18 +393,15 @@ data(world.cities)
 #   )
   
   
-  if (!ENABLE_MAP) {cat("<!---")}
-  
 ```
 
 
 ### 1.2 Deployment & Coverage Map for `r modeDistrict`
 
-Of `r alldevice_n` deployed devices, `r included_n` (shown in green) connected successfully, with approximate locations. Those in red were connected less than 25% of the time, so are excluded from the analysis.  `r devices_no_coords_n` devices were excluded due to missing location data.
+Of `r` deployed devices, `r` (shown in green) connected successfully, with approximate locations. Those in red were connected less than 25% of the time, so are excluded from the analysis.  `r` devices were excluded due to missing location data.
 
 ```{r  fig.height=8}
   myMap
 
-  if (!ENABLE_MAP) {cat("-->")}
 
 ```
