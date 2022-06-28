@@ -101,8 +101,8 @@ get_reg_kable <- function(reg_data, target_var) {
     relocate(city, .after = hhi) %>%
 
     kable(col.names = c("HHI provider", "City", target_var, "Device Id", "Correlation")) %>%
-    kableExtra::kable_material(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-                   html_font = "sans-serif") %>%
+    kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed", "responsive"),
+                   html_font = "IBM Plex Mono") %>%
 
     collapse_rows(columns = 1:3, valign = "middle") %>%
     scroll_box(width = "100%", height = "350px")
@@ -263,7 +263,7 @@ get_exposure_kable_var <- function(temp_exposure, target_var) {
     summarise_all(.funs = c(mean="mean")) %>%
     janitor::adorn_pct_formatting() %>%
     kable(col.names = c(stringi::stri_trans_totitle(target_var), "< 21°C", "< 18°C", "< 16°C", "< 12°C")) %>%
-    kable_material(bootstrap_options = c("striped", "hover", "condensed"), html_font = "sans-serif") %>%
+    kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "IBM Plex Mono") %>%
     collapse_rows(columns = 1:2, valign = "middle")
 }
 
@@ -292,7 +292,7 @@ get_exposure_kable_dev <- function(temp_exposure, target_var) {
     arrange(desc(`< 21°C`)) %>%
     janitor::adorn_pct_formatting() %>%
     kable(col.names = c("Device Id", stringi::stri_trans_totitle(target_var), "< 21°C", "< 18°C", "< 16°C", "< 12°C")) %>%
-    kable_material(bootstrap_options = c("striped", "hover", "condensed"), html_font = "sans-serif")
+    kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "IBM Plex Mono")
 }
 
 

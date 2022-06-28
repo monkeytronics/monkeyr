@@ -161,9 +161,9 @@ if (TRUE) {
 
 #### Map 1.4: Device Map
 
-```{r child='map_regional.rmd'}
+<!-- ```{r child='map_regional.rmd'} -->
 
-```
+<!-- ``` -->
 
 ## 2. Temperature Analysis Introduction
 
