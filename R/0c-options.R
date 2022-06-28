@@ -64,12 +64,12 @@ param_list <- function(report_params) {
 }
 
 
-#' segment_list
+#' target_var_list
 #' @description matches requested report params to available segments for reporting
 #' @param wrangled_obs data.frame, as output by `wrangle_observations`
 #' @param param_list list, report parameters from param_list
 #' @export
-segment_list <- function(wrangled_obs, param_list) {
+target_var_list <- function(wrangled_obs, param_list) {
   # param_list <- c("map", "room", "room_type")
   tib <- as_tibble(colnames(wrangled_obs)) %>%
     filter(value %in% param_list)
