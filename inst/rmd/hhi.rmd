@@ -138,23 +138,32 @@ if (TRUE) {
 ```{r echo=FALSE}
   home_summary_kable(wrangled_devices) 
 ```
+
 #### Table 1.1.   Number of properties with devices installed
+
 <br />
 
 ```{r echo=FALSE}
   room_summary_kable(wrangled_devices) 
 ```
+
 #### Table 1.2.   Summary of device locations by room type
+
 <br />
 
 ```{r echo=FALSE} 
   device_excluded_kable(data_volume)
 ```
+
 #### Table 1.3.   Summary of device locations by room type
+
 <br />
 
+#### Map 1.4: Device Map
 
+```{r child='map_regional.rmd'}
 
+```
 
 ## 2. Temperature Analysis Introduction
 
@@ -225,13 +234,11 @@ To understand the correlation factor: below 0.4 is good; below 0.7 is average; b
     reg_data   <- monkeyr::get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
     boxplot <- monkeyr::get_reg_boxplot(reg_data, target_var)
     print(boxplot)
-    cat(paste0("\n", "#### Figure ", section_number, ".1.1 Estimated Correlation Segmented by ", target_var_Title)) 
-    cat("\n\n***") 
+    cat(paste0("\n", "#### Figure ", section_number, ".1.1 Estimated Correlation Segmented by ", target_var_Title,"\n")) 
     
     reg_kable  <- monkeyr::get_reg_kable(reg_data, target_var)
     print(reg_kable)
-    cat(paste0("\n", "#### Figure ", section_number, ".1.2 Estimated Correlation Tabulated by ", target_var_Title))
-    cat("\n***")
+    cat(paste0("\n", "#### Figure ", section_number, ".1.2 Estimated Correlation Tabulated by ", target_var_Title, "\n"))
     
   # WHO Thresholds
   # --------------
@@ -239,19 +246,16 @@ To understand the correlation factor: below 0.4 is good; below 0.7 is average; b
     exposure_chart_data <- monkeyr::get_exposure_chart_data(wrangled_obs, wrangled_devices, target_var)
     exposure_plot       <- monkeyr::get_exposure_plot(exposure_chart_data, target_var)
     print(exposure_plot)
-    cat(paste0("\n", "#### Figure ", section_number, ".2.1 Night-time Temperature Below Threshold by ", target_var_Title))
-    cat("\n***")
+    cat(paste0("\n", "#### Figure ", section_number, ".2.1 Night-time Temperature Below Threshold by ", target_var_Title, "\n"))
 
     temp_exposure      <- monkeyr::get_temp_exposure(wrangled_obs, wrangled_devices, target_var)
     exposure_kable_var <- monkeyr::get_exposure_kable_var(temp_exposure, target_var)
     print(exposure_kable_var)
-    cat(paste0("\n", "#### Figure ", section_number, ".2.2 Time Spent Below the Minimum Health Standard ", target_var_Title))
-    cat("\n***")
+    cat(paste0("\n", "#### Figure ", section_number, ".2.2 Time Spent Below the Minimum Health Standard ", target_var_Title, "\n"))
     
     exposure_kable_dev <- monkeyr::get_exposure_kable_dev(temp_exposure, target_var)
     print(exposure_kable_dev)
-    cat(paste0("\n", "#### Figure ", section_number, ".2.3 Summary of All Devices "))
-    cat("\n***")
+    cat(paste0("\n", "#### Figure ", section_number, ".2.3 Summary of All Devices ", "\n"))
     
   # Lowest Temp Ever
   # ----------------
@@ -260,8 +264,7 @@ To understand the correlation factor: below 0.4 is good; below 0.7 is average; b
     lowtemp_chart_data <- monkeyr::get_lowtemp_chart_data(wrangled_obs, wrangled_devices, target_var)
     lowtemp_chart      <- monkeyr::get_exposure_plot(lowtemp_chart_data, target_var)
     print(lowtemp_chart)
-    cat(paste0("\n", "#### Figure ", section_number, ".1.1 Lowest night-time temperature  ever experienced by ", target_var_Title))
-    cat("\n***")
+    cat(paste0("\n", "#### Figure ", section_number, ".1.1 Lowest night-time temperature  ever experienced by ", target_var_Title, "\n"))
     
   ## Break After Section
   ## -------------------
