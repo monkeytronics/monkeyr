@@ -76,13 +76,16 @@ home_summary_kable <- function(wrangled_devices) {
 
   kable_1_1 <-
     table_1_1 %>%
-    kable(col.names = c("HHI Provider", "Home Tenure", "Number of Homes")) %>%
-    kableExtra::kable_material(bootstrap_options = c("striped", "hover", "condensed"),
-                   html_font = "IBM Plex Mono")
+    kable(col.names = c("HHI Provider", "Home Tenure", "Number of Homes"),format = "html", table.attr = "style='width:30%;'") %>%
+    kableExtra::kable_material(
+      lightable_options = c("striped", "hover", "condensed")
+      ,html_font = "IBM Plex Mono"
+      ,full_width = TRUE
+      )
 
   if (nrow(table_1_1) > 0) {
     kable_1_1 <- kable_1_1 %>%
-      collapse_rows(columns = 1, valign = "top")
+      collapse_rows(columns = 1, valign = "middle")
   }
   ## Output
   kable_1_1
@@ -106,12 +109,14 @@ room_summary_kable <- function(wrangled_devices) {
   kable_1_2 <-
     table_1_2 %>%
     kable(col.names = c("HHI provider", "Device Manager", "Home Tenure", "Room Type", "Count")) %>%
-    kable_material(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-                   html_font = "IBM Plex Mono")
+    kable_material(
+      lightable_options = c("striped", "hover", "condensed", "responsive")
+      ,html_font = "IBM Plex Mono"
+      )
 
   if (nrow(table_1_2) > 0) {
     kable_1_2 <- kable_1_2 %>%
-      collapse_rows(columns = 1:3, valign = "top")
+      collapse_rows(columns = 1:3, valign = "middle")
   }
   ## Output
   kable_1_2
@@ -139,12 +144,12 @@ device_excluded_kable <- function(data_volume) {
     kable_1_3 <-
       table_1_3 %>%
       kable(col.names = c("HHI Provider", "Home Tenure", "Device Id")) %>%
-      kable_material(bootstrap_options = c("striped", "hover", "condensed"),
+      kable_material(lightable_options = c("striped", "hover", "condensed"),
                      html_font = "IBM Plex Mono")
 
     if (nrow(table_1_3) > 0) {
       kable_1_3 <- kable_1_3 %>%
-        collapse_rows(columns = 1, valign = "top")
+        collapse_rows(columns = 1, valign = "middle")
     }
     ## Output
     kable_1_3
