@@ -47,7 +47,7 @@ params:
 ```
 
 
-```{r WRANGLE_DATA, include=FALSE}
+```{r WRANGLE_DATA}
 
   ## STANDARD DATA WRANGLING & JOINING
   ## ---------------------------------
