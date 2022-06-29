@@ -68,11 +68,14 @@ sf::sf_use_s2(FALSE)
   countryName <- names(which.max(table(wrangled_devices$country)))
   print(countryName)  
 
-  countryCode <- countrycode(countryName, origin = 'country.name', destination = 'iso2c')
+  countryCode <- countrycode::countrycode(countryName, origin = 'country.name', destination = 'iso2c')
   # countryCode <- countrycode("New Zealand", origin = 'country.name', destination = 'iso2c')
   
 ###### Map location data table #######
-  map_location <- devices_for_map
+  map_location <- devices_for_map %>%
+    dplyr::filter(connected  == 1) %>%
+    dplyr::filter(has_coords == 1)
+  
   
 ###### Check for Matching Region / District #######
   map_location_row <- map_location %>%
@@ -262,7 +265,7 @@ sf::sf_use_s2(FALSE)
             title.hjust = 0.7,
             label.hjust = 0.7
         )) +
-        geom_point(data = country_points, aes(x = long, y = lat,colour = connected),size=0.7)+
+        geom_point(data = country_points, aes(x = long, y = lat,colour = connected),size=0.5)+
         scale_color_manual(values = c("TRUE" = "#069C36", "FALSE" = "#C03653")) +
         
         ### cities
@@ -398,10 +401,14 @@ sf::sf_use_s2(FALSE)
 
 ### 1.2 Deployment & Coverage Map for `r modeDistrict`
 
-Of `r` deployed devices, `r` (shown in green) connected successfully, with approximate locations. Those in red were connected less than 25% of the time, so are excluded from the analysis.  `r` devices were excluded due to missing location data.
+```{r echo=FALSE} 
+  count_all       <- nrow(devices_for_map)
+  count_connected <- nrow(devices_for_map %>% filter(connected == TRUE))
+  count_no_coords <- nrow(devices_for_map %>% filter(has_coords == FALSE))
+```
 
-```{r  fig.height=8}
+Of `r count_all` deployed devices, `r count_connected` (shown in green) connected successfully, with approximate locations. Those in red were connected less than 10% of the time, so are excluded from the analysis.  `r count_no_coords` devices could not be shown on the map due to missing location data.
+
+```{r echo=FALSE, fig.height=8}
   myMap
-
-
 ```

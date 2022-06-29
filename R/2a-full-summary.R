@@ -76,17 +76,18 @@ home_summary_kable <- function(wrangled_devices) {
 
   kable_1_1 <-
     table_1_1 %>%
-    kable(col.names = c("HHI Provider", "Home Tenure", "Number of Homes"),format = "html", table.attr = "style='width:30%;'") %>%
+    # kable() %>%   ## kbl extends this.
+    kableExtra::kbl(col.names = c("HHI Provider", "Home Tenure", "Number of Homes"),
+                    format = "html",
+                    align = "llc") %>%
     kableExtra::kable_material(
-      lightable_options = c("striped", "hover", "condensed")
-      ,html_font = "IBM Plex Mono"
-      ,full_width = TRUE
-      )
+      lightable_options = c("striped", "hover", "condensed"),
+      html_font = "sans-serif"
+      # ,full_width = TRUE  ## default value!
+      # ,font_size = 14     ## Doesn't work
+      ) %>%
+    kableExtra::column_spec(1:3, width = c("40em","40em","30em"))
 
-  if (nrow(table_1_1) > 0) {
-    kable_1_1 <- kable_1_1 %>%
-      collapse_rows(columns = 1, valign = "middle")
-  }
   ## Output
   kable_1_1
 }
@@ -108,16 +109,12 @@ room_summary_kable <- function(wrangled_devices) {
 
   kable_1_2 <-
     table_1_2 %>%
-    kable(col.names = c("HHI provider", "Device Manager", "Home Tenure", "Room Type", "Count")) %>%
+    kableExtra::kbl(col.names = c("HHI Provider", "Owner", "Home Tenure", "Room Type", "Count")) %>%
     kable_material(
-      lightable_options = c("striped", "hover", "condensed", "responsive")
-      ,html_font = "IBM Plex Mono"
-      )
+      lightable_options = c("striped", "hover", "condensed"),
+      html_font = "sans-serif"
+    )
 
-  if (nrow(table_1_2) > 0) {
-    kable_1_2 <- kable_1_2 %>%
-      collapse_rows(columns = 1:3, valign = "middle")
-  }
   ## Output
   kable_1_2
 }
@@ -143,13 +140,16 @@ device_excluded_kable <- function(data_volume) {
 
     kable_1_3 <-
       table_1_3 %>%
-      kable(col.names = c("HHI Provider", "Home Tenure", "Device Id")) %>%
+      kableExtra::kbl(col.names = c("HHI Provider", "Home Tenure", "Device Id"),
+                      format = "html",
+                      align = "llc") %>%
       kable_material(lightable_options = c("striped", "hover", "condensed"),
-                     html_font = "IBM Plex Mono")
+                     html_font = "sans-serif") %>%
+      kableExtra::column_spec(1:3, width = c("40em","40em","30em"))
 
-    if (nrow(table_1_3) > 0) {
+    if (nrow(table_1_3) > 5) {
       kable_1_3 <- kable_1_3 %>%
-        collapse_rows(columns = 1, valign = "middle")
+        scroll_box(height = "400px")
     }
     ## Output
     kable_1_3

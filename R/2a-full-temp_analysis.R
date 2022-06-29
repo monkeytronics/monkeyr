@@ -20,7 +20,8 @@ get_reg_data <- function(wranged_devices, wrangled_obs, target_reading = "temp")
   regression <- wrangled_obs %>%
     filter(!is.na(outdoor_temp)) %>%
     filter(reading == target_reading) %>%
-    filter(as.integer(hour) %in% c(20:23, 0:7))
+    filter(as.integer(hour) %in% c(23, 0:7))
+    # filter(as.integer(hour) %in% c(20:23, 0:7))
 
   ## Devices Present in Analysis
   deviceList <-
@@ -102,10 +103,10 @@ get_reg_kable <- function(reg_data, target_var) {
 
     kable(col.names = c("HHI provider", "City", target_var, "Device Id", "Correlation")) %>%
     kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed", "responsive"),
-                   html_font = "IBM Plex Mono") %>%
+                   html_font = "sans-serif") %>%
 
-    collapse_rows(columns = 1:3, valign = "middle") %>%
-    scroll_box(width = "100%", height = "350px")
+    # collapse_rows(columns = 1:3, valign = "middle") %>%
+    scroll_box(height = "350px")
 }
 
 
@@ -263,8 +264,8 @@ get_exposure_kable_var <- function(temp_exposure, target_var) {
     summarise_all(.funs = c(mean="mean")) %>%
     janitor::adorn_pct_formatting() %>%
     kable(col.names = c(stringi::stri_trans_totitle(target_var), "< 21°C", "< 18°C", "< 16°C", "< 12°C")) %>%
-    kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "IBM Plex Mono") %>%
-    collapse_rows(columns = 1:2, valign = "middle")
+    kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "sans-serif") #%>%
+    # collapse_rows(columns = 1:2, valign = "middle")
 }
 
 #' get_exposure_kable_dev
@@ -292,7 +293,12 @@ get_exposure_kable_dev <- function(temp_exposure, target_var) {
     arrange(desc(`< 21°C`)) %>%
     janitor::adorn_pct_formatting() %>%
     kable(col.names = c("Device Id", stringi::stri_trans_totitle(target_var), "< 21°C", "< 18°C", "< 16°C", "< 12°C")) %>%
-    kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "IBM Plex Mono")
+    kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "sans-serif")
+
+  if (nrow(temp_exposure) > 5) {
+    exposure_kable_dev <- exposure_kable_dev %>%
+      scroll_box(height = "400px")
+  }
 }
 
 

@@ -188,33 +188,35 @@ who_guidance_kable <- function() {
         "below 12°C"
       ),
       effect = c(
-        "Evidence from the modelling of outdoor temperature indicates <br>
-            that health effects are likely above 29 °C",
-        "An indoor temperature of at least 21 °C is recommended for <br>
-            vulnerable groups including older people, children and those <br>
-            with chronic illnesses, particularly cardiorespiratory disease.",
-        "18 °C is the WHO recommended minimum to provide a safe  <br>
-            and well-balanced indoor temperature to protect the health of  <br>
-            general populations during cold seasons. ",
-        "Temperatures under 16 °C have been shown to have  <br>
-            cardiovascular effects.",
-        "Temperatures under 12 °C have been shown to have  <br>
-            immediate reductions in children’s lung function. "
+        "Evidence from the modelling of outdoor  temperature indicates <br>
+         that health effects are likely above 29 °C",
+
+        "An indoor temperature of at least  21 °C is recommended  for <br>
+         vulnerable groups including older people,  children and those <br>
+         with chronic illnesses, particularly cardiorespiratory disease",
+
+        "18 °C is the WHO recommended  minimum  indoor  temperature to <br>
+         protect the health of general populations during cold seasons",
+
+        "Temperatures under 16 °C are shown to have cardiovascular effects",
+
+        "Temperatures under 12 °C have been shown to cause immediate <br>
+         reduction in children’s lung function. "
       )
     ),
-    col.names = c("Indoor Temperature", "Health Effects"),
+    col.names = c("Indoor Temp", "Health Effects"),
     # caption = "Table 2.1.1. Impact of Indoor temperature on health",
     escape = FALSE
   ) %>%
     kableExtra::kable_material(
-      bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-      html_font = "sans-serif",
-      full_width = TRUE
+      lightable_options = c("striped", "hover", "bordered", "responsive"),
+      html_font = "sans-serif"
     ) %>%
     kableExtra::footnote(
       general = "Source WHO: Housing and Health Guidelines (ISBN: 978 92 4 155037 6)",
       general_title = "*",
       footnote_as_chunk = TRUE
-    )
+    ) %>%
+    kableExtra::column_spec(1:2, width = c("25em","75em"))
 }
 
