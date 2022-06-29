@@ -53,6 +53,11 @@ params:
   ## ---------------------------------
   
   wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
+
+
+  # # BAIL TO FOCUS ON TEST
+  print(wrangled_devices)
+  knitr::knit_exit("</body></html>")
   
   wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
   

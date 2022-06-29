@@ -45,6 +45,7 @@ Imports:
     geojson,
     cowplot,
     ggrepel,
+    distill,
     rmarkdown,
     htmltools
 Suggests:
