@@ -38,9 +38,11 @@ library(magrittr)
 ```
 
 ```{r wrangle_data }
-# generate tables and values used later in the report
 
-wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
+  ## STANDARD DATA WRANGLING & JOINING
+  ## ---------------------------------
+
+  wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
 
   # # BAIL TO FOCUS ON TEST
   print(wrangled_devices)
@@ -48,43 +50,43 @@ wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
   
   
 
-wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
-
-wrangled_obs <- monkeyr::wrangle_observations(
-  filtered_obs   = params$filtered_obs,
-  devices        = wrangled_devices,
-  weather        = wrangled_weather
-)
-
-data_volume <- monkeyr::get_data_volume(
-  observations   = wrangled_obs,
-  from_timestamp = params$fromTimeStamp,
-  to_timestamp   = params$toTimeStamp
-)
-
-devices_for_map <- monkeyr::get_devices_for_map(
-  devices        = wrangled_devices,
-  data_volume    = data_volume
-)
-
-wrangled_devices <- monkeyr::remove_excluded_devices(
-  target_data    = wrangled_devices,
-  data_volume    = data_volume
-)
-
-wrangled_obs <- monkeyr::remove_excluded_devices(
-  target_data    = wrangled_obs,
-  data_volume    = data_volume
-)
-
-nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
-
-report_type <- "Home"
-
-# set R options for monkey reports
-monkeyr::set_options(wrangled_obs = wrangled_obs)
-monkeyr::monkey_palettes(devices = wrangled_devices)
-unique_readings <- monkeyr::unique_readings(wrangled_obs = wrangled_obs)
+  wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
+  
+  wrangled_obs <- monkeyr::wrangle_observations(
+    filtered_obs   = params$filtered_obs,
+    devices        = wrangled_devices,
+    weather        = wrangled_weather
+  )
+  
+  data_volume <- monkeyr::get_data_volume(
+    observations   = wrangled_obs,
+    from_timestamp = params$fromTimeStamp,
+    to_timestamp   = params$toTimeStamp
+  )
+  
+  devices_for_map <- monkeyr::get_devices_for_map(
+    devices        = wrangled_devices,
+    data_volume    = data_volume
+  )
+  
+  wrangled_devices <- monkeyr::remove_excluded_devices(
+    target_data    = wrangled_devices,
+    data_volume    = data_volume
+  )
+  
+  wrangled_obs <- monkeyr::remove_excluded_devices(
+    target_data    = wrangled_obs,
+    data_volume    = data_volume
+  )
+  
+  nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
+  
+  report_type <- "Home"
+  
+  # set R options for monkey reports
+  monkeyr::set_options(wrangled_obs = wrangled_obs)
+  monkeyr::monkey_palettes(devices = wrangled_devices)
+  unique_readings <- monkeyr::unique_readings(wrangled_obs = wrangled_obs)
 ```
 
 ---

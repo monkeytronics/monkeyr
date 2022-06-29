@@ -1,6 +1,6 @@
 ---
 title: "Indoor Environment Monitoring"
-date: "`r format(Sys.time(), '%b %d %Y')`"
+date: '`r format(Sys.time(), "%b %d %Y")`'
 
 author:
   - name: "Saera Chun"
@@ -55,7 +55,7 @@ params:
   wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
 
 
-  # # BAIL TO FOCUS ON TEST
+  ## BAIL TO FOCUS ON TEST
   print(wrangled_devices)
   knitr::knit_exit("</body></html>")
   

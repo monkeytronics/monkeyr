@@ -90,8 +90,8 @@ report_period <- function(from_timestamp, to_timestamp) {
 #' wrangle_devices(test_params("monkey_a")$dev)
 #'
 #' @export
-wrangle_devices <-
-  function( filtered_devices,
+wrangle_devices <- function(
+            filtered_devices,
             data_type_filter = c("CD", "TH", "PM", "FO", "CL"), # not really used.
             na.strings = c("",NA),
             integer_columns = c("floor"),
@@ -147,7 +147,7 @@ wrangle_devices <-
   # )
 
 
-  devices <-
+  wrangled_devices <-
     filtered_devices %>%
 
     # Filter Sensor Node
@@ -170,7 +170,7 @@ wrangle_devices <-
     dplyr::mutate(room_type = dplyr::case_when(
       grepl("bedroom", tolower(room), fixed = TRUE) ~ "bedroom"
     ))
-  return(devices)
+  return(wrangled_devices)
 }
 
 
@@ -195,12 +195,12 @@ wrangle_weather <- function(filtered_weather) {
 
 
   if (checkmate::test_character(filtered_weather)) {
-    weather <- readr::read_csv(filtered_weather, col_types = readr::cols())
+    wrangled_weather <- readr::read_csv(filtered_weather, col_types = readr::cols())
   } else {
-    weather <- filtered_weather
+    wrangled_weather <- filtered_weather
   }
 
-  weather %>%
+  wrangled_weather %>%
     janitor::clean_names() %>%
     dplyr::filter(!is.na(dt)) %>%
     dplyr::mutate(city = as.character(city_name)) %>% ## prevents crash in hourly data, when empty data set
@@ -321,14 +321,14 @@ wrangle_observations <-
     checkmate::assert_data_frame(devices)
 
     if (checkmate::test_character(filtered_obs)) {
-      obs <-
+      wrangled_obs <-
         readr::read_csv(filtered_obs, col_types = "ciiicd")
     } else {
-      obs <- filtered_obs
+      wrangled_obs <- filtered_obs
     }
 
 
-    obs2 <- obs %>%
+    wrangled_obs <- wrangled_obs %>%
       ## only include devices present in device array
       dplyr::filter(device_id %in% devices$device_id) %>%
       ## Remove duplicate rows
@@ -357,7 +357,7 @@ wrangle_observations <-
       tibble::add_column(local_time = "", .after = "ts")
 
 
-    obs2 %>%
+    wrangled_obs %>%
       dplyr::mutate(local_time = get_local_time(as.numeric(ts), lat, long)) %>%
 
       ## extract hour, date, month, year for joining data set
