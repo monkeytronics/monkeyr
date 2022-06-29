@@ -120,7 +120,6 @@ wrangle_devices <- function(
                 "classRoom",
                 "deployment_id")) {
   # checkmate::assert_class(x = filtered_devices, classes = c("data.frame", "character"))
-
   # filtered_devices <-  paste0("inst/dummy-data/", params$filtered_devices)
 
   if (checkmate::test_character(filtered_devices)) {
@@ -146,8 +145,11 @@ wrangle_devices <- function(
   #     },
   # )
 
+  message(filtered_devices)
+  logger::log_debug(paste0("filtered_devices = ", filtered_devices))
 
-  wrangled_devices <-
+
+  wrangled_devices_ <-
     filtered_devices %>%
 
     # Filter Sensor Node
@@ -170,7 +172,12 @@ wrangle_devices <- function(
     dplyr::mutate(room_type = dplyr::case_when(
       grepl("bedroom", tolower(room), fixed = TRUE) ~ "bedroom"
     ))
-  return(wrangled_devices)
+
+  if(nrow(wrangled_devices_) == 0) {
+    stop("Oh no. Wrangled devcies is zero length.")
+  }
+
+  return(wrangled_devices_)
 }
 
 
