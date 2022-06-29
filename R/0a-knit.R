@@ -39,7 +39,7 @@ run_test_report <- function (
   )
 
   # run the rmd report
-  monkeyr::knit_home_report(
+  monkeyr::knit_report(
     param_list  = par_list,
     output_dir  = paste0("html/", report),
     output_file = dummy_data,
@@ -168,12 +168,12 @@ make_params_list <- function(.list = NULL, ...) {
 #'   fromTimeStamp = from,
 #'   toTimeStamp = to
 #' ) {
-#' knit_home_report(par_list)
+#' knit_report(par_list)
 #'
 #' }
 #'
 #' @export
-knit_home_report <-
+knit_report <-
   function(param_list,
            output_file = paste0("home-", as.numeric(Sys.time()), ".html"),
            output_dir  = getwd(),

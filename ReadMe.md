@@ -153,7 +153,7 @@ The output will be generated as a html file in
 
 # Running an Analysis from inside a Docker Container
 
-We have a function `?knit_home_report` that takes - a list of parameters
+We have a function `?knit_report` that takes - a list of parameters
 (paths to data and timestamps)  
 - output file name (so we can keep track of requests if needed) - output
 directory (we need this to tell the docker container where on the host
@@ -186,7 +186,7 @@ We run this like so:
   outfile                  <- file.path(temporary_directory, paste0("flexi", ".html"))
 
 # knit with default file name and output dir
-  monkeyr::knit_home_report(
+  monkeyr::knit_report(
     param_list = par_list,
     output_file = outfile,
     output_dir = temporary_directory,

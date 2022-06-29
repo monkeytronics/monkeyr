@@ -22,7 +22,7 @@ output:
 # paths with `inst` will only work in `dev` setting. 
 # in `production` setting, please use real data
 # or call installed files with `system.file`
-# see example in `?knit_home_report()`
+# see example in `?knit_report()`
 params:
   filtered_obs:             "../dummy-data/monkey_a/obs.csv"
   filtered_weather:         "../dummy-data/monkey_a/weather.csv"
