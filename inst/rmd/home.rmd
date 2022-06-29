@@ -229,7 +229,7 @@ for (i in 1 : length(valid_readings)) {
   cat("gfdsfsdgfsdgsgfds")
   plotlist[[2*i+1]] = ts_chart
   print(htmltools::tagList(ts_chart))
-  
+}
 ```
 
 
