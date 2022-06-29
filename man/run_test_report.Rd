@@ -27,7 +27,8 @@ to ensure everything is working properly and to see an example of the output.
 Please note that the pameters for test reports are preset.
 }
 \examples{
-# run_test_report("home", "monkey_a",    "params_1.txt")
-# run_test_report("hhi",  "org_corner2", "map.txt")
+run_test_report("home", "monkey_32",   "params_1.txt")
+run_test_report("home", "monkey_a",    "params_1.txt")
+run_test_report("hhi",  "org_corner2", "map.txt")
 
 }

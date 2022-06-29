@@ -12,8 +12,9 @@
 #' @return an html document printed out to a file and the path of the output file is returned
 #'
 #' @examples
-#' # run_test_report("home", "monkey_a",    "params_1.txt")
-#' # run_test_report("hhi",  "org_corner2", "map.txt")
+#' run_test_report("home", "monkey_32",   "params_1.txt")
+#' run_test_report("home", "monkey_a",    "params_1.txt")
+#' run_test_report("hhi",  "org_corner2", "map.txt")
 #'
 #' @export
 run_test_report <- function (

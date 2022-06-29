@@ -14,10 +14,10 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/moe_1/obs.csv"
-  filtered_weather:         "../dummy-data/moe_1/weather.csv"
-  filtered_devices:         "../dummy-data/moe_1/dev.csv"
-  filtered_interventions:   "../dummy-data/moe_1/interv.csv"
+  filtered_obs:             "../dummy-data/monkey_32/obs.csv"
+  filtered_weather:         "../dummy-data/monkey_32/weather.csv"
+  filtered_devices:         "../dummy-data/monkey_32/dev.csv"
+  filtered_interventions:   "../dummy-data/monkey_32/interv.csv"
   report_params:            "-map-"                                            
   fromTimeStamp:            1655892909
   toTimeStamp:              1656065715
