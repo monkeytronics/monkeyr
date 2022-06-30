@@ -145,8 +145,8 @@ wrangle_devices <- function(
   #     },
   # )
 
-  message(filtered_devices)
-  logger::log_debug(paste0("filtered_devices = ", filtered_devices))
+  # message(filtered_devices)
+  # logger::log_debug(paste0("filtered_devices = ", filtered_devices))
 
 
   wrangled_devices_ <-
