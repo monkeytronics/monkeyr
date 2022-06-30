@@ -42,55 +42,30 @@ library(magrittr)
   ## STANDARD DATA WRANGLING & JOINING
   ## ---------------------------------
 
-  # # ## Global Options Otuput
-  # # sysOut <- Sys.getenv()
-  # # logger::log_debug(paste0(sysOut))
-  # logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices))
-  # 
-  # message(str(
-  #   paste0("params$filtered_devices = ", params$filtered_devices)
-  # ))
-  # 
-  # message(str(
-  #   paste0("params$filtered_weather = ", params$filtered_weather)
-  # ))
-  # 
-  # message(str(
-  #   paste0("params$filtered_obs = ", params$filtered_obs)
-  # ))
-  #   
-  # message(str(
-  #   paste0("params$filtered_interv = ", params$filtered_interv)
-  # ))
-  # 
-  # message(str(
-  #   paste0("working dir = ", getwd())
-  # ))
-  # 
-  # message(str(
-  #   paste0("devs.obs (head) = ", system(paste0("head ", params$filtered_devices)))
-  # ))
-  
-  
-
-  
-  wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
-  
-  # # logger::log_debug(paste0("wrangled_devices after wrangle_devices function = ", wrangled_devices))
-  # 
-  # ## Print out Wrangled_devices structure (dataframe or NULL)
-  # message(str(
-  #   wrangled_devices
-  # ))
-  # 
   # ## Global Options Otuput
   # sysOut <- Sys.getenv()
   # logger::log_debug(paste0(sysOut))
-  # 
-  # 
-  # # # # BAIL TO FOCUS ON TEST
-  # # print(wrangled_devices)
-  # knitr::knit_exit("</body></html>")
+  
+
+  message(paste0("params$filtered_devices = ", params$filtered_devices))
+  message(paste0("params$filtered_weather = ", params$filtered_weather))
+  message(paste0("params$filtered_obs = ", params$filtered_obs))
+  message(paste0("params$filtered_interv = ", params$filtered_interv))
+  message(paste0("working dir = ", getwd()))
+  logger::log_debug(paste0("working dir = ", getwd()))
+  
+
+  logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices)) # goes to cloudwatch.
+  message(params$filtered_devices)
+  
+  wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
+  
+  message(wrangled_devices)
+  logger::log_debug(paste0("wrangled_devices in rmd = ", wrangled_devices))
+  
+  
+  # # # BAIL TO FOCUS ON TEST
+  knitr::knit_exit("</body></html>")
 
   wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
   
