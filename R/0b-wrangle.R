@@ -439,8 +439,8 @@ get_devices_for_map <- function(devices, data_volume) {
   checkmate::assert_data_frame(devices)
   checkmate::assert_data_frame(data_volume)
 
-  ## Test Code
-  devices        = wrangled_devices
+  # ## Test Code
+  # devices        = wrangled_devices
 
   devices %>%
     dplyr::mutate(connected = device_id %in% data_volume$device_id) %>%
