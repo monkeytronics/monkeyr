@@ -47,24 +47,29 @@ params:
 ```
 
 
-```{r WRANGLE_DATA, echo=FALSE}
+```{r WRANGLE_DATA}
 
   ## STANDARD DATA WRANGLING & JOINING
   ## ---------------------------------
   
-  message(paste0("params$filtered_devices = ", params$filtered_devices))
-  message(paste0("params$filtered_weather = ", params$filtered_weather))
-  message(paste0("params$filtered_obs = ", params$filtered_obs))
-  message(paste0("params$filtered_interv = ", params$filtered_interv))
-  message(paste0("working dir = ", getwd()))
-  logger::log_debug(paste0("working dir = ", getwd()))
-  logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices)) # goes to cloudwatch.
-  message(params$filtered_devices)
-    
+  # message(paste0("params$filtered_devices = ", params$filtered_devices))
+  # message(paste0("params$filtered_weather = ", params$filtered_weather))
+  # message(paste0("params$filtered_obs = ", params$filtered_obs))
+  # message(paste0("params$filtered_interv = ", params$filtered_interv))
+  # message(paste0("working dir = ", getwd()))
+
+  # logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices)) # goes to cloudwatch.
+  # message(params$filtered_devices)
+
+
+  logger::log_debug(paste0("working dir = ", getwd()))    
+  logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices))
+  
   
   wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
   
-  message(wrangled_devices)
+
+  # message(wrangled_devices)
   logger::log_debug(paste0("wrangled_devices in rmd = ", wrangled_devices))
   ls_result <- ls()
   message(paste0("ls() = ", ls_result))
@@ -72,6 +77,7 @@ params:
   tryCatch(
     {
       wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
+      logger::log_debug(paste0("wrangled_weather in rmd = ", wrangled_weather))
       
       wrangled_obs <- monkeyr::wrangle_observations(
         filtered_obs   = params$filtered_obs,
