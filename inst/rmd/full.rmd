@@ -61,75 +61,79 @@ params:
   # logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices)) # goes to cloudwatch.
   # message(params$filtered_devices)
 
-
-  logger::log_debug(paste0("working dir = ", getwd()))    
-  logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices))
+  message(paste0("MESSAGE OUT : params = ", params))
+  message(paste0("MESSAGE OUT : working dir = ", getwd())) 
+  message(paste0("MESSAGE OUT : params$filtered_devices in rmd = ", params$filtered_devices))
+  logger::log_debug(paste0("working dir = ", getwd())) 
+  # logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices))
   
   
   wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
   
 
-  # message(wrangled_devices)
+  
   logger::log_debug(paste0("wrangled_devices in rmd = ", wrangled_devices))
   ls_result <- ls()
-  message(paste0("ls() = ", ls_result))
+  message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
   
   tryCatch(
-    {
-      wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
-      logger::log_debug(paste0("wrangled_weather in rmd = ", wrangled_weather))
-      
-      wrangled_obs <- monkeyr::wrangle_observations(
-        filtered_obs   = params$filtered_obs,
-        devices        = wrangled_devices,
-        weather        = wrangled_weather
-      )
-      
+  {
+        
+    wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
+    logger::log_debug(paste0("wrangled_weather nrow = ", nrow(wrangled_weather)))
+    
+    wrangled_obs <- monkeyr::wrangle_observations(
+      filtered_obs   = params$filtered_obs,
+      devices        = wrangled_devices,
+      weather        = wrangled_weather
+    )
+    
+    data_volume <- monkeyr::get_data_volume(
+      observations   = wrangled_obs,
+      from_timestamp = params$fromTimeStamp,
+      to_timestamp   = params$toTimeStamp
+    )
+    
+    devices_for_map <- monkeyr::get_devices_for_map(
+      devices        = wrangled_devices,
+      data_volume    = data_volume
+    )
+    
+    wrangled_devices <- monkeyr::remove_excluded_devices(
+      target_data    = wrangled_devices,
+      data_volume    = data_volume
+    )
+    
+    wrangled_obs <- monkeyr::remove_excluded_devices(
+      target_data    = wrangled_obs,
+      data_volume    = data_volume
+    )
+    
+    nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
+    
+    report_type <- "Home"
+    
+    # set R options for monkey reports
+    monkeyr::set_options(wrangled_obs = wrangled_obs)
+    monkeyr::monkey_palettes(devices = wrangled_devices)
+    
+    # pull out report params
+    param_list      <- param_list(params$report_params)
+    target_var_list <- target_var_list(wrangled_obs, param_list)
+  
+  
     },
+  
     error = function(cond) {
-      logger::log_debug(paste0("error conditinon = ", cond))
+      logger::log_debug(paste0("error condition = ", cond))
       tb <- traceback()
       logger::log_debug(tb)
     }
   )
   
   ls_result <- ls()
-  message(paste0("ls() = ", ls_result))
-  
-  
-  
-  data_volume <- monkeyr::get_data_volume(
-    observations   = wrangled_obs,
-    from_timestamp = params$fromTimeStamp,
-    to_timestamp   = params$toTimeStamp
-  )
-  
-  devices_for_map <- monkeyr::get_devices_for_map(
-    devices        = wrangled_devices,
-    data_volume    = data_volume
-  )
-  
-  wrangled_devices <- monkeyr::remove_excluded_devices(
-    target_data    = wrangled_devices,
-    data_volume    = data_volume
-  )
-  
-  wrangled_obs <- monkeyr::remove_excluded_devices(
-    target_data    = wrangled_obs,
-    data_volume    = data_volume
-  )
-  
-  nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
-  
-  report_type <- "Home"
-  
-  # set R options for monkey reports
-  monkeyr::set_options(wrangled_obs = wrangled_obs)
-  monkeyr::monkey_palettes(devices = wrangled_devices)
-  
-  # pull out report params
-  param_list      <- param_list(params$report_params)
-  target_var_list <- target_var_list(wrangled_obs, param_list)
+  message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
+  knitr::knit_exit("</body></html>")
 
 ```
 
