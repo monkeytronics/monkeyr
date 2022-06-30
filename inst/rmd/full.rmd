@@ -66,24 +66,31 @@ params:
   
   message(wrangled_devices)
   logger::log_debug(paste0("wrangled_devices in rmd = ", wrangled_devices))
+  ls_result <- ls()
+  message(paste0("ls() = ", ls_result))
   
-  wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
-  
-  # ## Print out Wrangled_devices structure (dataframe or NULL)
-  # message(str(
-  #   wrangled_devices
-  # ))
-  # 
-  # ## Gloabl Options Otuput
-  # sysOut <- Sys.getenv()
-  # logger::log_debug(paste0("sysOut = ", sysOut))
-  
-  
-  wrangled_obs <- monkeyr::wrangle_observations(
-    filtered_obs   = params$filtered_obs,
-    devices        = wrangled_devices,
-    weather        = wrangled_weather
+  tryCatch(
+    {
+      wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
+      
+      wrangled_obs <- monkeyr::wrangle_observations(
+        filtered_obs   = params$filtered_obs,
+        devices        = wrangled_devices,
+        weather        = wrangled_weather
+      )
+      
+    },
+    error = function(cond) {
+      logger::log_debug(paste0("error conditinon = ", cond))
+      tb <- traceback()
+      logger::log_debug(tb)
+    }
   )
+  
+  ls_result <- ls()
+  message(paste0("ls() = ", ls_result))
+  
+  
   
   data_volume <- monkeyr::get_data_volume(
     observations   = wrangled_obs,
