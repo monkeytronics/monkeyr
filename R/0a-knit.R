@@ -14,11 +14,11 @@
 #' @examples
 #' run_test_report("home", "monkey_32",   "params_1.txt")
 #' run_test_report("home", "monkey_a",    "params_1.txt")
-#' run_test_report("hhi",  "org_corner2", "map.txt")
+#' run_test_report("full", "monkey_32",   "map.txt")
 #'
 #' @export
 run_test_report <- function (
-    report       = "hhi",
+    report       = "home",
     dummy_data   = "monkey_a",
     dummy_params = "params_1.txt"
 ) {

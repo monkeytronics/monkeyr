@@ -53,13 +53,44 @@ params:
   ## ---------------------------------
   
   ## Global Options Otuput
+
+  logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices))
+
+  message(str(
+    paste0("params$filtered_devices = ", params$filtered_devices)
+  ))
+  
+  message(str(
+    paste0("params$filtered_weather = ", params$filtered_weather)
+  ))
+  
+  message(str(
+    paste0("params$filtered_obs = ", params$filtered_obs)
+  ))
+    
+  message(str(
+    paste0("params$filtered_interv = ", params$filtered_interv)
+  ))
+  
+  message(str(
+    paste0("working dir = ", getwd())
+  ))
+  
+  
+  
   sysOut <- Sys.getenv()
+  message(str(
+    paste0("sysOut = ", sysOut)
+  ))
+    
   logger::log_debug(paste0(sysOut))
   logger::log_debug(paste0("params$filtered_devices in rmd = ", params$filtered_devices))
   
   message(str(
     params$filtered_devices
   ))
+  
+    message( params$filtered_devices )
     
   
   wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
@@ -88,8 +119,8 @@ params:
   ))
   
   ## Gloabl Options Otuput
-  Sys.getenv()
-  logger::log_debug(paste0(sysOut))
+  sysOut <- Sys.getenv()
+  logger::log_debug(paste0("sysOut = ", sysOut))
   
   
   wrangled_obs <- monkeyr::wrangle_observations(
