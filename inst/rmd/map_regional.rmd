@@ -1,4 +1,4 @@
-```{r   include=FALSE}
+```{r }
 
 tryCatch(
   {
@@ -19,7 +19,7 @@ tryCatch(
     data(world.cities)
       
     sf::sf_use_s2(FALSE)
-    message(paste0("\nMESSAGE OUT : After library loading "))
+    message(paste0("\nMAP REGIONAL : After library loading"))
     
       
       ##testing with UK datasets 
