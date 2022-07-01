@@ -1,5 +1,7 @@
 ```{r }
 
+message(paste0("\nMAP REGIONAL : Entering child rmd"))
+
 tryCatch(
   {
       
