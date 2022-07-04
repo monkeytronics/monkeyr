@@ -1,5 +1,0 @@
-device_owner,device_id,data_type,comms_type,long,lat,locationCode,addr,suburb,city,country,room,hhi,cluster,privacy,risk,buildingType,tenure,height,direction,school,building,floor,classRoom,deployment_id
-teharatau.mailbox@education.govt.nz,S002560,CL,W,172.559514,-43.5242456,Christchurch|NZ,Avonhead School,Avonhead,Christchurch,New Zealand,,,Avonhead ,Do Not Share,Low,,,,,Avonhead School,Junior Classrooms ,0,Room 5,299fa757-2757-1757-8757-0000657b73d1
-teharatau.mailbox@education.govt.nz,S004299,CL,W,0,0,|,,,,,,,,Do Not Share,Low,,,,,,,0,,00000030-0030-1030-8030-000000000030
-teharatau.mailbox@education.govt.nz,S004655,CL,W,0,0,|,,,,,,,,Do Not Share,Low,,,,,,,0,,00000030-0030-1030-8030-000000000030
-teharatau.mailbox@education.govt.nz,S004662,CL,W,172.6961554,-43.4736043,Christchurch|NZ,Queenspark School,Parklands,Christchurch,New Zealand,,,QPS,Do Not Share,Low,,,,,Queenspark School,Block 2,0,Room 20,47a3bccf-3ccf-14cf-84cf-00006faa9434

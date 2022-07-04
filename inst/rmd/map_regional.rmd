@@ -1,4 +1,4 @@
-```{r }
+```{r echo=FALSE, include=FALSE}
 
 message(paste0("\nMAP REGIONAL : Entering child rmd"))
 
@@ -428,3 +428,5 @@ Of `r count_all` deployed devices, `r count_connected` (shown in green) connecte
 ```{r echo=FALSE, fig.height=8}
   myMap
 ```
+
+##### Figure 1.4: Device Map

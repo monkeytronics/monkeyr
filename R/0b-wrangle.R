@@ -159,6 +159,7 @@ wrangle_devices <- function(
     dplyr::mutate(room         = tidyr::replace_na(room,         "unknown")) %>%
     dplyr::mutate(addr         = tidyr::replace_na(addr,         "Unknown")) %>%
     dplyr::mutate(hhi          = tidyr::replace_na(hhi,          "Unknown")) %>%
+    dplyr::mutate(hhi          = stringi::stri_replace_first_fixed(hhi, "Not Listed", "Unknown") ) %>%
 
     dplyr::mutate(city         = tidyr::replace_na(city,        common_city)) %>%
     dplyr::mutate(country      = tidyr::replace_na(country,  common_country)) %>%

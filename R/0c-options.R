@@ -56,9 +56,9 @@ filter_list <- function(available, permitted) {
 #' @description returns report params as a list
 #' @param report_params The string with '-' separation
 #' @export
-param_list <- function(report_params) {
+param_list <- function(report_params, split_char = ",") {
   # report_params <- "-map-tenure-room-roomType-"
-  param_list <- as.list(strsplit(report_params, "-")[1])
+  param_list <- as.list(strsplit(report_params, split_char)[1])
   param_list <- lapply(param_list, function(x) {x[!x == ""]})
   param_list <- param_list[[1]]
 }
@@ -66,14 +66,50 @@ param_list <- function(report_params) {
 
 #' target_var_list
 #' @description matches requested report params to available segments for reporting
-#' @param wrangled_obs data.frame, as output by `wrangle_observations`
-#' @param param_list list, report parameters from param_list
+#' @param wrangled_devices data.frame, as output by `wrangled_devices`
+#' @param param_list list, report parameters from param_list. The ones we want will take the form
+#' '{param} anlys' - for instance 'room_type anlys'
 #' @export
-target_var_list <- function(wrangled_obs, param_list) {
-  # param_list <- c("map", "room", "room_type")
-  tib <- as_tibble(colnames(wrangled_obs)) %>%
+target_var_list <- function(wrangled_devices, param_list) {
+  # param_list <- c("show map deloyment", "room anlys", "room_type anlys")
+
+  # remove " anlys" junk
+  param_list <- gsub(" anlys", "", param_list)
+
+  # return matching terms as tibble
+  tib <- as_tibble(colnames(wrangled_devices)) %>%
     filter(value %in% param_list)
   return (tib$value)
+}
+
+#' target_group_list
+#' @description captures requested report group params : to compare to device group as reporting segment
+#' @param wrangled_devices data.frame, as output by `wrangle_devices`
+#' @param param_list list, report parameters from param_list. The ones we want will take the form
+#' '{param} anlys' - for instance 'room_type anlys'
+#' @export
+target_group_list <- function(wrangled_devices, param_list) {
+  # param_list <- c("Analyse My Cool Project group", "Analyse YYYY group", "Analyse ZZZZ group")
+  # groups are in wrangled_devices$cluster as 'ZZZZ-YYYY-My Cool Project-OtherGroups'
+
+  # Get valid groups from wrangled devices
+  groups_valid <-
+    wrangled_devices$cluster %>%
+    na.omit() %>%
+    unique() %>%
+    lapply(function(x) {param_list(x, "-")}) %>%
+    unlist()
+
+  # groups requested into tibbble
+  tib <-
+    tibble(groups_req = param_list) %>%
+    filter(stringr::str_starts(groups_req, "Analyse")) %>%
+    filter(stringr::str_ends(groups_req, "group")) %>%
+
+    # only keep valid ones
+    filter(groups_req %in% groups_valid)
+
+  return (tib$groups_req)
 }
 
 

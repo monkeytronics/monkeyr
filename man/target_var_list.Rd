@@ -4,12 +4,13 @@
 \alias{target_var_list}
 \title{target_var_list}
 \usage{
-target_var_list(wrangled_obs, param_list)
+target_var_list(wrangled_devices, param_list)
 }
 \arguments{
-\item{wrangled_obs}{data.frame, as output by \code{wrangle_observations}}
+\item{wrangled_devices}{data.frame, as output by \code{wrangled_devices}}
 
-\item{param_list}{list, report parameters from param_list}
+\item{param_list}{list, report parameters from param_list. The ones we want will take the form
+'{param} anlys' - for instance 'room_type anlys'}
 }
 \description{
 matches requested report params to available segments for reporting

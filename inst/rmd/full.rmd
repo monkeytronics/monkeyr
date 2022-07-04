@@ -28,7 +28,7 @@ params:
   filtered_weather:         "../dummy-data/monkey_a/weather.csv"
   filtered_devices:         "../dummy-data/monkey_a/dev.csv"
   filtered_interventions:   "../dummy-data/monkey_a/interv.csv"
-  report_params:            "-map-tenure-room-"                                            
+  report_params:            "deployment map,tenure anlys,room anlys"                                            
   fromTimeStamp:            1627639151
   toTimeStamp:              1630317551
 ---
@@ -101,8 +101,8 @@ params:
       monkeyr::monkey_palettes(devices = wrangled_devices)
       
       # pull out report params
-      param_list      <- param_list(params$report_params)
-      target_var_list <- target_var_list(wrangled_obs, param_list)
+      param_list      <- param_list(params$report_params, split_char = ",")
+      target_var_list <- target_var_list(wrangled_devices, param_list)
   
     },
     error = function(cond) {
@@ -156,19 +156,18 @@ title: "`r org_string(wrangled_devices)` Indoor Sensor Report"
 
 <br />
 
-```{r echo=FALSE} 
+```{r echo=FALSE, results="asis", out.width="80%"} 
   device_excluded_kable(data_volume)
 ```
 
-##### Table 1.3.   Devices Excluded Due to Insufficient Data
-
 <br />
 
-```{r child='map_regional.rmd'}
-
+```{r, echo=FALSE, results='asis'}
+  if ("deployment map" %in% param_list) {
+    res <- knitr::knit_child('map_regional.rmd', quiet = TRUE)
+    cat(res, sep = '\n')
+  }
 ```
-
-##### Figure 1.4: Device Map
 
 <br />
 
@@ -230,7 +229,7 @@ To interpret the correlation factor: below 0.4 is good; below 0.7 is average; be
   section_number <- 3
 
   i = 1 ## for testing
-  for (i in 1:length(target_var_list)) {
+  while (i <= length(target_var_list)) {
     
     target_var       <- target_var_list[i]
     target_var_Title <- stringi::stri_trans_totitle(target_var_list[i])
@@ -298,6 +297,7 @@ To interpret the correlation factor: below 0.4 is good; below 0.7 is average; be
   ## -------------------
     section_number <- section_number + 1
     cat("\n\n\n")
+    i <- i + 1
   }
 
   # # BAIL TO FOCUS ON TEST

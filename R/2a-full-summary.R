@@ -39,23 +39,27 @@ device_summary_string <- function(data_volume) {
 }
 
 
-#' get_org
+#' org_string
 #' @description Brief Summary of Device Success / Failure
 #' @param ts data_volume : data.frame with device connection details
 #' @return Character[] The text for Device Summary Section
 #' @export
 org_string <- function(wrangled_devices) {
   ## list of data source organisations : Do before exclusions. The org data is still valid nonetheless.
-  hhi_count <- n_distinct(wrangled_devices$hhi, na.rm = TRUE)
+  devices_with_hhi <-
+    wrangled_devices %>%
+    filter(hhi != "Unknown")
+
+  hhi_count <- n_distinct(devices_with_hhi$hhi, na.rm = TRUE)
   list_org <-
     if (hhi_count == 0) {
       print("Independent")
     } else if (hhi_count == 1) {
-      print(levels(as.factor(wrangled_devices$hhi)))
+      print(levels(as.factor(devices_with_hhi$hhi)))
     } else {
-      print( paste( sapply(list(levels(as.factor(wrangled_devices$hhi))[-hhi_count]), paste, collapse = ", "),
+      print( paste( sapply(list(levels(as.factor(devices_with_hhi$hhi))[-hhi_count]), paste, collapse = ", "),
                     " and ",
-                    levels(as.factor(wrangled_devices$hhi))[hhi_count]))
+                    levels(as.factor(devices_with_hhi$hhi))[hhi_count]))
     }
   ## Output
   list_org
@@ -128,11 +132,9 @@ room_summary_kable <- function(wrangled_devices) {
 device_excluded_kable <- function(data_volume) {
 
   devices_excl <- data_volume %>%
-    filter(tenure == "unknown")
-    # filter(exclude == 1)
+    filter(exclude == 1)
 
   if (nrow(devices_excl) > 0) {
-  # if (TRUE) {
     table_1_3 <-
       devices_excl %>%
       group_by(hhi, tenure, device_id) %>%
@@ -152,7 +154,8 @@ device_excluded_kable <- function(data_volume) {
         scroll_box(height = "400px")
     }
     ## Output
-    kable_1_3
+    print(kable_1_3)
+    cat(paste0("\n", "##### Table 1.3. Devices Excluded Due to Insufficient Data", "\n"))
   }
 }
 

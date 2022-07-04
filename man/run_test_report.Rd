@@ -7,7 +7,7 @@
 run_test_report(
   report = "home",
   dummy_data = "monkey_a",
-  dummy_params = "params_1.txt"
+  dummy_params = "params_blank.txt"
 )
 }
 \arguments{
@@ -27,8 +27,8 @@ to ensure everything is working properly and to see an example of the output.
 Please note that the pameters for test reports are preset.
 }
 \examples{
-run_test_report("home", "monkey_32",   "params_1.txt")
-run_test_report("home", "monkey_a",    "params_1.txt")
-run_test_report("full", "monkey_32",   "map.txt")
+run_test_report("home", "monkey_32",   "params_blank.txt")
+run_test_report("home", "monkey_a",    "params_blank.txt")
+run_test_report("full", "monkey_32",   "params_full_map.txt")
 
 }

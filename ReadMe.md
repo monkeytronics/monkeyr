@@ -126,8 +126,10 @@ into `dummy-data` and secondly the parameters which go in
     │   │   ├── monkey_b
     │   │   |   ├── **.csv
     │   ├── dummy-params
-    │   │   ├── params_1.txt
-    │   │   ├── params_2.txt
+    │   │   ├── params_blank.txt
+    │   │   ├── params_full_map.txt
+    │   │   ├── params_full_2vars.txt
+    │   │   ├── params_full_all.txt    
     │   ├── rmd
     │   │   ├── home.rmd
     │   │   ├── my-report.rmd
@@ -142,9 +144,9 @@ needed :
 
 ``` r
 run_test_report(
-    report       = "home",           ## rmd file!
-    dummy_data   = "monkey_a",       ## dummy data from inst/dummy-data
-    dummy_params = "params_1.txt"    ## dummy params from inst/dummy-params
+    report       = "home",            ## rmd file!
+    dummy_data   = "monkey_a",        ## dummy data from inst/dummy-data
+    dummy_params = "params_blank.txt" ## dummy params from inst/dummy-params
 )
 ```
 

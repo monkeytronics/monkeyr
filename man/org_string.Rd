@@ -2,7 +2,7 @@
 % Please edit documentation in R/2a-full-summary.R
 \name{org_string}
 \alias{org_string}
-\title{get_org}
+\title{org_string}
 \usage{
 org_string(wrangled_devices)
 }

@@ -1,0 +1,1 @@
+show deployment map,intro,tenure anlys,room anlys,room_type anlys,intervention analys

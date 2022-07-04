@@ -1,8 +1,8 @@
-device_owner,device_id,data_type,comms_type,long,lat,locationCode,addr,suburb,city,country,room,hhi,cluster,privacy,risk,buildingType,tenure,height,direction,school,building,floor,classRoom,deployment_id
-al@monkeytronics.co.nz,412224,TH,S,174.7835485,-41.3407073,Wellington,20 Cave Road,Houghton Bay,Wellington,New Zealand,,,testgroup,Medium,, ,,,, , , , , 
-al@monkeytronics.co.nz,C000094,CD,W,0,0,,,,,,,,,Do Not Share,Low,,,,,,,0,,
-al@monkeytronics.co.nz,C000105,CD,W,0,0,,,,,,,,,Do Not Share,Low,,,,,,,0,,
-al@monkeytronics.co.nz,C000295,CD,W,0,0,,,,,,,,,Do Not Share,Low,,,,,,,0,,
-al@monkeytronics.co.nz,W000004,TH,W,174.7835485,-41.3407073,Wellington,20 Cave Road,Houghton Bay,Wellington,New Zealand,Kitchen,Wellington Well Homes,cave road,Medium,Low,Detached,Privately Owned,Head - 180cm,North, , , , , 
-al@monkeytronics.co.nz,W000046,TH,W,0,0,,,,,,,,,Do Not Share,Low, ,,,,,,0,,
-al@monkeytronics.co.nz,W000054,TH,W,-74.0635121,40.7075941,NJ,20 Caven Point Avenue,Jersey City,NJ,USA,Bedroom 3,Sustainability Options,chq-cave road-testgroup-He Kainga -houghton valley,Medium,Low,Split Level Flat,Kāinga Ora,Sitting - 120cm,North,,,0,,
+device_owner,device_id,data_type,comms_type,long,lat,locationCode,addr,suburb,city,country,room,hhi,cluster,privacy,risk,buildingType,tenure,height,.,school,building,floor,classRoom,deployment_id
+al@monkeytronics.co.nz,412224,TH,S,174.7835485,-41.3407073,Wellington,20 Cave Road,Houghton Bay,Wellington,New Zealand,Bedroom 2,Wellington Well Homes,testgroup,Medium,,Detached,Emergency / Transitional,Sleeping - 60cm,South, , , , , 
+al@monkeytronics.co.nz,C000094,CD,W,0,0,,,,,,Bedroom 3,Wellington Well Homes,,Do Not Share,Low,Detached,Privately Owned,Sleeping - 60cm,South,,,0,,
+al@monkeytronics.co.nz,C000105,CD,W,0,0,,,,,,Bedroom 1,,,Do Not Share,Low,Split Level Flat,Privately Owned,Sleeping - 60cm,South,,,0,,
+al@monkeytronics.co.nz,C000295,CD,W,0,0,,,,,,Lounge,Wellington Well Homes,,Do Not Share,Low,Split Level Flat,Privately Owned,Sleeping - 60cm,North,,,0,,
+al@monkeytronics.co.nz,W000004,TH,W,174.7835485,-41.3407073,Wellington,20 Cave Road,Houghton Bay,Wellington,New Zealand,Kitchen,Wellington Well Homes,cave road,Medium,Low,Detached,Private Rental,Head - 180cm,North, , , , , 
+al@monkeytronics.co.nz,W000046,TH,W,0,0,,,,,,Lounge 2,,,Do Not Share,Low,Bungalow,Private Rental,Sleeping - 60cm,South,,,0,,
+al@monkeytronics.co.nz,W000054,TH,W,-74.0635121,40.7075941,NJ,20 Caven Point Avenue,Jersey City,NJ,USA,Bedroom 3,Wellington Well Homes,chq-cave road-testgroup-He Kainga -houghton valley,Medium,Low,Bungalow,Private Rental,Sitting - 120cm,North,,,0,,

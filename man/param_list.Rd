@@ -4,7 +4,7 @@
 \alias{param_list}
 \title{param_list}
 \usage{
-param_list(report_params)
+param_list(report_params, split_char = ",")
 }
 \arguments{
 \item{report_params}{The string with '-' separation}

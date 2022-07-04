@@ -12,15 +12,15 @@
 #' @return an html document printed out to a file and the path of the output file is returned
 #'
 #' @examples
-#' run_test_report("home", "monkey_32",   "params_1.txt")
-#' run_test_report("home", "monkey_a",    "params_1.txt")
-#' run_test_report("full", "monkey_32",   "map.txt")
+#' run_test_report("home", "monkey_32",   "params_blank.txt")
+#' run_test_report("home", "monkey_a",    "params_blank.txt")
+#' run_test_report("full", "monkey_32",   "params_full_map.txt")
 #'
 #' @export
 run_test_report <- function (
     report       = "home",
     dummy_data   = "monkey_a",
-    dummy_params = "params_1.txt"
+    dummy_params = "params_blank.txt"
 ) {
 
   ## Get test file paths from folder name
@@ -68,11 +68,11 @@ run_test_report <- function (
 #' @export
 make_test_params <- function(
     dummy_data   = "monkey_a",
-    dummy_params = "params_1.txt",
+    dummy_params = "params_blank.txt",
     ...) {
 
   ## Pull Timestamps out of args file
-  # dummy_data   = "moe_1"
+  # dummy_data   = "schools_4"
   args_file = system.file("dummy-data", paste0(dummy_data, "/args.csv"), package = "monkeyr")
   args <- readr::read_csv(args_file, col_types = "iic")
 

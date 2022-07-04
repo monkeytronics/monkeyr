@@ -4,7 +4,11 @@
 \alias{make_test_params}
 \title{Create a List of Parameters to Test}
 \usage{
-make_test_params(dummy_data = "monkey_a", dummy_params = "params_1.txt", ...)
+make_test_params(
+  dummy_data = "monkey_a",
+  dummy_params = "params_blank.txt",
+  ...
+)
 }
 \arguments{
 \item{folder}{folder located in inst/extdata/{folder}}
