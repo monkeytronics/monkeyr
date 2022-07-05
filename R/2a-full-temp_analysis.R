@@ -347,6 +347,9 @@ get_exposure_kable_dev <- function(temp_exposure, target_var) {
           scroll_box(height = "400px")
       }
 
+      ## output
+      exposure_kable_dev
+
     ## Error Handler
     },
       error = function(cond) {
