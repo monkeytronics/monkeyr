@@ -13,7 +13,7 @@
 #'
 #' @examples
 #' run_test_report("home", "monkey_32",   "params_blank.txt")
-#' run_test_report("home", "monkey_a",    "params_blank.txt")
+#' run_test_report("home", "customer",    "params_blank.txt")
 #' run_test_report("full", "monkey_32",   "params_full_map.txt")
 #'
 #' @export
@@ -71,28 +71,26 @@ make_test_params <- function(
     dummy_params = "params_blank.txt",
     ...) {
 
-  ## Pull Timestamps out of args file
-  # dummy_data   = "schools_4"
+  ## Pull customer info out of args file
   args_file = system.file("dummy-data", paste0(dummy_data, "/args.csv"), package = "monkeyr")
   args <- readr::read_csv(args_file, col_types = "iic")
 
+
+  ## We want to replicate a customer scenario with least effort
+  if (dummy_data == "custimer") {
+    params <- args$report_params[1]
+  } else {
+    params = system.file("dummy-params", dummy_params, package = "monkeyr")
+  }
+
+
+  ## params object to use!
   list(
-
-    ## May only work in dev
-    # obs           = paste0("inst/dummy-data/",   dummy_data, "/obs.csv"),
-    # weather       = paste0("inst/dummy-data/",   dummy_data, "/weather.csv"),
-    # dev           = paste0("inst/dummy-data/",   dummy_data, "/dev.csv"),
-    # interv        = paste0("inst/dummy-data/",   dummy_data, "/interv.csv"),
-    # params        = paste0("inst/dummy_params/", dummy_params),
-
-    ## Using sysdata - production - USE THIS CODE!
     obs           = system.file("dummy-data", paste0(dummy_data, "/obs.csv"),     package = "monkeyr"),
     weather       = system.file("dummy-data", paste0(dummy_data, "/weather.csv"), package = "monkeyr"),
     dev           = system.file("dummy-data", paste0(dummy_data, "/dev.csv"),     package = "monkeyr"),
     interv        = system.file("dummy-data", paste0(dummy_data, "/interv.csv"),  package = "monkeyr"),
-    params        = system.file("dummy-params", dummy_params,                     package = "monkeyr"),
-
-    # replace these with text files with standard options.
+    params        = params, ## See above
     fromTimeStamp = args$fromTimeStamp[1],
     toTimeStamp   = args$toTimeStamp[1]
   )

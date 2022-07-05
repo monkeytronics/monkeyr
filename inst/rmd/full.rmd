@@ -24,13 +24,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/monkey_c/obs.csv"
-  filtered_weather:         "../dummy-data/monkey_c/weather.csv"
-  filtered_devices:         "../dummy-data/monkey_c/dev.csv"
-  filtered_interventions:   "../dummy-data/monkey_c/interv.csv"
-  report_params:            "intro,intervention analys,show deployment map,room anlys,tenure anlys,buildingType anlys,direction anlys,Analyse My Cool Project group,Analyse WISE group"                                            
-  fromTimeStamp:            1656068313
-  toTimeStamp:              1656759513
+  filtered_obs:             "../dummy-data/customer/obs.csv"
+  filtered_weather:         "../dummy-data/customer/weather.csv"
+  filtered_devices:         "../dummy-data/customer/dev.csv"
+  filtered_interventions:   "../dummy-data/customer/interv.csv"
+  report_params:            "intro,intervention analys,show deployment map,room anlys,tenure anlys"                                            
+  fromTimeStamp:            1655892909
+  toTimeStamp:              1656065715
 ---
 
 ```{r setup, include=FALSE}
@@ -161,7 +161,7 @@ title: "`r org_string(wrangled_devices)` Indoor Sensor Report"
 <br />
 
 ```{r, echo=FALSE, results='asis'}
-  if ("deployment map" %in% param_list) {
+  if ("show deployment map" %in% param_list) {
     res <- knitr::knit_child('map_regional.rmd', quiet = TRUE)
     cat(res, sep = '\n')
   }
