@@ -4,10 +4,10 @@
 \alias{get_reg_data}
 \title{get_reg_data}
 \usage{
-get_reg_data(wranged_devices, wrangled_obs, target_reading = "temp")
+get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
 }
 \arguments{
-\item{wranged_devices}{from \code{wrangle_observations( )}}
+\item{wrangled_devices}{from \code{wrangle_observations( )}}
 
 \item{wrangled_obs}{from \code{wrangled_obs( )}}
 
@@ -21,7 +21,7 @@ Make Data-Frame of Regression Test:
 for use with indoor - outdoor regression testing
 }
 \examples{
-reg_data  <- get_reg_data(wranged_devices, wrangled_obs, target_reading = "temp")
+reg_data  <- get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
 reg_kable <- get_reg_kable(reg_data, target_var)
 
 }

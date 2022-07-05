@@ -3,18 +3,18 @@
 #' @description Make Data-Frame of Regression Test:
 #'   for use with indoor - outdoor regression testing
 #'
-#' @param wranged_devices from `wrangle_observations( )`
+#' @param wrangled_devices from `wrangle_observations( )`
 #' @param wrangled_obs from `wrangled_obs( )`
 #' @param target_reading variable upon which to segment data
 #'
 #' @returns data frame
 #'
 #' @examples
-#' reg_data  <- get_reg_data(wranged_devices, wrangled_obs, target_reading = "temp")
+#' reg_data  <- get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
 #' reg_kable <- get_reg_kable(reg_data, target_var)
 #'
 #' @export
-get_reg_data <- function(wranged_devices, wrangled_obs, target_reading = "temp") {
+get_reg_data <- function(wrangled_devices, wrangled_obs, target_reading = "temp") {
   tryCatch (
     {
       ## Wrangle Obs for Temperature Regression Tests
@@ -84,7 +84,7 @@ get_reg_data <- function(wranged_devices, wrangled_obs, target_reading = "temp")
 #' @returns kable
 #'
 #' @examples
-#' reg_data  <- get_reg_data(wranged_devices, wrangled_obs, target_reading = "temp")
+#' reg_data  <- get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
 #' reg_kable <- get_reg_kable(reg_data, target_var)
 #'
 #' @export
@@ -138,7 +138,7 @@ get_reg_kable <- function(reg_data, target_var) {
 #' @returns Box Plot
 #'
 #' @examples
-#' reg_data  <- get_reg_data(wranged_devices, wrangled_obs, target_reading = "temp")
+#' reg_data  <- get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
 #' reg_kable <- get_reg_kable(reg_data, target_var)
 #'
 #' @export

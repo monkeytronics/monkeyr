@@ -213,8 +213,8 @@ monkey_knit_error <- function(
     err   = "err message",
     resource = "failing r function",
     ...) {
-      msg = paste0("error caught in ", resource, " = ", err)
-      cat(msg)
+      msg = paste0("error caught in ", resource, " = ", err, "\n")
+      cat(paste0(msg, "\n\n"))
       logger::log_debug(msg)
       ls_result <- ls()
       message(paste0("\nMESSAGE OUT : ls() = ", ls_result))

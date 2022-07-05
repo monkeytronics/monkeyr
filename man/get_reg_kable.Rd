@@ -19,7 +19,7 @@ Make Kable from Inside-Outside Regression Data that shows detailed
 device estimated correlation factor.
 }
 \examples{
-reg_data  <- get_reg_data(wranged_devices, wrangled_obs, target_reading = "temp")
+reg_data  <- get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
 reg_kable <- get_reg_kable(reg_data, target_var)
 
 }
