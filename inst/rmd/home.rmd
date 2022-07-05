@@ -14,13 +14,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/monkey_a/obs.csv"
-  filtered_weather:         "../dummy-data/monkey_a/weather.csv"
-  filtered_devices:         "../dummy-data/monkey_a/dev.csv"
-  filtered_interventions:   "../dummy-data/monkey_a/interv.csv"
+  filtered_obs:             "../dummy-data/mark_h/obs.csv"
+  filtered_weather:         "../dummy-data/mark_h/weather.csv"
+  filtered_devices:         "../dummy-data/mark_h/dev.csv"
+  filtered_interventions:   "../dummy-data/mark_h/interv.csv"
   report_params:            "-map-"                                            
-  fromTimeStamp:            1655892909
-  toTimeStamp:              1656065715
+  fromTimeStamp:            1654292001
+  toTimeStamp:              1656884001
 ---
 
 ```{r}
@@ -29,12 +29,12 @@ ENABLE_DEBUG <- FALSE
 
 
 ```{r setup }
-# load monkeyr package
-library(monkeyr)
-library(dplyr)
-library(magrittr)
+  ## load monkeyr package
+  library(monkeyr)
+  library(dplyr)
+  library(magrittr)
 
-# other dependencies loaded through namespace
+## other dependencies loaded through namespace
 ```
 
 ```{r wrangle_data}
@@ -79,16 +79,13 @@ library(magrittr)
       
       report_type <- "Home"
       
-      # set R options for monkey reports
+      ## set R options for monkey reports
       monkeyr::set_options(wrangled_obs = wrangled_obs)
       monkeyr::monkey_palettes(devices = wrangled_devices)
       unique_readings <- monkeyr::unique_readings(wrangled_obs = wrangled_obs)
     },
     error = function(cond) {
-      logger::log_debug(paste0("error condition = ", cond))
-      ls_result <- ls()
-      message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
-      knitr::knit_exit("</body></html>")
+      monkeyr::monkey_knit_error(err = cond, resource = "wrangle_data")
     }
   )
 ```
@@ -98,13 +95,11 @@ title: "`r report_type ` Report"
 ---
 
 ```{r check_data, results='asis'}
-
-# Bail if nothing in data. Returns empty report.
-if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
-  cat("No data present for the requested devices and timespan. Aborting report.")
-  knitr::knit_exit("</body></html>")
-}
-
+  ## Bail if nothing in data. Returns empty report.
+  if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
+    cat("No data present for the requested devices and timespan. Aborting report.")
+    knitr::knit_exit("</body></html>")
+  }
 ```
 
 # Healthy Homes Performance {data-icon="fa-chart-bar"}
@@ -114,14 +109,11 @@ if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
 ### Performance Against World Health Organisation Guidelines
 
 ```{r}
-
-who_chart <- 
-  monkeyr::who_threshold_data(observations = wrangled_obs) %>%
-  monkeyr::who_threshold_chart(from_timestamp = params$fromTimeStamp, params$toTimeStamp)
-
-who_chart
-
-
+  who_chart <- 
+    monkeyr::who_threshold_data(observations = wrangled_obs) %>%
+    monkeyr::who_threshold_chart(from_timestamp = params$fromTimeStamp, to_timestamp = params$toTimeStamp)
+  
+  who_chart
 ```
 
 ### World Health Organisation Guidelines
@@ -131,7 +123,7 @@ Low indoor temperatures are associated with increased risks of respiratory and c
 ----------
 
 ```{r}
-who_guidance_kable()
+  who_guidance_kable()
 ```
 
 ----------
@@ -141,26 +133,26 @@ who_guidance_kable()
 ### Hours each night below 18 °C
 
 ```{r}
-totals <-
-  monkeyr::who_threshold_data(observations = wrangled_obs) %>%
-  monkeyr::get_who_totals()
-
-below_12 <- totals$below_12
-below_16 <- totals$below_16
-below_18 <- totals$below_18
-
-palette <- monkeyr::get_heat_palette(6)
-
-flexdashboard::valueBox(paste0(round(8 * below_18, 1), " hrs (",scales::percent(below_18),")"),
-                        icon = "fa-thermometer-half",
-                        # color = ifelse(below_18 > 0.40, "warning", "primary"),
-                        color = palette[4])
+  totals <-
+    monkeyr::who_threshold_data(observations = wrangled_obs) %>%
+    monkeyr::get_who_totals()
+  
+  below_12 <- totals$below_12
+  below_16 <- totals$below_16
+  below_18 <- totals$below_18
+  
+  palette <- monkeyr::get_heat_palette(6)
+  
+  flexdashboard::valueBox(paste0(round(8 * below_18, 1), " hrs (",scales::percent(below_18),")"),
+                          icon = "fa-thermometer-half",
+                          # color = ifelse(below_18 > 0.40, "warning", "primary"),
+                          color = palette[4])
 ```
 
 ### Hours each night below 16 °C
 
 ```{r}
-flexdashboard::valueBox(paste0(round(8 * below_16, 1) , " hrs (", scales::percent(below_16), ")"),
+  flexdashboard::valueBox(paste0(round(8 * below_16, 1) , " hrs (", scales::percent(below_16), ")"),
                         icon = "fa-thermometer-quarter",
                         # color = color = ifelse(below_16 > 0.20, "warning", "primary")
                         color = palette[5])
@@ -169,15 +161,15 @@ flexdashboard::valueBox(paste0(round(8 * below_16, 1) , " hrs (", scales::percen
 ### Hours each night below 12 °C
 
 ```{r}
-flexdashboard::valueBox(paste0(
-  round(8 * below_12, 1) ,
-  " hrs (",
-  scales::percent(below_12),
-  ")"
-),
-icon = "fa-thermometer-empty",
-# color = ifelse(below_12 > 0.01, "danger", "primary")
-color = palette[6])
+  flexdashboard::valueBox(paste0(
+    round(8 * below_12, 1) ,
+    " hrs (",
+    scales::percent(below_12),
+    ")"
+  ),
+  icon = "fa-thermometer-empty",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = palette[6])
 ```
 
 
@@ -188,60 +180,59 @@ color = palette[6])
 ### Temperature
 
 ```{r}
-if (getOption("temp")) {
-  monkeyr::ts_chart(
-    observations = wrangled_obs,
-    from_timestamp = params$fromTimeStamp,
-    to_timestamp = params$toTimeStamp,
-    target_variable = "temp"
-  )
-} else {
-  cat("No Temperature Data Available!")
-}
+  if (getOption("temp")) {
+    monkeyr::ts_chart(
+      observations = wrangled_obs,
+      from_timestamp = params$fromTimeStamp,
+      to_timestamp = params$toTimeStamp,
+      target_variable = "temp"
+    )
+  } else {
+    cat("No Temperature Data Available!")
+  }
 ```
 
 ### Humidity
 
 ```{r}
-if (getOption("hum")) {
-  monkeyr::ts_chart(
-    observations = wrangled_obs,
-    from_timestamp = params$fromTimeStamp,
-    to_timestamp = params$toTimeStamp,
-    target_variable = "hum"
-  ) 
-} else {
-  cat("No Humidity Data Available!")
-}
+  if (getOption("hum")) {
+    monkeyr::ts_chart(
+      observations = wrangled_obs,
+      from_timestamp = params$fromTimeStamp,
+      to_timestamp = params$toTimeStamp,
+      target_variable = "hum"
+    ) 
+  } else {
+    cat("No Humidity Data Available!")
+  }
 ```
 
 ```{r echo=FALSE, results="asis"}
 
-# All the rest are present when data is available!
-# ------------------------------------------------
-
-# unique_readings <- unique_readings(wrangled_obs)
-valid_readings <- monkeyr::filter_list(unique_readings, permitted_readings())
-valid_readings <- valid_readings[valid_readings != "temp"]
-valid_readings <- valid_readings[valid_readings != "hum"]
-
-plotlist = list()
-
-for (i in 1 : length(valid_readings)) {
-  cat("\n", "\n### ", toupper(valid_readings[i]), "\n")
-  ts_chart <- monkeyr::ts_chart(
-    observations = wrangled_obs,
-    from_timestamp = params$fromTimeStamp,
-    to_timestamp = params$toTimeStamp,
-    target_variable = valid_readings[i]
-  ) 
+  ## All the rest are present when data is available!
+  ## ------------------------------------------------
   
-  plotlist[[2*i]] = ts_chart
-  print(htmltools::tagList(ts_chart))
-  cat("gfdsfsdgfsdgsgfds")
-  plotlist[[2*i+1]] = ts_chart
-  print(htmltools::tagList(ts_chart))
-}
+  valid_readings <- monkeyr::filter_list(unique_readings, permitted_readings())
+  valid_readings <- valid_readings[valid_readings != "temp"]
+  valid_readings <- valid_readings[valid_readings != "hum"]
+  
+  if (length(valid_readings) > 0) {
+    plotlist = list()
+    for (i in 1 : length(valid_readings)) {
+      cat("\n", "\n### ", toupper(valid_readings[i]), "\n")
+      ts_chart <- monkeyr::ts_chart(
+        observations = wrangled_obs,
+        from_timestamp = params$fromTimeStamp,
+        to_timestamp = params$toTimeStamp,
+        target_variable = valid_readings[i]
+      ) 
+      
+      plotlist[[2*i]] = ts_chart
+      print(htmltools::tagList(ts_chart))
+      plotlist[[2*i+1]] = ts_chart
+      print(htmltools::tagList(ts_chart))
+    }
+  }
 ```
 
 
@@ -250,19 +241,19 @@ for (i in 1 : length(valid_readings)) {
 ### Highest Ever Temperature
 
 ```{r}
-extremes_temp <- monkeyr::get_extreme_vals(
-  observations = wrangled_obs,
-  target_variable = "temp")
-
-flexdashboard::valueBox(extremes_temp$highest_val,
-         icon = "fa-thermometer-full",
-         color = ifelse(extremes_temp$highest_val > 29, "warning", "primary"))
+  extremes_temp <- monkeyr::get_extreme_vals(
+    observations = wrangled_obs,
+    target_variable = "temp")
+  
+  flexdashboard::valueBox(extremes_temp$highest_val,
+           icon = "fa-thermometer-full",
+           color = ifelse(extremes_temp$highest_val > 29, "warning", "primary"))
 ```
 
 ### Lowest Ever Temperature
 
 ```{r}
-flexdashboard::valueBox(extremes_temp$lowest_val,
+  flexdashboard::valueBox(extremes_temp$lowest_val,
          icon = "fa-thermometer-empty",
          color = ifelse(extremes_temp$lowest_val < 12, "warning", "primary"))
 ```
@@ -270,9 +261,7 @@ flexdashboard::valueBox(extremes_temp$lowest_val,
 ### Mean Temperature
 
 ```{r}
-flexdashboard::valueBox(extremes_temp$mean_val,
+  flexdashboard::valueBox(extremes_temp$mean_val,
          icon = "fa-thermometer-half",
          color = ifelse(extremes_temp$mean_val < 16, "warning", "primary"))
 ```
-
-

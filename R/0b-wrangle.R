@@ -134,30 +134,32 @@ wrangle_devices <- function(
   }
 
   ## Get most common City & Country for weather data joining.
-    # tryCatch (
-    #   expr = {
+    tryCatch (
+      {
         common_city    <- tail(names(sort(table(filtered_devices$city))), 1)
         common_country <- tail(names(sort(table(filtered_devices$country))), 1)
-  #     },
-  #     error = function(e){
-  #       common_city     <- "unknown"
-  #       common_country  <- "unknown"
-  #     },
-  # )
+        if (typeof(common_city)    == "NULL")  { common_city = "unknown"}
+        if (typeof(common_country) == "NULL")  { common_country = "unknown"}
+      },
+      error = function(e){
+        common_city     <- "unknown"
+        common_country  <- "unknown"
+      }
+    )
 
-  wrangled_devices_ <-
+  wrangled_devices <-
     filtered_devices %>%
 
-    # Filter Sensor Node
+    ## Filter Sensor Node
     dplyr::filter((data_type %in% data_type_filter)) %>%
 
-    # replace missing values with 'unknown'
+    ## replace missing values with 'unknown'
     dplyr::mutate(tenure       = tidyr::replace_na(tenure,       "unknown")) %>%
     dplyr::mutate(buildingType = tidyr::replace_na(buildingType, "unknown")) %>%
     dplyr::mutate(height       = tidyr::replace_na(height,       "unknown")) %>%
     dplyr::mutate(direction    = tidyr::replace_na(direction,    "unknown")) %>%
     dplyr::mutate(room         = tidyr::replace_na(room,         "unknown")) %>%
-    dplyr::mutate(addr         = tidyr::replace_na(addr,         "Unknown")) %>%
+    # dplyr::mutate(addr         = tidyr::replace_na(addr,         "Unknown")) %>%
     dplyr::mutate(hhi          = tidyr::replace_na(hhi,          "Unknown")) %>%
     dplyr::mutate(hhi          = stringi::stri_replace_first_fixed(hhi, "Not Listed", "Unknown") ) %>%
 
@@ -165,16 +167,18 @@ wrangle_devices <- function(
     dplyr::mutate(country      = tidyr::replace_na(country,  common_country)) %>%
 
     # Mutate a room type for bedroom / living space division (default living)
-    tibble::add_column(room_type = "living", .after = "room") %>%
+    # tibble::add_column(room_type = "living", .after = "room") %>%
     dplyr::mutate(room_type = dplyr::case_when(
       grepl("bedroom", tolower(room), fixed = TRUE) ~ "bedroom"
+      ,TRUE ~ "living"
     ))
 
-  if(nrow(wrangled_devices_) == 0) {
-    stop("Oh no. Wrangled devcies is zero length.")
+  if(nrow(wrangled_devices) == 0) {
+    monkeyr::monkey_knit_error(err = "No useful data present to analyse", resource = "wrangle_devices")
+    # stop("Oh no. Wrangled devcies is zero length.")
   }
 
-  return(wrangled_devices_)
+  return(wrangled_devices)
 }
 
 
@@ -204,50 +208,48 @@ wrangle_weather <- function(filtered_weather) {
     wrangled_weather <- filtered_weather
   }
 
-  wrangled_weather %>%
-    janitor::clean_names() %>%
-    dplyr::filter(!is.na(dt)) %>%
-    dplyr::mutate(city = as.character(city_name)) %>% ## prevents crash in hourly data, when empty data set
+  if(nrow(wrangled_weather > 0)) {
+    wrangled_weather %>%
+      janitor::clean_names() %>%
+      dplyr::filter(!is.na(dt)) %>%
+      dplyr::mutate(city = as.character(city_name)) %>% ## prevents crash in hourly data, when empty data set
 
-    ## extract hour, date, month, year for joining data set
-    dplyr::mutate(rounded_time = 3600 * round(dt/3600) + 60) %>% # 1 minute past hour as dt is irregular.
-    dplyr::mutate(time_local_iso = as.POSIXct(rounded_time, origin="1970-01-01")) %>%
-    dplyr::relocate(c(rounded_time, time_local_iso, dt, dt_iso), .before = "timezone") %>%
+      ## extract hour, date, month, year for joining data set
+      dplyr::mutate(rounded_time = 3600 * round(dt/3600) + 60) %>% # 1 minute past hour as dt is irregular.
+      dplyr::mutate(time_local_iso = as.POSIXct(rounded_time, origin="1970-01-01")) %>%
+      dplyr::relocate(c(rounded_time, time_local_iso, dt, dt_iso), .before = "timezone") %>%
 
-    # Get h, d, m, Y.
-    dplyr::mutate(hour  = format(as.POSIXct(time_local_iso, format = "%H:%M"),    "%H")) %>%
-    dplyr::mutate(date  = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%d")) %>%
-    dplyr::mutate(month = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%m")) %>%
-    dplyr::mutate(year  = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%Y")) %>%
-    dplyr::relocate(c(hour, date, month, year), .before = "timezone") %>%
+      # Get h, d, m, Y.
+      dplyr::mutate(hour  = format(as.POSIXct(time_local_iso, format = "%H:%M"),    "%H")) %>%
+      dplyr::mutate(date  = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%d")) %>%
+      dplyr::mutate(month = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%m")) %>%
+      dplyr::mutate(year  = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%Y")) %>%
+      dplyr::relocate(c(hour, date, month, year), .before = "timezone") %>%
 
-    ## give better names
-    dplyr::mutate(outdoor_hum  = as.numeric(humidity)) %>%
-    dplyr::mutate(outdoor_temp  = as.numeric(temp)) %>%
+      ## give better names
+      dplyr::mutate(outdoor_hum  = as.numeric(humidity)) %>%
+      dplyr::mutate(outdoor_temp  = as.numeric(temp)) %>%
 
-    # Clear out the crap!
-    dplyr::select(
-      -humidity,
-      -temp,
-      -sea_level,
-      -grnd_level,
-      -rain_3h,
-      -snow_3h,
-      -dt,
-      -dt_iso,
-      -rounded_time,
-      -time_local_iso,
-      -timezone,
-      -lon,
-      -lat
-      )
+      # Clear out the crap!
+      dplyr::select(
+        -humidity,
+        -temp,
+        -sea_level,
+        -grnd_level,
+        -rain_3h,
+        -snow_3h,
+        -dt,
+        -dt_iso,
+        -rounded_time,
+        -time_local_iso,
+        -timezone,
+        -lon,
+        -lat
+        )
+  } else {
+    wrangled_weather = NULL
+  }
 
-
-    # # I want to move away from hourly averages - it is a terrible idea.
-    # # long_form
-    # dplyr::group_by(city, h) %>%
-    # # dplyr::summarise( mean_t = mean(as.double(temp), na.rm = TRUE) ) %>%  # just temp
-    # dplyr::summarise_at(dplyr::vars("outdoor_hum", "outdoor_temp"), mean, na.rm = TRUE)    # add several values!
 }
 
 
@@ -361,7 +363,8 @@ wrangle_observations <-
       tibble::add_column(local_time = "", .after = "ts")
 
 
-    wrangled_obs %>%
+    wrangled_obs <-
+      wrangled_obs %>%
       dplyr::mutate(local_time = get_local_time(as.numeric(ts), lat, long)) %>%
 
       ## extract hour, date, month, year for joining data set
@@ -369,9 +372,16 @@ wrangle_observations <-
       dplyr::mutate(date  = format(as.POSIXct(local_time, format = "%Y-%m-%d"), "%d")) %>%
       dplyr::mutate(month = format(as.POSIXct(local_time, format = "%Y-%m-%d"), "%m")) %>%
       dplyr::mutate(year  = format(as.POSIXct(local_time, format = "%Y-%m-%d"), "%Y")) %>%
-      dplyr::relocate(c(hour, date, month, year), .after = "local_time") %>%
+      dplyr::relocate(c(hour, date, month, year), .after = "local_time")
 
-      dplyr::left_join(weather, by = c("hour", "date", "month", "year", "city"))
+    if (typeof(weather) != "NULL") {
+      wrangled_obs <-
+        wrangled_obs %>%
+        dplyr::left_join(weather, by = c("hour", "date", "month", "year", "city"))
+    }
+
+    ## output
+    wrangled_obs
 }
 
 

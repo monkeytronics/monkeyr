@@ -1,0 +1,3 @@
+device_owner,device_id,data_type,comms_type,long,lat,locationCode,addr,suburb,city,country,room,hhi,cluster,privacy,risk,buildingType,tenure,height,direction,school,building,floor,classRoom,deployment_id
+jillianandmark@gmail.com,W000055,TH,W,0,0,,,,,New Zealand,,,,None,Low, ,,,,,,0,,
+jillianandmark@gmail.com,W000061,TH,W,0,0,,,,,New Zealand,,,,None,Low, ,,,,,,0,,

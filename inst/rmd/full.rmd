@@ -94,8 +94,6 @@ params:
       
       nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
       
-      report_type <- "Home"
-      
       # set R options for monkey reports
       monkeyr::set_options(wrangled_obs = wrangled_obs)
       monkeyr::monkey_palettes(devices = wrangled_devices)

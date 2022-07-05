@@ -16,26 +16,33 @@ date_string <- function(ts) {
 #' @export
 device_summary_string <- function(data_volume) {
 
-  devices_n   <- nrow(data_volume)
-  excluded_n  <- sum(data_volume$exclude == 1)
-  included_n  <- sum(data_volume$exclude == 0)
+  tryCatch(
+    {
+      devices_n   <- nrow(data_volume)
+      excluded_n  <- sum(data_volume$exclude == 1)
+      included_n  <- sum(data_volume$exclude == 0)
 
-  comment_all <-
-    if (devices_n == excluded_n) {
-      paste("all")
+      comment_all <-
+        if (devices_n == excluded_n) {
+          paste("all")
+        }
+
+      comment_excluded_n <-
+        if (excluded_n == 0) {
+          paste("no")
+        } else {
+          paste(excluded_n)
+        }
+
+      ret <- paste0("Of the ", devices_n , " devices included within this report, ",
+      comment_all, comment_excluded_n," devices were excluded due to having insufficient data volume within the reporting period.")
+
+      return(ret)
+    },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "device_summary_string")
     }
-
-  comment_excluded_n <-
-    if (excluded_n == 0) {
-      paste("no")
-    } else {
-      paste(excluded_n)
-    }
-
-  ret <- paste0("Of the ", devices_n , " devices included within this report, ",
-  comment_all, comment_excluded_n," devices were excluded due to having insufficient data volume within the reporting period.")
-
-  return(ret)
+  )
 }
 
 
@@ -46,24 +53,37 @@ device_summary_string <- function(data_volume) {
 #' @export
 org_string <- function(wrangled_devices) {
   ## list of data source organisations : Do before exclusions. The org data is still valid nonetheless.
-  devices_with_hhi <-
-    wrangled_devices %>%
-    filter(hhi != "Unknown")
 
-  hhi_count <- n_distinct(devices_with_hhi$hhi, na.rm = TRUE)
-  list_org <-
-    if (hhi_count == 0) {
-      print("Independent")
-    } else if (hhi_count == 1) {
-      print(levels(as.factor(devices_with_hhi$hhi)))
-    } else {
-      print( paste( sapply(list(levels(as.factor(devices_with_hhi$hhi))[-hhi_count]), paste, collapse = ", "),
-                    " and ",
-                    levels(as.factor(devices_with_hhi$hhi))[hhi_count]))
+  tryCatch(
+    {
+      ## devices with valid hhi value
+      devices_with_hhi <-
+        wrangled_devices %>%
+        filter(hhi != "Unknown")
+
+      ## create string from unique hhi values
+      hhi_count <- n_distinct(devices_with_hhi$hhi, na.rm = TRUE)
+      list_org <-
+        if (hhi_count == 0) {
+          print("Independent")
+        } else if (hhi_count == 1) {
+          print(levels(as.factor(devices_with_hhi$hhi)))
+        } else {
+          print( paste( sapply(list(levels(as.factor(devices_with_hhi$hhi))[-hhi_count]), paste, collapse = ", "),
+                        " and ",
+                        levels(as.factor(devices_with_hhi$hhi))[hhi_count]))
+        }
+
+      ## Output
+      list_org
+
+    },
+      error = function(cond) {
+        monkeyr::monkey_knit_error(err = cond, resource = "org_string")
     }
-  ## Output
-  list_org
+  )
 }
+
 
 
 #' home_summary_kable
@@ -72,28 +92,36 @@ org_string <- function(wrangled_devices) {
 #' @return kable
 #' @export
 home_summary_kable <- function(wrangled_devices) {
-  table_1_1 <-
-    ## number of properties per hhi / tenure
-    wrangled_devices %>%
-    group_by(hhi, tenure) %>%
-    summarise(property = n_distinct(addr))
+  tryCatch(
+    {
+      table_1_1 <-
+        ## number of properties per hhi / tenure
+        wrangled_devices %>%
+        group_by(hhi, tenure) %>%
+        summarise(property = n_distinct(addr))
 
-  kable_1_1 <-
-    table_1_1 %>%
-    # kable() %>%   ## kbl extends this.
-    kableExtra::kbl(col.names = c("HHI Provider", "Home Tenure", "Number of Homes"),
-                    format = "html",
-                    align = "llc") %>%
-    kableExtra::kable_material(
-      lightable_options = c("striped", "hover", "condensed"),
-      html_font = "sans-serif"
-      # ,full_width = TRUE  ## default value!
-      # ,font_size = 14     ## Doesn't work
-      ) %>%
-    kableExtra::column_spec(1:3, width = c("40em","40em","30em"))
+      kable_1_1 <-
+        table_1_1 %>%
+        # kable() %>%   ## kbl extends this.
+        kableExtra::kbl(col.names = c("HHI Provider", "Home Tenure", "Number of Homes"),
+                        format = "html",
+                        align = "llc") %>%
+        kableExtra::kable_material(
+          lightable_options = c("striped", "hover", "condensed"),
+          html_font = "sans-serif"
+          # ,full_width = TRUE  ## default value!
+          # ,font_size = 14     ## Doesn't work
+          ) %>%
+        kableExtra::column_spec(1:3, width = c("40em","40em","30em"))
 
-  ## Output
-  kable_1_1
+      # Output
+      kable_1_1
+
+    },
+      error = function(cond) {
+        monkeyr::monkey_knit_error(err = cond, resource = "home_summary_kable")
+    }
+  )
 }
 
 
@@ -103,24 +131,33 @@ home_summary_kable <- function(wrangled_devices) {
 #' @return kable
 #' @export
 room_summary_kable <- function(wrangled_devices) {
-  table_1_2 <-
-    ## hhi / device manager | location | count
 
-    wrangled_devices %>%
-    # summary table
-    group_by(hhi, device_owner, tenure, room_type) %>%
-    summarise(count = n_distinct(device_id))
+  tryCatch(
+    {
+      table_1_2 <-
+        ## hhi / device manager | location | count
 
-  kable_1_2 <-
-    table_1_2 %>%
-    kableExtra::kbl(col.names = c("HHI Provider", "Owner", "Home Tenure", "Room Type", "Count")) %>%
-    kable_material(
-      lightable_options = c("striped", "hover", "condensed"),
-      html_font = "sans-serif"
-    )
+        wrangled_devices %>%
+        # summary table
+        group_by(hhi, device_owner, tenure, room_type) %>%
+        summarise(count = n_distinct(device_id))
 
-  ## Output
-  kable_1_2
+      kable_1_2 <-
+        table_1_2 %>%
+        kableExtra::kbl(col.names = c("HHI Provider", "Owner", "Home Tenure", "Room Type", "Count")) %>%
+        kable_material(
+          lightable_options = c("striped", "hover", "condensed"),
+          html_font = "sans-serif"
+        )
+
+      ## Output
+      kable_1_2
+
+    },
+      error = function(cond) {
+        monkeyr::monkey_knit_error(err = cond, resource = "room_sumary_kable")
+    }
+  )
 }
 
 
@@ -131,32 +168,41 @@ room_summary_kable <- function(wrangled_devices) {
 #' @export
 device_excluded_kable <- function(data_volume) {
 
-  devices_excl <- data_volume %>%
-    filter(exclude == 1)
+  tryCatch(
+    {
+      ## devices with NO data
+      devices_excl <- data_volume %>%
+        filter(exclude == 1)
 
-  if (nrow(devices_excl) > 0) {
-    table_1_3 <-
-      devices_excl %>%
-      group_by(hhi, tenure, device_id) %>%
-      summarise()
+      ## Only knit if something to show
+      if (nrow(devices_excl) > 0) {
+        table_1_3 <-
+          devices_excl %>%
+          group_by(hhi, tenure, device_id) %>%
+          summarise()
 
-    kable_1_3 <-
-      table_1_3 %>%
-      kableExtra::kbl(col.names = c("HHI Provider", "Home Tenure", "Device Id"),
-                      format = "html",
-                      align = "llc") %>%
-      kable_material(lightable_options = c("striped", "hover", "condensed"),
-                     html_font = "sans-serif") %>%
-      kableExtra::column_spec(1:3, width = c("40em","40em","30em"))
+        kable_1_3 <-
+          table_1_3 %>%
+          kableExtra::kbl(col.names = c("HHI Provider", "Home Tenure", "Device Id"),
+                          format = "html",
+                          align = "llc") %>%
+          kable_material(lightable_options = c("striped", "hover", "condensed"),
+                         html_font = "sans-serif") %>%
+          kableExtra::column_spec(1:3, width = c("40em","40em","30em"))
 
-    if (nrow(table_1_3) > 5) {
-      kable_1_3 <- kable_1_3 %>%
-        scroll_box(height = "400px")
+        if (nrow(table_1_3) > 5) {
+          kable_1_3 <- kable_1_3 %>%
+            scroll_box(height = "400px")
+        }
+        ## Output
+        print(kable_1_3)
+        cat(paste0("\n", "##### Table 1.3. Devices Excluded Due to Insufficient Data", "\n"))
+      }
+    },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "org_string")
     }
-    ## Output
-    print(kable_1_3)
-    cat(paste0("\n", "##### Table 1.3. Devices Excluded Due to Insufficient Data", "\n"))
-  }
+  )
 }
 
 

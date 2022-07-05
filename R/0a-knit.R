@@ -194,3 +194,29 @@ knit_report <-
       ...
     )
   }
+
+
+#' monkey_error
+#'
+#' @description R Code crashed. Need to print out message to: \cr
+#'   * to html report
+#'   * console / terminal
+#'   * render
+#'
+#' @param folder folder located in inst/extdata/{folder}
+#' @param params_file params txt file located at inst/extdata/params/{params_file}
+#'
+#' @return a list of parameters that may be used for generating a report
+#'
+#' @export
+monkey_knit_error <- function(
+    err   = "err message",
+    resource = "failing r function",
+    ...) {
+      msg = paste0("error caught in ", resource, " = ", err)
+      cat(msg)
+      logger::log_debug(msg)
+      ls_result <- ls()
+      message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
+      knitr::knit_exit("</body></html>")
+}

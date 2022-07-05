@@ -403,12 +403,9 @@ tryCatch(
     #   )
   
   
-},
-  error = function(cond) {
-    logger::log_debug(paste0("error condition = ", cond))
-    ls_result <- ls()
-    message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
-    knitr::knit_exit("</body></html>")
+  },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "mapping")
   }
 )
   
@@ -429,4 +426,4 @@ Of `r count_all` deployed devices, `r count_connected` (shown in green) connecte
   myMap
 ```
 
-##### Figure 1.4: Device Map
+##### Figure 1.2: Device Map
