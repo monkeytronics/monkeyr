@@ -14,13 +14,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/monkey_c/obs.csv"
-  filtered_weather:         "../dummy-data/monkey_c/weather.csv"
-  filtered_devices:         "../dummy-data/monkey_c/dev.csv"
-  filtered_interventions:   "../dummy-data/monkey_c/interv.csv"
+  filtered_obs:             "../dummy-data/monkey_32/obs.csv"
+  filtered_weather:         "../dummy-data/monkey_32/weather.csv"
+  filtered_devices:         "../dummy-data/monkey_32/dev.csv"
+  filtered_interventions:   "../dummy-data/monkey_32/interv.csv"
   report_params:            "-map-"                                            
-  fromTimeStamp:            1656068313
-  toTimeStamp:              1656759513
+  fromTimeStamp:            1627639151
+  toTimeStamp:              1630317551
 ---
 
 ```{r}
@@ -33,6 +33,7 @@ ENABLE_DEBUG <- FALSE
   library(monkeyr)
   library(dplyr)
   library(magrittr)
+  library(fontawesome)
 
 ## other dependencies loaded through namespace
 ```
@@ -45,14 +46,19 @@ ENABLE_DEBUG <- FALSE
   tryCatch(
     {
       wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
+      
+      # local_tz         <- monkeyr::get_local_tz(wrangled_devices)
     
       wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
       
+      start_time <- Sys.time()
       wrangled_obs <- monkeyr::wrangle_observations(
         filtered_obs   = params$filtered_obs,
         devices        = wrangled_devices,
         weather        = wrangled_weather
       )
+      end_time <- Sys.time()
+      end_time - start_time
       
       data_volume <- monkeyr::get_data_volume(
         observations   = wrangled_obs,
@@ -74,6 +80,11 @@ ENABLE_DEBUG <- FALSE
         target_data    = wrangled_obs,
         data_volume    = data_volume
       )
+      
+      sample_rate <- ceiling(nrow(wrangled_obs)/50000)
+      if (sample_rate > 1) {
+        wrangled_obs <- monkeyr::downsample_obs(wrangled_obs, sample_rate)
+      }
       
       nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
       
@@ -101,6 +112,11 @@ title: "`r report_type ` Report"
     knitr::knit_exit("</body></html>")
   }
 ```
+
+
+
+<!-- PAGE 1: HEALTHY HOMES    -->
+<!-- ------------------------ -->
 
 # Healthy Homes Performance {data-icon="fa-chart-bar"}
 
@@ -173,7 +189,21 @@ Low indoor temperatures are associated with increased risks of respiratory and c
 ```
 
 
-# Raw Timeseries Data {data-icon="fa-chart-line"}
+
+<!-- PAGE 2: VENTILATION CODE -->
+<!-- ------------------------ -->
+```{r, echo=FALSE, results='asis'}
+  if ("co2" %in% wrangled_obs$reading) {
+    res <- knitr::knit_child('ventilation.rmd', quiet = TRUE)
+    cat(res, sep = '\n')
+  }
+```
+
+
+<!-- PAGE 3: TIME SERIES CODE -->
+<!-- ------------------------ -->
+
+# `r fa("chart-line", fill = "white")`  Raw Timeseries Data
 
 ## Column 1 {.tabset}
 

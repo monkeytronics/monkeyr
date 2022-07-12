@@ -22,27 +22,14 @@ ts_chart <- function(observations,
   checkmate::assert_number(to_timestamp)
   checkmate::assert_data_frame(observations)
 
+  ## Test
+  ## observations = wrangled_obs
+  ## from_timestamp = params$fromTimeStamp
+  ## to_timestamp = params$toTimeStamp
+  ## target_variable = "temp"
+
   tryCatch (
     {
-
-      ## Test
-      ## observations <- wrangled_obs
-      ## from_timestamp <- params$fromTimeStamp
-      ## to_timestamp <- params$toTimeStamp
-      ## target_variable <- "pm1"
-
-      ## Use room if unique vals present
-      rooms <- observations %>%
-        group_by(device_id, room) %>%
-        filter(!is.na(room)) %>%
-        summarise
-
-      ## Can tolerate only 1 unknown - no duplicates
-      if (sum(duplicated(rooms$room)) == 0) {
-        observations <- observations %>%
-          mutate(device_id = room)
-      }
-
       ## Make Polygons for target var
       blue_zone_1 <- make_polygon_area(observations, target_variable, severity = 1)
       blue_zone_2 <- make_polygon_area(observations, target_variable, severity = 2)
@@ -101,8 +88,19 @@ ts_chart <- function(observations,
         "dba"   = "Sound Pressure Level Time Series ",
       )
 
+
+      ## prep data set
       observations <- observations %>%
-        dplyr::filter(reading == target_variable & !is.na(ts))
+        dplyr::filter(reading == target_variable & !is.na(ts)) %>%
+
+      ## group by device_id & make names unique
+        dplyr::group_by(device_id) %>%
+        dplyr::mutate(name = ifelse(
+          sum(duplicated(name)) > 0,
+          paste0(device_id, " - ", name),
+          name
+        ))
+
 
       axis_high <- max(y_lim[[2]], max(as.numeric(observations$val), na.rm = TRUE))
       axis_low  <- min(y_lim[[1]],  min(as.numeric(observations$val), na.rm = TRUE))
@@ -111,15 +109,15 @@ ts_chart <- function(observations,
         ggplot2::ggplot(ggplot2::aes(
           x = local_time,
           y = val,
-          colour = device_id
+          colour = name
         )) +
         ggplot2::geom_polygon(data = blue_zone_1, colour = "white", alpha = 0.20, fill = "royalblue") +
         ggplot2::geom_polygon(data = blue_zone_2, colour = "white", alpha = 0.30, fill = "royalblue") +
         ggplot2::geom_polygon(data = blue_zone_3, colour = "white", alpha = 0.40, fill = "royalblue") +
         ggplot2::geom_line() +
+
         ggplot2::scale_color_manual(values = target_colours) +
-        ggplot2::labs(title = paste0(t_lab, report_period),
-                      colour = "Room") +
+        ggplot2::labs(title = paste0(t_lab, report_period)) +
         ggplot2::ylab(y_lab) +
         ggplot2::xlab("Change_Date") +
         ggplot2::ylim(axis_low, axis_high) +

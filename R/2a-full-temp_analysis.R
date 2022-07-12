@@ -61,7 +61,8 @@ get_reg_data <- function(wrangled_devices, wrangled_obs, target_reading = "temp"
         select(-c(std.error, statistic)) %>%
 
         ## Add back in Device Cols which lm() removed
-        left_join(wrangled_devices, by = "device_id")
+        left_join(wrangled_devices, by = "device_id") %>%
+        dplyr::filter(!is.na(estimate))
 
     ## Error Handler
     },
@@ -246,7 +247,7 @@ get_temp_exposure <- function(wrangled_obs, wrangled_devices, target_var) {
 
         ## Sum fraction > 21
         group_by(device_id, temp_band) %>%
-        summarise(fraction = round(sum(fraction), 3)) %>%
+        summarise(fraction = sum(fraction)) %>%
         ungroup() %>%
 
         ## Spread - Replaced by Pivot Wider
@@ -338,6 +339,7 @@ get_exposure_kable_dev <- function(temp_exposure, target_var) {
         relocate(device_id) %>%
         group_by(target_var, device_id)  %>%
         arrange(desc(`< 21°C`)) %>%
+        # arrange(-`< 21°C`, -`< 18°C`, -`< 16°C`, -`< 12°C`) %>%
         janitor::adorn_pct_formatting() %>%
         kable(col.names = c("Device Id", stringi::stri_trans_totitle(target_var), "< 21°C", "< 18°C", "< 16°C", "< 12°C")) %>%
         kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "sans-serif")
@@ -394,7 +396,7 @@ get_exposure_chart_data <- function(wrangled_obs, wrangled_devices, target_var) 
 
         ## Sum fraction > 21
         group_by(device_id, temp_band) %>%
-        summarise(fraction = round(sum(fraction), 3)) %>%
+        summarise(fraction = sum(fraction)) %>%
         ungroup() %>%
 
         ## Add back in Device Info
@@ -432,7 +434,7 @@ get_exposure_chart_data <- function(wrangled_obs, wrangled_devices, target_var) 
         mutate(ymax = cumsum(fraction),
                ymin = c(0, head(cumsum(fraction), n = -1))) %>%
         mutate(label_pos = (ymax+ymin) / 2,
-               label = ifelse(fraction < 0.01, "", paste0(round(fraction*100, 0), "%"))) #%>%
+               label = ifelse(fraction < 0.01, "", paste0(round(fraction*100, 0), "%")))
 
     ## Error Handler
     },
@@ -480,7 +482,7 @@ get_exposure_plot <- function(exposure_chart_data, target_var) {
                   size = 3) +
 
         nord::scale_fill_nord("lumina", # moose_pond
-                              name = "of device experienced\n a night-time temperature\n",
+                              name = "night-time\ntemperature\n",
                               label = c("> 20°C", "< 20°C", "< 18°C", "< 16°C", "< 12°C"),
                               drop = FALSE) +
         nord::scale_color_nord("lumina", # moose_pond
@@ -489,13 +491,12 @@ get_exposure_plot <- function(exposure_chart_data, target_var) {
         guides(color = "none",
                fill = guide_legend(title.position = "top")) +
 
-        # coord_polar(theta="y") +
+        # coord_polar(theta="y") +    ## Pie Chart!
         xlim(c(0, 3)) +
         ylim(c(1, 0)) + # reversing so lower temps are at bottom.
 
         facet_wrap(vars( target_var ), ncol=4) +
-
-        # facet_grid(cols = vars(room_type), rows = vars(hhi, rental_type)) +
+        #facet_grid(cols = vars(room_type), rows = vars(hhi, rental_type)) +
 
         labs(title = paste0(""), y = "", x = "") +
 
@@ -503,7 +504,7 @@ get_exposure_plot <- function(exposure_chart_data, target_var) {
 
         theme(plot.margin = margin(0.0, 0.0, 0.0, 0.0, "cm"),
 
-              strip.text.x = element_text(angle = 0, hjust = 0.3),
+              strip.text.x = element_text(angle = 0, hjust = 0.3, size = 9),
 
               legend.title = element_text(size = 9),
               legend.position = "right",
@@ -559,7 +560,7 @@ get_lowtemp_chart_data <- function(wrangled_obs, wrangled_devices, target_var) {
 
         ## Sum fraction > 21
         group_by(device_id, temp_band) %>%
-        summarise(fraction = round(sum(fraction), 3)) %>%
+        summarise(fraction = sum(fraction)) %>%
         ungroup() %>%
 
         ## Add back in Device Info
@@ -586,14 +587,20 @@ get_lowtemp_chart_data <- function(wrangled_obs, wrangled_devices, target_var) {
       ## Flag Worst temp_band
       lowest_temp_chart_data <-
         lowest_temp_chart_data %>%
-        group_by(target_var, device_id) %>%
         relocate(target_var, .after = device_id) %>%
-        ## flag temp_bands that were found
-        mutate(worst_band = ifelse(fraction > 0.0, temp_band, 0)) %>%
-        mutate(worst_band = ifelse(worst_band == max(worst_band), 1, 0)) %>%
+
+        ## assign number to temp bands in use - not in use NA
+        group_by(target_var, device_id) %>%
+        mutate(worst_band = ifelse(fraction > 0.0, temp_band, NA)) %>%
+
+        ## Highest in use denotes the worst case
+        mutate(worst_band = ifelse(worst_band == max(worst_band, na.rm=TRUE), 1, 0)) %>%
+
+        ## Restore NA values
+        tidyr::replace_na(list(worst_band = 0)) %>%
         relocate(worst_band, .after = temp_band) %>%
 
-        ## contibution to fraction...
+        ## fraction by band grouped by target var
         ungroup() %>%
         group_by(target_var, temp_band) %>%
         summarise(fraction = sum(worst_band)/n())
@@ -606,7 +613,7 @@ get_lowtemp_chart_data <- function(wrangled_obs, wrangled_devices, target_var) {
         mutate(ymax = cumsum(fraction),
                ymin = c(0, head(cumsum(fraction), n = -1))) %>%
         mutate(label_pos = (ymax+ymin) / 2,
-               label = ifelse(fraction < 0.01, "", paste0(round(fraction*100, 0), "%")))
+               label = ifelse(fraction < 0.005, "", paste0(round(fraction*100, 0), "%")))
 
     ## Error Handler
     },

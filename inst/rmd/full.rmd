@@ -101,6 +101,7 @@ params:
       # pull out report params
       param_list      <- param_list(params$report_params, split_char = ",")
       target_var_list <- target_var_list(wrangled_devices, param_list)
+      data_segments   <- data_segments(wrangled_devices, target_var_list)
   
     },
     error = function(cond) {
@@ -154,7 +155,7 @@ title: "`r org_string(wrangled_devices)` Indoor Sensor Report"
 
 <br />
 
-```{r echo=FALSE, results="asis", out.width="80%"} 
+```{r echo=FALSE, results="asis", out.width="100%"} 
   device_excluded_kable(data_volume)
 ```
 
@@ -198,8 +199,8 @@ To explain this is more detail, we will look at some artificial data set to show
 To determine the likely health impact of the home, we compare the temperature data against the WHO guidelines, as given in table 2.1.1 above. In the ideal case, every home should remain above 18 °C all the time. The following example data set shows a range of scenarios from the ideal where the temperature is consistently above 18 °C to a home where the temperature falls below 12 °C for significant periods, which constitutes a potentially serious risk to children's health.
 
 
-```{r echo=FALSE}
-  ## Demo Box Plot
+```{r echo=FALSE, out.width="100%", fig.height=3}
+  ## Demo Exposure Plot
   example_exposure_data <- readr::read_csv(system.file("dummy-data", "example/example_exposure.csv", package = "monkeyr"))
   example_exposure_plot <- monkeyr::get_exposure_plot(example_exposure_data, "room_type")
   print(example_exposure_plot)
@@ -213,7 +214,7 @@ To compare the estimated correlation for different test cases, we use box plots.
 
 To interpret the correlation factor: below 0.4 is good; below 0.7 is average; below 1.0 is poor; above 1.0 is very poor. The following example plot should help to illustrates this.
 
-```{r echo=FALSE}
+```{r echo=FALSE, out.width="100%", fig.height=5}
   ## Demo Box Plot
   example_boxplot_data  <- readr::read_csv(system.file("dummy-data", "example/example_boxplot.csv",  package = "monkeyr"))
   example_boxplot       <- monkeyr::get_reg_boxplot(example_boxplot_data, "performance")
@@ -223,7 +224,7 @@ To interpret the correlation factor: below 0.4 is good; below 0.7 is average; be
 
 
 
-```{r  echo=FALSE, results="asis", out.width="80%"}
+```{r  echo=FALSE, results="asis", out.width="100%", fig.height = 2+2*ceiling(data_segments/4)}
   section_number <- 3
 
   i = 1 ## for testing

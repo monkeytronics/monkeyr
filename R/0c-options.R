@@ -113,6 +113,34 @@ target_group_list <- function(wrangled_devices, param_list) {
 }
 
 
+#' data_segments
+#' @description work out the max number of data segments - useful for formatting plots
+#' @param wrangled_devices data.frame, as output by `wrangle_devices`
+#' @param target_var_list list, report parameters which we will segment upon
+#' @export
+data_segments   <- function(wrangled_devices, target_var_list) {
+  max_segments <- 0
+  if (length(target_var_list) == 0) {
+    retrurn (0)
+  } else {
+    for (index in 1:length(target_var_list)) {
+      target_var <- target_var_list[index]
+      unique_segments <-
+        as.vector(wrangled_obs[[target_var]]) %>%
+        unique() %>%
+        length()
+
+      max_segments <- max(
+        max_segments,
+        unique_segments
+      )
+    }
+  }
+  ## output
+  return(max_segments)
+}
+
+
 #' monkey_palettes
 #' @description define some color palettes and set them as R options to be globally available
 #' @param devices data.frame, the wrangled devices data as output by `wrangle_devices`,

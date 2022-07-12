@@ -12,9 +12,6 @@
 #'
 #' @export
 get_local_time <- function(timestamp, lat, long) {
-  # checkmate::assert_numeric(timestamp)
-  # checkmate::assert_numeric(lat)
-  # checkmate::assert_numeric(long)
 
 # test NZ Values :
   # https://stackoverflow.com/questions/59833660/
@@ -26,14 +23,54 @@ get_local_time <- function(timestamp, lat, long) {
 
 
 # Real Code :
-  # Get local timezone baesd on lat & long
-  local_tz = lutz::tz_lookup_coords(lat = lat, lon = long, method = "fast", warn = FALSE) # not accurate
+  tryCatch(
+    {
+      # Get local timezone based on lat & long
+      local_tz = lutz::tz_lookup_coords(lat = lat, lon = long, method = "fast", warn = FALSE) # not accurate
 
-  # convert to local time plus timezone format
-  local_date <- timestamp %>%
-    as.POSIXct(origin = "1970-01-01") %>%
-    # lubridate::with_tz(tz = local_tz)
-    lubridate::with_tz(tz = "Etc/GMT")
+      # convert to local time plus timezone format
+      local_date <- timestamp %>%
+        as.POSIXct(origin = "1970-01-01") %>%
+        # lubridate::with_tz(tz = local_tz[1])
+        # lubridate::with_tz(tz = "Etc/GMT")
+        lubridate::with_tz(tz = "Pacific/Auckland")
+
+      ## Error Handler
+    },
+      error = function(cond) {
+        monkeyr::monkey_knit_error(err = cond, resource = "get_local_time")
+    }
+  )
+}
+
+#' get_local_time_fast
+#'
+#' @description Convert time stamp to local timezone datetime
+#'
+#' @param timestamp Unix time stamp vector
+#' @param local_tz local timezone
+#'
+#' @return Returns "POSIXct", "POSIXt" vector in local time zone
+#' @examples
+#' get_local_time(1555555555, -125.357, 23.556)
+#'
+#' @export
+get_local_time_fast <- function(timestamp, local_tz) {
+
+  # Real Code :
+  tryCatch(
+    {
+      # convert to local time plus timezone format
+      local_date <- timestamp %>%
+        as.POSIXct(origin = "1970-01-01") %>%
+        lubridate::with_tz(tz = local_tz)
+
+      ## Error Handler
+    },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "get_local_time")
+    }
+  )
 }
 
 
@@ -103,6 +140,7 @@ wrangle_devices <- function(
                 "comms_type",
                 "locationCode",
                 "addr",
+                "name",
                 "suburb",
                 "city",
                 "country",
@@ -159,9 +197,9 @@ wrangle_devices <- function(
     dplyr::mutate(height       = tidyr::replace_na(height,       "unknown")) %>%
     dplyr::mutate(direction    = tidyr::replace_na(direction,    "unknown")) %>%
     dplyr::mutate(room         = tidyr::replace_na(room,         "unknown")) %>%
-    # dplyr::mutate(addr         = tidyr::replace_na(addr,         "Unknown")) %>%
-    dplyr::mutate(hhi          = tidyr::replace_na(hhi,          "Unknown")) %>%
-    dplyr::mutate(hhi          = stringi::stri_replace_first_fixed(hhi, "Not Listed", "Unknown") ) %>%
+    # dplyr::mutate(name         = tidyr::replace_na(name,         "unknown")) %>%
+    dplyr::mutate(hhi          = tidyr::replace_na(hhi,          "unknown")) %>%
+    dplyr::mutate(hhi          = stringi::stri_replace_first_fixed(hhi, "Not Listed", "unknown") ) %>%
 
     dplyr::mutate(city         = tidyr::replace_na(city,        common_city)) %>%
     dplyr::mutate(country      = tidyr::replace_na(country,  common_country)) %>%
@@ -181,6 +219,32 @@ wrangle_devices <- function(
   return(wrangled_devices)
 }
 
+
+#' get_local_tz
+#'
+#' @description Based on the wrangled devices :\cr
+#' * Exclude NZ or missing lon / lat \cr
+#' * Grab average values \cr
+#' * Used for time-series axis \cr
+#'
+#' @param wrangled_devices
+#'
+#' @return local_tz
+#'
+#' @examples
+#' get_local_tz(wrangled_devices = wrangled_devices)
+#'
+#' @export
+get_local_tz <- function(wrangled_devices) {
+  test <- wrangled_devices %>%
+    filter(!is.na(long) & !is.na(lat)) %>%
+    summarise(
+      long = mean(long),
+      lat  = mean(lat))
+
+  local_tz = lutz::tz_lookup_coords(lat = test$lat[1], lon = test$long[1], method = "fast", warn = FALSE)
+  return(local_tz[1])
+}
 
 
 #' wrangle_weather
@@ -363,9 +427,12 @@ wrangle_observations <-
       tibble::add_column(local_time = "", .after = "ts")
 
 
+    local_tz <- monkeyr::get_local_tz(devices)
+
     wrangled_obs <-
       wrangled_obs %>%
-      dplyr::mutate(local_time = get_local_time(as.numeric(ts), lat, long)) %>%
+      # dplyr::mutate(local_time = get_local_time(as.numeric(ts), lat, long)) %>%
+      dplyr::mutate(local_time = get_local_time_fast(as.numeric(ts), local_tz)) %>%
 
       ## extract hour, date, month, year for joining data set
       dplyr::mutate(hour  = format(as.POSIXct(local_time, format = "%H:%M"),    "%H")) %>%
@@ -382,6 +449,28 @@ wrangle_observations <-
 
     ## output
     wrangled_obs
+}
+
+
+
+#' downsample_obs
+#'
+#' @description Reduce data set for intensive charts (plotly mostly)
+#'
+#' @param wrangle_obs from `wrangle_observations`
+#' @param rate downsampling rate
+#'
+#' @examples
+#' wrangle_obs <- downsample_obs(wrangle_obs, 5)
+#'
+#' @export
+## Down-sample Data set.
+# downsampling_rate <- 1
+downsample_obs <- function(wrangle_obs, rate) {
+  wrangle_obs %>%
+    group_by(reading) %>%
+    slice(which(row_number() %% rate == 1)) %>%
+    ungroup()
 }
 
 

@@ -28,7 +28,7 @@ Please note that the pameters for test reports are preset.
 }
 \examples{
 run_test_report("home", "monkey_32",   "params_blank.txt")
-run_test_report("home", "monkey_a",    "params_blank.txt")
+run_test_report("home", "customer",    "params_blank.txt")
 run_test_report("full", "monkey_32",   "params_full_map.txt")
 
 }

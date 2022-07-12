@@ -4,6 +4,7 @@
 #' `wrangle.observations` and further filtered by `remove_excluded_devices`
 #' @export
 who_threshold_data <- function(observations) {
+  ## observations <- wrangled_obs
   tryCatch (
     {
 
@@ -21,7 +22,7 @@ who_threshold_data <- function(observations) {
         dplyr::rename(temp = val) %>%
 
         ## assign values to bands
-        dplyr::select(device_id, temp, room) %>%
+        dplyr::select(device_id, temp, name) %>%
         dplyr::mutate(
           temp_band   = dplyr::if_else(temp < 29 & temp >= 21, "< 29°C", ""),
           temp_band   = dplyr::if_else(temp < 21 & temp >= 18, "< 21°C", temp_band),
@@ -32,12 +33,12 @@ who_threshold_data <- function(observations) {
         ) %>%
 
         ## n observations for device
-        dplyr::group_by(device_id, room) %>%
+        dplyr::group_by(device_id, name) %>%
         dplyr::mutate(n_obs = dplyr::n()) %>%
         ungroup() %>%
 
         ## n observations for each band
-        dplyr::group_by(device_id, room, temp_band, n_obs) %>%
+        dplyr::group_by(device_id, name, temp_band, n_obs) %>%
         dplyr::summarise(n_obs_band = dplyr::n()) %>%
 
         ## Add in zeros f rows
@@ -48,13 +49,13 @@ who_threshold_data <- function(observations) {
           fill = list(n_obs_band = 0, n_obs = 0)
         ) %>%
 
-        ## Restore room values that got set to NA
+        ## Restore name values that got set to NA
         group_by(device_id) %>%
-        mutate(room = calcmode(room)) %>%
+        mutate(name = calcmode(name)) %>%
         ungroup() %>%
 
         ## replace zero n_obs values
-        dplyr::group_by(device_id, room) %>%
+        dplyr::group_by(device_id, name) %>%
         mutate(n_obs = max(n_obs)) %>%
 
         ## Get percentatge
@@ -82,7 +83,8 @@ get_heat_palette <- function(width) {
              {heatcols <- c("#F97162")},
              {heatcols <- c("#F97162", "#FBE1B1")},
              {heatcols <- c("#F97162", "#FBE1B1", "#B7DFCB")},
-             {heatcols <- c("#F97162", "#FBE1B1", "#B7DFCB", "#5ABAD1")},
+             # {heatcols <- c("#F97162", "#FBE1B1", "#B7DFCB", "#5ABAD1")},
+             {heatcols <- c("#e2d5f9", "#c5abf4", "#a781ee", "#6d2de3")},
              {heatcols <- c("#F97162", "#FBE1B1", "#B7DFCB", "#5ABAD1", "#3984B6")},
              {heatcols <- c("#F97162", "#FBE1B1", "#B7DFCB", "#5ABAD1", "#3984B6", "#275a7c")},
       )
@@ -172,6 +174,9 @@ get_who_totals <- function(who_threshold_data) {
 #' @param from_timestamp,to_timestamp timestamps for the begin and end of the report
 #' @export
 who_threshold_chart <- function(who_threshold_data, from_timestamp, to_timestamp) {
+  ## from_timestamp <- params$fromTimeStamp
+  ## to_timestamp   <- params$toTimeStamp
+  ## who_threshold_data <- monkeyr::who_threshold_data(observations = wrangled_obs)
   tryCatch (
     {
       checkmate::assert_number(from_timestamp)
@@ -179,25 +184,25 @@ who_threshold_chart <- function(who_threshold_data, from_timestamp, to_timestamp
 
       ## Get palette for 6 levels
       heatcols <- get_heat_palette(6)
+      bands    <- c(temp_band = c("< 29°C", "< 21°C" ,"< 18°C" ,"< 16°C" ,"< 12°C", "> 29°C"))
 
-      ## Use room if unique vals present
-      rooms <- who_threshold_data %>%
-        group_by(device_id, room) %>%
-        filter(!is.na(room)) %>%
-        summarise
+      ## prep data set - ensure names unique else concat- device_id
+      who_threshold_data <- who_threshold_data %>%
+        ## group by device_id & make names unique
+        dplyr::group_by(device_id) %>%
+        dplyr::mutate(name = ifelse(
+          sum(duplicated(name)) > length(bands),
+          paste0(device_id, " - ", name),
+          name
+        ))
 
-      if (sum(rooms$room == "unknown") > 0 || sum(duplicated(rooms$room)) > 0) {
-        x_axis <- who_threshold_data$device_id
-      } else {
-        x_axis <- who_threshold_data$room
-      }
 
       ## Make chart
       report_period <- report_period(from_timestamp , to_timestamp)
       who_chart <- who_threshold_data %>%
 
         ggplot2::ggplot(ggplot2::aes(
-          x    = x_axis, ## either device_id / room as above
+          x    = name,
           y    = fraction,
           fill = forcats::fct_rev(temp_band) # reverse order cos it was wrong!
         )) +

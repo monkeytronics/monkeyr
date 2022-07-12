@@ -11,9 +11,9 @@ wrangle_devices(
   integer_columns = c("floor"),
   double_columns = c("long", "lat"),
   character_columns = c("device_owner", "device_id", "data_type", "comms_type",
-    "locationCode", "addr", "suburb", "city", "country", "room", "hhi", "cluster",
-    "privacy", "risk", "buildingType", "tenure", "height", "direction", "school",
-    "building", "classRoom", "deployment_id")
+    "locationCode", "addr", "name", "suburb", "city", "country", "room", "hhi",
+    "cluster", "privacy", "risk", "buildingType", "tenure", "height", "direction",
+    "school", "building", "classRoom", "deployment_id")
 )
 }
 \arguments{

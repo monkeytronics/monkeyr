@@ -59,7 +59,7 @@ org_string <- function(wrangled_devices) {
       ## devices with valid hhi value
       devices_with_hhi <-
         wrangled_devices %>%
-        filter(hhi != "Unknown")
+        filter(hhi != "unknown")
 
       ## create string from unique hhi values
       hhi_count <- n_distinct(devices_with_hhi$hhi, na.rm = TRUE)
@@ -114,6 +114,11 @@ home_summary_kable <- function(wrangled_devices) {
           ) %>%
         kableExtra::column_spec(1:3, width = c("40em","40em","30em"))
 
+      if (nrow(table_1_1) > 5) {
+        kable_1_1 <- kable_1_1 %>%
+          scroll_box(height = "400px")
+      }
+
       # Output
       kable_1_1
 
@@ -149,6 +154,11 @@ room_summary_kable <- function(wrangled_devices) {
           lightable_options = c("striped", "hover", "condensed"),
           html_font = "sans-serif"
         )
+
+      if (nrow(table_1_2) > 5) {
+        kable_1_2 <- kable_1_2 %>%
+          scroll_box(height = "400px")
+      }
 
       ## Output
       kable_1_2
