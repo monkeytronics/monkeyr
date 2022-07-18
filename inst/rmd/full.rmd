@@ -37,10 +37,10 @@ params:
   ENABLE_DEBUG <- FALSE
 
   # CloudWatch Logs
-  message(paste0("\nMESSAGE OUT : params = ", params))
-  message(paste0("\nMESSAGE OUT : working dir = ", getwd())) 
-  message(paste0("\nMESSAGE OUT : params$filtered_devices in rmd = ", params$filtered_devices))
-  logger::log_debug(paste0("working dir = ", getwd())) 
+  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : params = ", params), resource="setup")
+  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : working dir = ", getwd()), resource="setup")
+  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : params$filtered_devices in rmd = ", params$filtered_devices), resource="setup")
+
   
   # load monkeyr package
   library(monkeyr)
@@ -63,7 +63,8 @@ params:
       wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
        
       wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
-      logger::log_debug(paste0("wrangled_weather nrow = ", nrow(wrangled_weather)))
+      monkey_knit_msg(msg = paste0("wrangled_weather nrow = ", nrow(wrangled_weather)), resource="WRANGLE_DATA")
+
       
       wrangled_obs <- monkeyr::wrangle_observations(
         filtered_obs   = params$filtered_obs,
@@ -105,10 +106,7 @@ params:
   
     },
     error = function(cond) {
-      logger::log_debug(paste0("error condition = ", cond))
-      ls_result <- ls()
-      message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
-      knitr::knit_exit("</body></html>")
+      monkeyr::monkey_knit_error(err = cond, resource = "WRANGLE_DATA chunk")
     }
   )
   

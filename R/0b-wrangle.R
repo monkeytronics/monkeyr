@@ -89,18 +89,30 @@ get_local_time_fast <- function(timestamp, local_tz) {
 #' @export
 report_period <- function(from_timestamp, to_timestamp) {
 
-  checkmate::assert_number(from_timestamp)
-  checkmate::assert_number(to_timestamp)
+  tryCatch(
+    {
+      checkmate::assert_number(from_timestamp)
+      checkmate::assert_number(to_timestamp)
 
-  fromTime <- from_timestamp %>%
-    as.POSIXct(origin = "1970-01-01") %>%
-    format("%b %d")
+      fromTime <- from_timestamp %>%
+        as.POSIXct(origin = "1970-01-01") %>%
+        format("%b %d")
 
-  toTime <- to_timestamp %>%
-    as.POSIXct(origin = "1970-01-01") %>%
-    format('%b %d, %Y')
+      toTime <- to_timestamp %>%
+        as.POSIXct(origin = "1970-01-01") %>%
+        format('%b %d, %Y')
 
-  return(paste("from", fromTime, "to", toTime))
+      report_period <- paste("from", fromTime, "to", toTime)
+      monkey_knit_msg(msg = paste0("report_period = ", report_period), resource="report_period")
+
+      return(report_period)
+
+    ## Error Handler
+      },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "report_period")
+    }
+  )
 }
 
 
@@ -171,52 +183,64 @@ wrangle_devices <- function(
       )
   }
 
-  ## Get most common City & Country for weather data joining.
-    tryCatch (
-      {
-        common_city    <- tail(names(sort(table(filtered_devices$city))), 1)
-        common_country <- tail(names(sort(table(filtered_devices$country))), 1)
-        if (typeof(common_city)    == "NULL")  { common_city = "unknown"}
-        if (typeof(common_country) == "NULL")  { common_country = "unknown"}
-      },
-      error = function(e){
-        common_city     <- "unknown"
-        common_country  <- "unknown"
+## Get most common City & Country for weather data joining.
+  tryCatch (
+    {
+      common_city    <- tail(names(sort(table(filtered_devices$city))), 1)
+      common_country <- tail(names(sort(table(filtered_devices$country))), 1)
+      if (typeof(common_city)    == "NULL")  { common_city = "unknown"}
+      if (typeof(common_country) == "NULL")  { common_country = "unknown"}
+    },
+    error = function(e){
+      common_city     <- "unknown"
+      common_country  <- "unknown"
+    }
+  )
+  monkey_knit_msg(msg = paste0("most common city = ", common_city), resource="wrangle_devices")
+  monkey_knit_msg(msg = paste0("most common country = ", common_country), resource="wrangle_devices")
+
+## main code
+  tryCatch (
+    {
+      wrangled_devices <-
+        filtered_devices %>%
+
+        ## Filter Sensor Node
+        dplyr::filter((data_type %in% data_type_filter)) %>%
+
+        ## replace missing values with 'unknown'
+        dplyr::mutate(tenure       = tidyr::replace_na(tenure,       "unknown")) %>%
+        dplyr::mutate(buildingType = tidyr::replace_na(buildingType, "unknown")) %>%
+        dplyr::mutate(height       = tidyr::replace_na(height,       "unknown")) %>%
+        dplyr::mutate(direction    = tidyr::replace_na(direction,    "unknown")) %>%
+        dplyr::mutate(room         = tidyr::replace_na(room,         "unknown")) %>%
+        # dplyr::mutate(name         = tidyr::replace_na(name,         "unknown")) %>%
+        dplyr::mutate(hhi          = tidyr::replace_na(hhi,          "unknown")) %>%
+        dplyr::mutate(hhi          = stringi::stri_replace_first_fixed(hhi, "Not Listed", "unknown") ) %>%
+
+        dplyr::mutate(city         = tidyr::replace_na(city,        common_city)) %>%
+        dplyr::mutate(country      = tidyr::replace_na(country,  common_country)) %>%
+
+        # Mutate a room type for bedroom / living space division (default living)
+        # tibble::add_column(room_type = "living", .after = "room") %>%
+        dplyr::mutate(room_type = dplyr::case_when(
+          grepl("bedroom", tolower(room), fixed = TRUE) ~ "bedroom"
+          ,TRUE ~ "living"
+        ))
+
+      if(nrow(wrangled_devices) == 0) {
+        monkeyr::monkey_knit_error(err = "Device list zero length - No useful data present to analyse", resource = "wrangle_devices")
+        # stop("Oh no. Wrangled devcies is zero length.")
       }
-    )
 
-  wrangled_devices <-
-    filtered_devices %>%
+      return(wrangled_devices)
 
-    ## Filter Sensor Node
-    dplyr::filter((data_type %in% data_type_filter)) %>%
-
-    ## replace missing values with 'unknown'
-    dplyr::mutate(tenure       = tidyr::replace_na(tenure,       "unknown")) %>%
-    dplyr::mutate(buildingType = tidyr::replace_na(buildingType, "unknown")) %>%
-    dplyr::mutate(height       = tidyr::replace_na(height,       "unknown")) %>%
-    dplyr::mutate(direction    = tidyr::replace_na(direction,    "unknown")) %>%
-    dplyr::mutate(room         = tidyr::replace_na(room,         "unknown")) %>%
-    # dplyr::mutate(name         = tidyr::replace_na(name,         "unknown")) %>%
-    dplyr::mutate(hhi          = tidyr::replace_na(hhi,          "unknown")) %>%
-    dplyr::mutate(hhi          = stringi::stri_replace_first_fixed(hhi, "Not Listed", "unknown") ) %>%
-
-    dplyr::mutate(city         = tidyr::replace_na(city,        common_city)) %>%
-    dplyr::mutate(country      = tidyr::replace_na(country,  common_country)) %>%
-
-    # Mutate a room type for bedroom / living space division (default living)
-    # tibble::add_column(room_type = "living", .after = "room") %>%
-    dplyr::mutate(room_type = dplyr::case_when(
-      grepl("bedroom", tolower(room), fixed = TRUE) ~ "bedroom"
-      ,TRUE ~ "living"
-    ))
-
-  if(nrow(wrangled_devices) == 0) {
-    monkeyr::monkey_knit_error(err = "No useful data present to analyse", resource = "wrangle_devices")
-    # stop("Oh no. Wrangled devcies is zero length.")
-  }
-
-  return(wrangled_devices)
+      ## Error Handler
+    },
+      error = function(cond) {
+        monkeyr::monkey_knit_error(err = cond, resource = "wrangle_devices")
+    }
+  )
 }
 
 
@@ -265,54 +289,63 @@ get_local_tz <- function(wrangled_devices) {
 wrangle_weather <- function(filtered_weather) {
   # checkmate::assert_choice(x = class(filtered_weather), choices = c("data.frame", "character"))
 
+  tryCatch(
+    {
+      if (checkmate::test_character(filtered_weather)) {
+        wrangled_weather <- readr::read_csv(filtered_weather, col_types = readr::cols())
+      } else {
+        wrangled_weather <- filtered_weather
+      }
 
-  if (checkmate::test_character(filtered_weather)) {
-    wrangled_weather <- readr::read_csv(filtered_weather, col_types = readr::cols())
-  } else {
-    wrangled_weather <- filtered_weather
-  }
+      if(nrow(wrangled_weather > 0)) {
+        wrangled_weather %>%
+          janitor::clean_names() %>%
+          dplyr::filter(!is.na(dt)) %>%
+          dplyr::mutate(city = as.character(city_name)) %>% ## prevents crash in hourly data, when empty data set
 
-  if(nrow(wrangled_weather > 0)) {
-    wrangled_weather %>%
-      janitor::clean_names() %>%
-      dplyr::filter(!is.na(dt)) %>%
-      dplyr::mutate(city = as.character(city_name)) %>% ## prevents crash in hourly data, when empty data set
+          ## extract hour, date, month, year for joining data set
+          dplyr::mutate(rounded_time = 3600 * round(dt/3600) + 60) %>% # 1 minute past hour as dt is irregular.
+          dplyr::mutate(time_local_iso = as.POSIXct(rounded_time, origin="1970-01-01")) %>%
+          dplyr::relocate(c(rounded_time, time_local_iso, dt, dt_iso), .before = "timezone") %>%
 
-      ## extract hour, date, month, year for joining data set
-      dplyr::mutate(rounded_time = 3600 * round(dt/3600) + 60) %>% # 1 minute past hour as dt is irregular.
-      dplyr::mutate(time_local_iso = as.POSIXct(rounded_time, origin="1970-01-01")) %>%
-      dplyr::relocate(c(rounded_time, time_local_iso, dt, dt_iso), .before = "timezone") %>%
+          # Get h, d, m, Y.
+          dplyr::mutate(hour  = format(as.POSIXct(time_local_iso, format = "%H:%M"),    "%H")) %>%
+          dplyr::mutate(date  = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%d")) %>%
+          dplyr::mutate(month = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%m")) %>%
+          dplyr::mutate(year  = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%Y")) %>%
+          dplyr::relocate(c(hour, date, month, year), .before = "timezone") %>%
 
-      # Get h, d, m, Y.
-      dplyr::mutate(hour  = format(as.POSIXct(time_local_iso, format = "%H:%M"),    "%H")) %>%
-      dplyr::mutate(date  = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%d")) %>%
-      dplyr::mutate(month = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%m")) %>%
-      dplyr::mutate(year  = format(as.POSIXct(time_local_iso, format = "%Y-%m-%d"), "%Y")) %>%
-      dplyr::relocate(c(hour, date, month, year), .before = "timezone") %>%
+          ## give better names
+          dplyr::mutate(outdoor_hum  = as.numeric(humidity)) %>%
+          dplyr::mutate(outdoor_temp  = as.numeric(temp)) %>%
 
-      ## give better names
-      dplyr::mutate(outdoor_hum  = as.numeric(humidity)) %>%
-      dplyr::mutate(outdoor_temp  = as.numeric(temp)) %>%
+          # Clear out the crap!
+          dplyr::select(
+            -humidity,
+            -temp,
+            -sea_level,
+            -grnd_level,
+            -rain_3h,
+            -snow_3h,
+            -dt,
+            -dt_iso,
+            -rounded_time,
+            -time_local_iso,
+            -timezone,
+            -lon,
+            -lat
+            )
+      } else {
+        wrangled_weather = NULL
+        monkey_knit_msg(msg = paste0("No Weather Data available! "), resource="wrangle_weather")
+      }
 
-      # Clear out the crap!
-      dplyr::select(
-        -humidity,
-        -temp,
-        -sea_level,
-        -grnd_level,
-        -rain_3h,
-        -snow_3h,
-        -dt,
-        -dt_iso,
-        -rounded_time,
-        -time_local_iso,
-        -timezone,
-        -lon,
-        -lat
-        )
-  } else {
-    wrangled_weather = NULL
-  }
+    ## Error Handler
+    },
+      error = function(cond) {
+        monkeyr::monkey_knit_error(err = cond, resource = "wrangle_weather")
+    }
+  )
 
 }
 
@@ -343,19 +376,28 @@ wrangle_weather <- function(filtered_weather) {
 wrangle_interv <- function(filtered_interv, obs) {
   ## check & read
   checkmate::assert_data_frame(obs)
-  if (checkmate::test_character(filtered_interv)) {
-    interv <- readr::read_csv(filtered_interv, col_types = "cicic")
-  } else {
-    interv <- filtered_interv
-  }
 
-  ## go through each interv and append flags to data
-  # interv field = 'interv 1-interv 2-another interv' (NB spaces & separator)
+  tryCatch(
+    {
+      if (checkmate::test_character(filtered_interv)) {
+        interv <- readr::read_csv(filtered_interv, col_types = "cicic")
+      } else {
+        interv <- filtered_interv
+      }
+
+      ## go through each interv and append flags to data
+      # interv field = 'interv 1-interv 2-another interv' (NB spaces & separator)
 
 
-  ## how to vis this in a chart? one line per device with intervs on x axis
+      ## how to vis this in a chart? one line per device with intervs on x axis
 
 
+    ## Error Handler
+    },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "wrangle_interv")
+    }
+  )
 }
 
 
@@ -397,59 +439,70 @@ wrangle_observations <-
       wrangled_obs <- filtered_obs
     }
 
+    tryCatch(
+      {
 
-    wrangled_obs <- wrangled_obs %>%
-      ## only include devices present in device array
-      dplyr::filter(device_id %in% devices$device_id) %>%
-      ## Remove duplicate rows
-      dplyr::distinct() %>%
-      ## Join device data
-      dplyr::left_join(
-        dplyr::select( # remove addr & email addr!
-          devices,
-          -addr,
-          -device_owner
-        ),
-        by = "device_id"
-      ) %>%
+        wrangled_obs <- wrangled_obs %>%
+          ## only include devices present in device array
+          dplyr::filter(device_id %in% devices$device_id) %>%
+          ## Remove duplicate rows
+          dplyr::distinct() %>%
+          ## Join device data
+          dplyr::left_join(
+            dplyr::select( # remove addr & email addr!
+              devices,
+              -addr,
+              -device_owner
+            ),
+            by = "device_id"
+          ) %>%
 
-      ## Tidy things up if you want
-      # dplyr::relocate(hhi) %>%                                 # to front
-      # dplyr::relocate(c(tenure, room), .before = "ts") %>%     # tidy up
-
-
-      ## add default lat & long to devices missing
-      # use timezone to get Local time (based on average location!)
-      dplyr::mutate(lat  = tidyr::replace_na(lat,  mean(lat,na.rm=TRUE))) %>%
-      dplyr::mutate(long = tidyr::replace_na(long, mean(long, na.rm=TRUE))) %>%
-
-      ## datetime: nzst
-      tibble::add_column(local_time = "", .after = "ts")
+          ## Tidy things up if you want
+          # dplyr::relocate(hhi) %>%                                 # to front
+          # dplyr::relocate(c(tenure, room), .before = "ts") %>%     # tidy up
 
 
-    local_tz <- monkeyr::get_local_tz(devices)
+          ## add default lat & long to devices missing
+          # use timezone to get Local time (based on average location!)
+          dplyr::mutate(lat  = tidyr::replace_na(lat,  mean(lat,na.rm=TRUE))) %>%
+          dplyr::mutate(long = tidyr::replace_na(long, mean(long, na.rm=TRUE))) %>%
 
-    wrangled_obs <-
-      wrangled_obs %>%
-      # dplyr::mutate(local_time = get_local_time(as.numeric(ts), lat, long)) %>%
-      dplyr::mutate(local_time = get_local_time_fast(as.numeric(ts), local_tz)) %>%
+          ## datetime: nzst
+          tibble::add_column(local_time = "", .after = "ts")
 
-      ## extract hour, date, month, year for joining data set
-      dplyr::mutate(hour  = format(as.POSIXct(local_time, format = "%H:%M"),    "%H")) %>%
-      dplyr::mutate(date  = format(as.POSIXct(local_time, format = "%Y-%m-%d"), "%d")) %>%
-      dplyr::mutate(month = format(as.POSIXct(local_time, format = "%Y-%m-%d"), "%m")) %>%
-      dplyr::mutate(year  = format(as.POSIXct(local_time, format = "%Y-%m-%d"), "%Y")) %>%
-      dplyr::relocate(c(hour, date, month, year), .after = "local_time")
 
-    if (typeof(weather) != "NULL") {
-      wrangled_obs <-
-        wrangled_obs %>%
-        dplyr::left_join(weather, by = c("hour", "date", "month", "year", "city"))
-    }
+        local_tz <- monkeyr::get_local_tz(devices)
 
-    ## output
-    wrangled_obs
-}
+        wrangled_obs <-
+          wrangled_obs %>%
+          # dplyr::mutate(local_time = get_local_time(as.numeric(ts), lat, long)) %>%
+          dplyr::mutate(local_time = get_local_time_fast(as.numeric(ts), local_tz)) %>%
+
+          ## extract hour, date, month, year for joining data set
+          dplyr::mutate(hour  = format(as.POSIXct(local_time, format = "%H:%M"),    "%H")) %>%
+          dplyr::mutate(date  = format(as.POSIXct(local_time, format = "%Y-%m-%d"), "%d")) %>%
+          dplyr::mutate(month = format(as.POSIXct(local_time, format = "%Y-%m-%d"), "%m")) %>%
+          dplyr::mutate(year  = format(as.POSIXct(local_time, format = "%Y-%m-%d"), "%Y")) %>%
+          dplyr::relocate(c(hour, date, month, year), .after = "local_time")
+
+        if (typeof(weather) != "NULL") {
+          wrangled_obs <-
+            wrangled_obs %>%
+            dplyr::left_join(weather, by = c("hour", "date", "month", "year", "city"))
+        } else {
+          monkey_knit_msg(msg = paste0("Wasn't able to join obs & weather. Weather DB is NULL"), resource="wrangle_observations")
+        }
+
+        ## output
+        wrangled_obs
+
+      ## Error Handler
+      },
+      error = function(cond) {
+        monkeyr::monkey_knit_error(err = cond, resource = "wrangle_observations")
+      }
+    )
+  }
 
 
 
@@ -467,6 +520,7 @@ wrangle_observations <-
 ## Down-sample Data set.
 # downsampling_rate <- 1
 downsample_obs <- function(wrangle_obs, rate) {
+
   wrangle_obs %>%
     group_by(reading) %>%
     slice(which(row_number() %% rate == 1)) %>%
@@ -507,6 +561,8 @@ get_data_volume <- function(observations, from_timestamp, to_timestamp) {
   interval <- 15 * 60
   timespan <- to_timestamp - from_timestamp
   fullvol  <- (timespan / interval) + 1
+
+  monkey_knit_msg(msg = paste0("fullvol = ", fullvol, "observations of each measurement type per device."), resource="get_data_volume")
 
 
   ## How many are there? Exclude those with < 10%
@@ -598,16 +654,16 @@ make_polygon_area <- function(observations, target_variable, severity) {
 
   # define limits from least severe.
   temp_limits  <- c(18,   16,   12,     0)
-  hum_limits   <- c(70,   80,   90,   100)
-  co2_limits   <- c(850, 1200, 1500, 3000)
-  pm1_limits   <- c(10, 20, 30, 40)
-  pm2_5_limits <- c(10, 20, 30, 40)
-  pm10_limits  <- c(10, 20, 30, 40)
-  hcho_limits  <- c(10, 20, 30, 40)
-  nox_limits   <- c(100, 200, 300, 500)
-  voc_limits   <- c(150, 250, 350, 500)
-  t60_limits   <- c(1000, 4000, 8000, 10000)
-  dba_limits   <- c(50, 60, 80, 100)
+  hum_limits   <- c(70,   80,   90,     100)
+  co2_limits   <- c(850,  1200, 1500,   3000)
+  pm1_limits   <- c(10,   20,   30,     40)
+  pm2_5_limits <- c(10,   20,   30,     40)
+  pm10_limits  <- c(10,   20,   30,     40)
+  hcho_limits  <- c(10,   20,   30,     40)
+  nox_limits   <- c(100,  200,  300,    500)
+  voc_limits   <- c(150,  250,  350,    500)
+  t60_limits   <- c(1000, 4000, 8000,   10000)
+  dba_limits   <- c(50,   60,   80,     100)
   lux_limits   <- c(0, 200, 400, 800)
 
   # need to name limits as 'val' to match up with obs dataset %>% usage

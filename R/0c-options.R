@@ -79,6 +79,8 @@ target_var_list <- function(wrangled_devices, param_list) {
   # return matching terms as tibble
   tib <- as_tibble(colnames(wrangled_devices)) %>%
     filter(value %in% param_list)
+
+  monkey_knit_msg(msg = paste0("target_var_list = ", tib$value), resource="target_var_list")
   return (tib$value)
 }
 
@@ -109,6 +111,7 @@ target_group_list <- function(wrangled_devices, param_list) {
     # only keep valid ones
     filter(groups_req %in% groups_valid)
 
+  monkey_knit_msg(msg = paste0("target_group_list = ", tib$groups_req), resource="target_group_list")
   return (tib$groups_req)
 }
 
@@ -137,6 +140,7 @@ data_segments   <- function(wrangled_devices, target_var_list) {
     }
   }
   ## output
+  monkey_knit_msg(msg = paste0("max_segments = ", max_segments), resource="data_segments")
   return(max_segments)
 }
 

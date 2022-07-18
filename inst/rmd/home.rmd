@@ -51,14 +51,14 @@ ENABLE_DEBUG <- FALSE
     
       wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
       
-      start_time <- Sys.time()
+      # start_time <- Sys.time()
       wrangled_obs <- monkeyr::wrangle_observations(
         filtered_obs   = params$filtered_obs,
         devices        = wrangled_devices,
         weather        = wrangled_weather
       )
-      end_time <- Sys.time()
-      end_time - start_time
+      # end_time <- Sys.time()
+      # end_time - start_time
       
       data_volume <- monkeyr::get_data_volume(
         observations   = wrangled_obs,

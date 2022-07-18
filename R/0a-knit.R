@@ -3,7 +3,14 @@
 #' @description Test Report Locally with Dummy Test Data
 #' and Dummy Test Parameters. Uses library of test cases. Run this function first
 #' to ensure everything is working properly and to see an example of the output.
-#' Please note that the pameters for test reports are preset.
+#' Please note that the parameters for test reports are preset.
+#'
+#' `Special Case 'Customer'` The idea is to copy the entire stash from a customer report
+#' including the args.csv. These parameters are pulled to exactly replicate the cloud run.
+#'
+#' `How To Use Special Case` Only available on Admin accounts, inside the `s3_report_stash`
+#' folder, run `sync_s3_stash.bash`. Then find the test case you're interested in. Copy files
+#' into customer folder in inst/dummy_data, then run this function.
 #'
 #' @param report The report name
 #' @param dummy_data The Dummy data set which can be considered as a test case
@@ -12,9 +19,10 @@
 #' @return an html document printed out to a file and the path of the output file is returned
 #'
 #' @examples
-#' run_test_report("home", "monkey_32",   "params_blank.txt")
 #' run_test_report("home", "customer",    "params_blank.txt")
+#' run_test_report("full", "customer",    "params_blank.txt")
 #' run_test_report("full", "monkey_32",   "params_full_map.txt")
+#' run_test_report("home", "monkey_32",   "params_blank.txt")
 #'
 #' @export
 run_test_report <- function (
@@ -77,7 +85,7 @@ make_test_params <- function(
 
 
   ## We want to replicate a customer scenario with least effort
-  if (dummy_data == "custimer") {
+  if (dummy_data == "customer") {
     params <- args$report_params[1]
   } else {
     params = system.file("dummy-params", dummy_params, package = "monkeyr")
@@ -85,6 +93,7 @@ make_test_params <- function(
 
 
   ## params object to use!
+  monkey_knit_msg(msg = paste0("params = ", params), resource="make_test_params")
   list(
     obs           = system.file("dummy-data", paste0(dummy_data, "/obs.csv"),     package = "monkeyr"),
     weather       = system.file("dummy-data", paste0(dummy_data, "/weather.csv"), package = "monkeyr"),
@@ -201,20 +210,49 @@ knit_report <-
 #'   * console / terminal
 #'   * render
 #'
-#' @param folder folder located in inst/extdata/{folder}
-#' @param params_file params txt file located at inst/extdata/params/{params_file}
+#' @param err error message to report before knitr exits
+#' @param resource the function or chunk name where it's called
 #'
-#' @return a list of parameters that may be used for generating a report
+#' @examples
+#' monkey_knit_error(err = "Error Message", resource="CHUNK_NAME")
 #'
 #' @export
 monkey_knit_error <- function(
-    err   = "err message",
+    err      = "err message",
     resource = "failing r function",
     ...) {
-      msg = paste0("error caught in ", resource, " = ", err, "\n")
-      cat(paste0(msg, "\n\n"))
-      logger::log_debug(msg)
-      ls_result <- ls()
-      message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
-      knitr::knit_exit("</body></html>")
+  msg = paste0("error caught in ", resource, " = ", err, "\n")
+  cat(paste0(msg, "\n\n"))
+  logger::log_debug(msg)
+  ls_result <- ls()
+  message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
+  knitr::knit_exit("</body></html>")
 }
+
+
+#' monkey_knit_msg
+#'
+#' @description Debug : print out message to: \cr
+#'   * to html report
+#'   * console / terminal
+#'   * render
+#'
+#' @param msg string to holler out everywhere
+#' @param resource the function or chunk name where it's called
+#'
+#' @examples
+#' monkey_knit_msg(msg = "Thing to output everywhere", resource="CHUNK_NAME")
+#'
+#' @export
+monkey_knit_msg <- function(
+    msg   = "message",
+    resource = "failing r function",
+    ...) {
+  msg = paste0("msg from inside of ", resource, " = ", msg, "\n")
+  cat(paste0(msg, "\n"))
+  logger::log_debug(msg)
+  ls_result <- ls()
+  message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
+}
+
+

@@ -300,6 +300,7 @@ get_exposure_kable_var <- function(temp_exposure, target_var) {
         select(-device_id) %>%
         group_by(target_var) %>%
         summarise_all(.funs = c(mean="mean")) %>%
+        arrange(-`< 21°C_mean`, -`< 18°C_mean`, -`< 16°C_mean`, -`< 12°C_mean`) %>%
         janitor::adorn_pct_formatting() %>%
         kable(col.names = c(stringi::stri_trans_totitle(target_var), "< 21°C", "< 18°C", "< 16°C", "< 12°C")) %>%
         kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "sans-serif") #%>%
@@ -338,8 +339,8 @@ get_exposure_kable_dev <- function(temp_exposure, target_var) {
         temp_exposure %>%
         relocate(device_id) %>%
         group_by(target_var, device_id)  %>%
-        arrange(desc(`< 21°C`)) %>%
-        # arrange(-`< 21°C`, -`< 18°C`, -`< 16°C`, -`< 12°C`) %>%
+        # arrange(desc(`< 21°C`)) %>%
+        arrange(-`< 21°C`, -`< 18°C`, -`< 16°C`, -`< 12°C`) %>%
         janitor::adorn_pct_formatting() %>%
         kable(col.names = c("Device Id", stringi::stri_trans_totitle(target_var), "< 21°C", "< 18°C", "< 16°C", "< 12°C")) %>%
         kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "sans-serif")

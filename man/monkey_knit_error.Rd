@@ -7,12 +7,9 @@
 monkey_knit_error(err = "err message", resource = "failing r function", ...)
 }
 \arguments{
-\item{folder}{folder located in inst/extdata/{folder}}
+\item{err}{error message to report before knitr exits}
 
-\item{params_file}{params txt file located at inst/extdata/params/{params_file}}
-}
-\value{
-a list of parameters that may be used for generating a report
+\item{resource}{the function or chunk name where it's called}
 }
 \description{
 R Code crashed. Need to print out message to: \cr
@@ -21,4 +18,8 @@ R Code crashed. Need to print out message to: \cr
 \item console / terminal
 \item render
 }
+}
+\examples{
+monkey_knit_error(err = "Error Message", resource="CHUNK_NAME")
+
 }
