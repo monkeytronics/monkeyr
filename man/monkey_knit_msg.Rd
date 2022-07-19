@@ -4,7 +4,12 @@
 \alias{monkey_knit_msg}
 \title{monkey_knit_msg}
 \usage{
-monkey_knit_msg(msg = "message", resource = "failing r function", ...)
+monkey_knit_msg(
+  msg = "message",
+  resource = "failing r function",
+  debug = FALSE,
+  ...
+)
 }
 \arguments{
 \item{msg}{string to holler out everywhere}
