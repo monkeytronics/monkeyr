@@ -242,17 +242,23 @@ monkey_knit_error <- function(
 #'
 #' @examples
 #' monkey_knit_msg(msg = "Thing to output everywhere", resource="CHUNK_NAME")
+#' monkey_knit_msg(msg = "Debugging stuff locally", resource="function name etc.", debug = TRUE)
 #'
 #' @export
 monkey_knit_msg <- function(
     msg   = "message",
     resource = "failing r function",
+    debug = FALSE,
     ...) {
   msg = paste0("msg from inside of ", resource, " = ", msg, "\n")
-  cat(paste0(msg, "\n"))
+
   logger::log_debug(msg)
   ls_result <- ls()
   message(paste0("\nMESSAGE OUT : ls() = ", ls_result))
+
+  if (debug == TRUE) {
+    cat(paste0(msg, "\n"))
+  }
 }
 
 

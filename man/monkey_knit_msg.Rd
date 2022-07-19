@@ -21,5 +21,6 @@ Debug : print out message to: \cr
 }
 \examples{
 monkey_knit_msg(msg = "Thing to output everywhere", resource="CHUNK_NAME")
+monkey_knit_msg(msg = "Debugging stuff locally", resource="function name etc.", debug = TRUE)
 
 }

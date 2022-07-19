@@ -36,18 +36,17 @@ params:
 ```{r setup, include=FALSE}
   ENABLE_DEBUG <- FALSE
 
-  # CloudWatch Logs
-  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : params = ", params), resource="setup")
-  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : working dir = ", getwd()), resource="setup")
-  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : params$filtered_devices in rmd = ", params$filtered_devices), resource="setup")
-
-  
   # load monkeyr package
   library(monkeyr)
   library(dplyr)
   library(magrittr)
   library(kableExtra)
   library(ggplot2)
+
+  # CloudWatch Logs
+  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : params = ", params), resource="setup")
+  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : working dir = ", getwd()), resource="setup")
+  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : params$filtered_devices in rmd = ", params$filtered_devices), resource="setup")
   
   # other dependencies loaded through namespace
 ```
