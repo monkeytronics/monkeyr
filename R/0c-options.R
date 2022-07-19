@@ -129,7 +129,7 @@ data_segments   <- function(wrangled_devices, target_var_list) {
     for (index in 1:length(target_var_list)) {
       target_var <- target_var_list[index]
       unique_segments <-
-        as.vector(wrangled_obs[[target_var]]) %>%
+        as.vector(wrangled_devices[[target_var]]) %>%
         unique() %>%
         length()
 

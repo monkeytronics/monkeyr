@@ -2,7 +2,7 @@
 % Please edit documentation in R/1c-home-report-Ventilation.R
 \name{ventilation_data}
 \alias{ventilation_data}
-\title{who_threshold_data}
+\title{ventilation_data}
 \usage{
 ventilation_data(observations)
 }
@@ -11,5 +11,5 @@ ventilation_data(observations)
 \code{wrangle.observations} and further filtered by \code{remove_excluded_devices}}
 }
 \description{
-Arrange the measurement according to WHO guidalines
+equivalent to WHO guidalines functions but looking at CO2
 }

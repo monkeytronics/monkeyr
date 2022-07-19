@@ -210,7 +210,7 @@ device_excluded_kable <- function(data_volume) {
       }
     },
     error = function(cond) {
-      monkeyr::monkey_knit_error(err = cond, resource = "org_string")
+      monkeyr::monkey_knit_error(err = cond, resource = "device_excluded_kable")
     }
   )
 }

@@ -505,6 +505,8 @@ get_exposure_plot <- function(exposure_chart_data, target_var) {
 
         theme(plot.margin = margin(0.0, 0.0, 0.0, 0.0, "cm"),
 
+              aspect.ratio = 1,
+
               strip.text.x = element_text(angle = 0, hjust = 0.3, size = 9),
 
               legend.title = element_text(size = 9),

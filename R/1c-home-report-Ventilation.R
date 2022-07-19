@@ -1,5 +1,5 @@
-#' who_threshold_data
-#' @description Arrange the measurement according to WHO guidalines
+#' ventilation_data
+#' @description equivalent to WHO guidalines functions but looking at CO2
 #' @param observations data.frame, the wrangled observations data frame as output by
 #' `wrangle.observations` and further filtered by `remove_excluded_devices`
 #' @export
@@ -71,68 +71,11 @@ ventilation_data <- function(observations) {
 
 }
 
-#'
-#' #' get_heat_palette
-#' #' @description Get Heat Palette Colour Hex Values
-#' #' @param width number, the number of hex values needed
-#' #' @export
-#' get_heat_palette <- function(width) {
-#'   tryCatch (
-#'     {
-#'       heatcols <- 6
-#'       switch(width,
-#'              {heatcols <- c("#F97162")},
-#'              {heatcols <- c("#F97162", "#FBE1B1")},
-#'              {heatcols <- c("#F97162", "#FBE1B1", "#B7DFCB")},
-#'              {heatcols <- c("#F97162", "#FBE1B1", "#B7DFCB", "#5ABAD1")},
-#'              {heatcols <- c("#F97162", "#FBE1B1", "#B7DFCB", "#5ABAD1", "#3984B6")},
-#'              {heatcols <- c("#F97162", "#FBE1B1", "#B7DFCB", "#5ABAD1", "#3984B6", "#275a7c")},
-#'       )
-#'
-#'     ## Error Handler
-#'     },
-#'       error = function(cond) {
-#'         monkeyr::monkey_knit_error(err = cond, resource = "get_heat_palette")
-#'     }
-#'   )
-#' }
-#'
-#'
-#'
-#' #' degrees_below_18_score
-#' #' @description Calculate the degrees below 18C score
-#' #' @param observations data.frame, the wrangled observations data frame as output by
-#' #' `wrangle.observations` and further filtered by `remove_excluded_devices`
-#' #' @export
-#' degrees_below_18_score <- function(observations) {
-#'   tryCatch (
-#'     {
-#'       ## average degrees below 18
-#'       browser()
-#'       score <- observations %>%
-#'         ## only intereted in 11pm - 7am
-#'         dplyr::filter(as.numeric(hour) %in% c(23, 0:6)) %>%
-#'         dplyr::mutate(cap_co2 = ifelse(co2 > 18, 18, co2)) %>%
-#'         dplyr::summarise(sum(18 - cap_co2)) / nrow(.)
-#'
-#'       ## shitness score. 12deg (score = 6) -> 100.
-#'       score <- 100 - 100 * (score / (18 - 12))
-#'       floor(max(score, 0))
-#'
-#'     ## Error Handler
-#'     },
-#'       error = function(cond) {
-#'         monkeyr::monkey_knit_error(err = cond, resource = "degrees_below_18_score")
-#'     }
-#'   )
-#'
-#'
-#' }
-#'
-#'
+
+
 #' get_ventilation_totals
 #' @description Totals for Value Boxes
-#' @param who_threshold_data data.frame, the output from `?ventilation_data()`
+#' @param ventilation_data data.frame, the output from `?ventilation_data()`
 #' @export
 get_ventilation_totals <- function(ventilation_data) {
   tryCatch (
