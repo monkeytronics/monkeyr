@@ -196,7 +196,7 @@ To explain this is more detail, we will look at some artificial data set to show
 To determine the likely health impact of the home, we compare the temperature data against the WHO guidelines, as given in table 2.1.1 above. In the ideal case, every home should remain above 18 °C all the time. The following example data set shows a range of scenarios from the ideal where the temperature is consistently above 18 °C to a home where the temperature falls below 12 °C for significant periods, which constitutes a potentially serious risk to children's health.
 
 
-```{r echo=FALSE, out.width="100%", fig.height=3}
+```{r echo=FALSE, out.width="100%", fig.height = 2+2*ceiling(data_segments/4)}
   ## Demo Exposure Plot
   example_exposure_data <- readr::read_csv(system.file("dummy-data", "example/example_exposure.csv", package = "monkeyr"))
   example_exposure_plot <- monkeyr::get_exposure_plot(example_exposure_data, "room_type")

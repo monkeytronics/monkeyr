@@ -43,6 +43,16 @@ In the context of Covid-19, carbon dioxide is also being used as a proxy to meas
   above_1250 <- totals$above_1250
   above_800  <- totals$above_800
   
+  highest_co2 <- 
+    wrangled_obs %>%
+    dplyr::filter(reading == "co2") %>%
+    dplyr::select(val) %>%
+    unlist() %>%
+    unname() %>%
+    max()
+    
+    
+  
   palette <- monkeyr::get_heat_palette(4)
   
   flexdashboard::valueBox(paste0(
@@ -74,10 +84,8 @@ In the context of Covid-19, carbon dioxide is also being used as a proxy to meas
 
 ```{r}
   flexdashboard::valueBox(paste0(
-    round(24 * above_2000, 1) ,
-    " hrs (",
-    scales::percent(above_2000),
-    ")"
+    highest_co2,
+    " ppm"
   ),
   icon = "fa-lungs",
   # color = ifelse(below_12 > 0.01, "danger", "primary")

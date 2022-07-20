@@ -96,6 +96,7 @@ get_ventilation_totals <- function(ventilation_data) {
         filter(co2_band == "> 800 ppm") %>%
         pull(fraction)
 
+
       list(
         above_800  = above_800  + above_1250 + above_2000,
         above_1250 = above_1250 + above_2000,
