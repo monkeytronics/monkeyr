@@ -1,0 +1,1 @@
+tenure anlys,room_type anlys

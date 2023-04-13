@@ -1,0 +1,100 @@
+# `r fa("pie-chart", fill = "white")`  Particulate Matter
+
+## Column 1
+
+### Particulate Matter Assessment
+
+```{r}
+  pm_chart <- 
+    monkeyr::pm_data(observations = wrangled_obs) %>%
+    monkeyr::pm_donut(from_timestamp = params$fromTimeStamp, to_timestamp = params$toTimeStamp)
+  
+  pm_chart
+```
+
+----------
+
+### Particulate Matter Guidelines
+
+Particulate Matter or Particle Pollution is the mixture of air-borne particles and liquid droplets composed of acids (such as nitrates and sulfates), ammonium, water, black (or "elemental") carbon, organic chemicals, metals, and soil (crustal) material. It can be considered in 2 categories:
+
+* "Coarse particles" (PM10-2.5) such as those found near roadways and dusty industries range in diameter from 2.5 to 10 micrometers (or microns). The existing "coarse" particle standard (known as PM10) includes all particles less than 10 microns in size.
+* "Fine particles" (or PM2.5) such as those found in smoke and haze have diameters less than 2.5 microns.
+
+Health studies have shown a significant association between exposure to particle pollution and health risks, including cardiovascular effects such as cardiac arrhythmias and heart attacks, and respiratory effects such as asthma and bronchitis.
+
+Exposure to particle pollution can result in increased hospital admissions, emergency room visits, absences from school or work, and restricted activity days, especially for those with pre-existing heart or lung disease, older people, and children.
+
+The size of the particulate matter is important. Smaller particles (PM1.0 and PM2.5) can penetrate deeper into the lungs and pose a greater risk to a persons lungs and heart. Coarse particles are of less concern, although they can irritate a persons eyes, nose and throat.
+
+----------
+
+```{r}
+  pm_kable()
+```
+
+
+## Column 3
+
+### Hours spent above 8 ppm
+
+```{r}
+totals <-
+    monkeyr::pm_data(observations = wrangled_obs) %>%
+    monkeyr::get_pm_totals()
+  
+  above_50 <- totals$above_50
+  above_24 <- totals$above_24
+  above_8  <- totals$above_8
+  
+  highest_pm <- 
+    wrangled_obs %>%
+    dplyr::filter(reading == "pm2_5") %>%
+    dplyr::select(val) %>%
+    unlist() %>%
+    unname() %>%
+    max()
+    
+    
+  
+  palette <- monkeyr::get_heat_palette(4)
+  pm_palette <- monkeyr::get_palette("PM2_5", 4)
+  
+  flexdashboard::valueBox(paste0(
+    round(24 * above_8, 1) ,
+    " hrs (",
+    scales::percent(above_8),
+    ")"
+  ),
+  icon = "fa-viruses",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = pm_palette[2])
+
+```
+
+### Hours spent above 24 ppm
+
+```{r}
+  flexdashboard::valueBox(paste0(
+    round(24 * above_24, 1) ,
+    " hrs (",
+    scales::percent(0.5),
+    ")"
+  ),
+  icon = "fa-shield-virus",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = pm_palette[3])
+```
+
+### Highest ever PM reading
+
+```{r}
+  flexdashboard::valueBox(paste0(
+    highest_pm,
+    " ppm"
+  ),
+  icon = "fa-lungs",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = pm_palette[4])
+```
+

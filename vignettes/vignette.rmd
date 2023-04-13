@@ -1,0 +1,217 @@
+---
+title: "monkeyr"
+output: 
+  md_document:
+    variant: markdown_github
+vignette: >
+  %\VignetteIndexEntry{monkeyr vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+# Monkeyr 
+
+The goal of `monkeyr` is to package up and share the R code needed to produce
+flexdashboards and Rmarkdown reports from Monkeytronics monitoring data. The input 
+data format is consistent with the Monkeytronics Sensor Node mobile app and web 
+portal reporting functions. 
+
+## Installation
+
+Install the latest development version of monkeyr from github :
+
+```{r, eval = FALSE}
+# clone the repo and `Install and Restart`
+# or `devtools::load_all()`
+
+#remotes::install_bitbucket(repo = "monkeytronics/r-analytics", subdir = "monkeyr")
+devtools::install_github("monkeytronics/monkeyr", build_vignettes = TRUE)
+```
+
+Monkeyr is structured as pure functions. The library dependencies are listed in the
+`DESCRIPTION` file. This along with `roxygen` creates the `NAMESPACE` with all imports/exports.
+
+## Example Set Up of an Rmd File (using home report example)
+
+We start with a Monkeytronics Sensor Node data set :\cr
+
+* obs.csv
+* dev.csv
+* weather.csv
+* interv.csv
+
+And we use the wrangling functions to create the following sanitised, wrangled data :
+
+* `wrangled_obs`     : the joined data set
+* `wrangled_devices` : devices list minus excluded devices
+* `devices_for_map`  : a list used to populate a deployment map
+
+(If you need to copy and paste this, make sure you remove `eval = FALSE`!)
+
+```{r, eval = FALSE}
+library(monkeyr)
+
+wrangled_devices <- wrangle_devices(params$filtered_devices)
+
+wrangled_weather <- wrangle_weather(params$filtered_weather)
+
+wrangled_obs    <- wrangle_observations(
+  filtered_obs   = params$filtered_obs,
+  devices        = wrangled_devices,
+  weather        = wrangled_weather
+)
+
+data_volume     <- get_data_volume(
+  observations   = wrangled_obs,
+  from_timestamp = params$fromTimeStamp,
+  to_timestamp   = params$toTimeStamp
+)
+
+devices_for_map <- get_devices_for_map(
+  devices        = wrangled_devices,
+  data_volume    = data_volume
+)
+
+wrangled_devices<- remove_excluded_devices(
+  target_data    = wrangled_devices,
+  data_volume    = data_volume
+)
+
+wrangled_obs    <- remove_excluded_devices(
+  target_data    = wrangled_obs,
+  data_volume    = data_volume
+)
+```
+
+Next, we can set some options for available data and colors:
+
+```{r, eval = FALSE}
+set_options(observations = wrangled_obs)
+```
+
+## Now Run Analysis Code (Home report example) 
+
+We have everything we need to make a time series plot for humidity :
+
+```{r, eval = FALSE}
+ts_chart(
+  observations = wrangled_obs,
+  from_timestamp = test_params()$fromTimeStamp,
+  to_timestamp = test_params()$toTimeStamp,
+  target_variable = "hum"
+)
+```
+
+or temperature :
+
+```{r, eval = FALSE}
+ts_chart(
+  observations = wrangled_obs,
+  from_timestamp = test_params()$fromTimeStamp,
+  to_timestamp = test_params()$toTimeStamp,
+  target_variable = "temp"
+)
+```
+
+# Test Data & Params
+
+We want to store dummy data sets in the package to speed up testing. There are 2
+sources to consider. Firstly the raw csv files which we put into `dummy-data` 
+and secondly the parameters which go in `dummy-params`.
+
+```
+├── inst
+│   ├── dummy-data
+│   │   ├── monkey_a
+│   │   |   ├── dev.csv
+│   │   |   ├── interv.csv
+│   │   |   ├── obs.csv
+│   │   |   ├── weather.csv
+│   │   ├── monkey_b
+│   │   |   ├── **.csv
+│   ├── dummy-params
+│   │   ├── params_blank.txt
+│   │   ├── params_full_map.txt
+│   │   ├── params_full_2vars.txt
+│   │   ├── params_full_all.txt 
+│   ├── rmd
+│   │   ├── home.rmd
+│   │   ├── my-report.rmd
+
+```
+
+# Testing your Flexdash Report in the Local Environment
+
+During development of your flexdash report or for use with new datasets, 
+you should put the rmd file into the inst/rmd folder. And add new data sets into 
+`inst/dummy-data/{data-set-name}/*.csv`. Now you can test your code
+using the `run_test_report` function. The following parameters are needed :
+
+```{r, eval = FALSE}
+run_test_report(
+    report       = "home",           ## rmd file!
+    dummy_data   = "monkey_a",       ## dummy data from inst/dummy-data
+    dummy_params = "params_blank.txt"    ## dummy params from inst/dummy-params
+)
+```
+
+
+The output will be generated as a html file in `html/{report}/{dummy_data}.html`
+
+
+# Running an Analysis from inside a Docker Container
+
+We have a function `?knit_report` that takes 
+    - a list of parameters (paths to data and timestamps)  
+    - output file name (so we can keep track of requests if needed)
+    - output directory (we need this to tell the docker container where on the host to drop the files)
+
+We run this like so:
+
+```{r, eval = FALSE}
+# the system.file calls are to access the example data installed with the package
+# in production, the list of parameters will be generated by the script calling this
+# report
+
+  obs           <- "/tmp/obs.csv"
+  dev           <- "/tmp/dev.csv"
+  weather       <- "/tmp/weather.csv"
+  interv        <- "/tmp/interv.csv"
+  from          <- 1627639151
+  to            <- 1630317551
+  
+  par_list <- monkeyr::make_params_list(
+    filtered_obs           = obs,
+    filtered_devices       = dev,
+    filtered_weather       = weather,
+    filtered_interventions = interv,
+    fromTimeStamp          = from_ts,
+    toTimeStamp            = to_ts
+  )
+  
+  temporary_directory      <- Sys.getenv("TMPDIR", "/tmp")
+  outfile                  <- file.path(temporary_directory, paste0("flexi", ".html"))
+
+# knit with default file name and output dir
+  monkeyr::knit_report(
+    param_list = par_list,
+    output_file = outfile,
+    output_dir = temporary_directory,
+    intermediates_dir = temporary_directory,
+    envir = new.env()
+  )
+```
+

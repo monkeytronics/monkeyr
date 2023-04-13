@@ -11,3 +11,6 @@ s3_report_stash/
 inst/dummy-data
 !inst/dummy-data/example
 !inst/dummy-data/co2_demo
+!inst/dummy-data/maps-au
+!inst/dummy-data/maps-ie
+!inst/dummy-data/maps-derry

@@ -1,0 +1,93 @@
+# `r fa("line-chart", fill = "white")`  Formaldehyde
+
+## Column 1
+
+### Formaldehyde Assessment
+
+```{r}
+  hcho_chart <- 
+    monkeyr::hcho_data(observations = wrangled_obs) %>%
+    monkeyr::hcho_chart(from_timestamp = params$fromTimeStamp, to_timestamp = params$toTimeStamp)
+  
+  hcho_chart
+```
+
+----------
+
+### Formaldehyde Guidelines
+
+Formadehyde is a naturally occuring volatile compound with the chemical formula HCHO, created in a number of natural processes, such as the oxidation of hydrocarbons and the decomposition of plant matter. It has a distinct strong smell. In the indoor environment, formaldehydes are released by resins, glues, paints, insulating materials, chipboard, plywood and some fabrics.
+
+Exposure to low levels of formaldehyde may irritate your eyes, nose, throat, airways, or skin. Some people are more sensitive than others, so an exposure that causes no problems for some may make other people sick or uncomfortable. People who may be more sensitive to the effects of formaldehyde are the very young, the very old, and people with asthma and other breathing problems.
+
+----------
+
+```{r}
+  hcho_kable()
+```
+
+
+## Column 3
+
+### Hours spent above 500 ppb
+
+```{r}
+totals <-
+    monkeyr::hcho_data(observations = wrangled_obs) %>%
+    monkeyr::get_hcho_totals()
+  
+  above_1000 <- totals$above_1000
+  above_800  <- totals$above_800
+  above_500  <- totals$above_500
+  
+  highest_hcho <- 
+    wrangled_obs %>%
+    dplyr::filter(reading == "hcho") %>%
+    dplyr::select(val) %>%
+    unlist() %>%
+    unname() %>%
+    max()
+    
+    
+  
+  palette <- monkeyr::get_heat_palette(4)
+  hcho_palette <- monkeyr::get_palette("HCHO", 4)
+  
+  flexdashboard::valueBox(paste0(
+    round(24 * above_500, 1) ,
+    " hrs (",
+    scales::percent(above_500),
+    ")"
+  ),
+  icon = "fa-viruses",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = hcho_palette[2])
+
+```
+
+### Hours spent above 800 ppb
+
+```{r}
+  flexdashboard::valueBox(paste0(
+    round(24 * above_800, 1) ,
+    " hrs (",
+    scales::percent(above_800),
+    ")"
+  ),
+  icon = "fa-shield-virus",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = hcho_palette[3])
+```
+
+### Highest ever Formaldehyde Reading
+
+```{r}
+  flexdashboard::valueBox(paste0(
+    highest_hcho,
+    " ppb"
+  ),
+  icon = "fa-lungs",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = hcho_palette[4])
+```
+

@@ -1,0 +1,328 @@
+---
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  flexdashboard::flex_dashboard:
+    social: [ "menu" ]
+    logo: !expr system.file("app/www", "logo.png", package = "monkeyr")
+    favicon: !expr system.file("app/www", "favicon.png", package = "monkeyr")
+    # logo: "../www/logo.png"
+    # favicon: "../www/favicon.png"
+    orientation: rows
+    pandoc_args: [
+      "+RTS", "-K16m",
+      "-RTS"
+    ]
+
+# paths with `inst` will only work in `dev` setting. 
+# in `production` setting, please use real data
+# or call installed files with `system.file`
+# see example in `?knit_report()`
+params:
+  filtered_obs:             "../dummy-data/energymate_home/obs.csv"
+  filtered_weather:         "../dummy-data/energymate_home/weather.csv"
+  filtered_devices:         "../dummy-data/energymate_home/dev.csv"
+  filtered_interventions:   "../dummy-data/energymate_home/interv.csv"
+  report_params:            "-map-"                                            
+  fromTimeStamp:            1662958317
+  toTimeStamp:              1665546717
+---
+
+```{r}
+ENABLE_DEBUG <- FALSE
+```
+
+
+```{r setup }
+  ## load monkeyr package
+  library(monkeyr)
+  library(dplyr)
+  library(magrittr)
+  library(fontawesome)
+  # use fontawesome::fa_metadata() to see avail icons!
+
+## other dependencies loaded through namespace
+```
+
+```{r wrangle_data}
+
+  ## STANDARD DATA WRANGLING & JOINING
+  ## ---------------------------------
+  
+  tryCatch(
+    {
+      wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
+      
+      # fudge to generate WISE devices
+      wrangled_devices <- wrangled_devices %>%
+        #dplyr::filter(grepl("Whipit", cluster, fixed = TRUE))
+        dplyr::filter(grepl("HPA/Whipit", cluster, fixed = TRUE))
+      
+      
+      
+      # local_tz         <- monkeyr::get_local_tz(wrangled_devices)
+    
+      wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
+      
+      # start_time <- Sys.time()
+      wrangled_obs <- monkeyr::wrangle_observations(
+        filtered_obs   = params$filtered_obs,
+        devices        = wrangled_devices,
+        weather        = wrangled_weather
+      )
+      # end_time <- Sys.time()
+      # end_time - start_time
+      
+      data_volume <- monkeyr::get_data_volume(
+        observations   = wrangled_obs,
+        from_timestamp = params$fromTimeStamp,
+        to_timestamp   = params$toTimeStamp
+      )
+      
+      devices_for_map <- monkeyr::get_devices_for_map(
+        devices        = wrangled_devices,
+        data_volume    = data_volume
+      )
+      
+      wrangled_devices <- monkeyr::remove_excluded_devices(
+        target_data    = wrangled_devices,
+        data_volume    = data_volume
+      )
+      
+      wrangled_obs <- monkeyr::remove_excluded_devices(
+        target_data    = wrangled_obs,
+        data_volume    = data_volume
+      )
+      
+      sample_rate <- ceiling(nrow(wrangled_obs)/50000)
+      if (sample_rate > 1) {
+        wrangled_obs <- monkeyr::downsample_obs(wrangled_obs, sample_rate)
+      }
+      
+      nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
+      
+      report_type <- "Home"
+      
+      ## set R options for monkey reports
+      monkeyr::set_options(wrangled_obs = wrangled_obs)
+     # monkeyr::monkey_palettes(devices = wrangled_devices) # doesn't work - use get_palettes instead
+      unique_readings <- monkeyr::unique_readings(wrangled_obs = wrangled_obs)
+    },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "wrangle_data")
+    }
+  )
+```
+
+---
+title: "`r report_type ` Report"
+---
+
+```{r check_data, results='asis'}
+  ## Bail if nothing in data. Returns empty report.
+  if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
+    cat("No data present for the requested devices and timespan. Aborting report.")
+    knitr::knit_exit("</body></html>")
+  }
+```
+
+
+
+<!-- PAGE 1: HEALTHY HOMES    -->
+<!-- ------------------------ -->
+
+# Healthy Homes Performance {data-icon="fa-chart-bar"}
+
+## Column 1
+
+### Performance Against World Health Organisation Guidelines
+
+```{r}
+  who_chart <- 
+    monkeyr::who_threshold_data(observations = wrangled_obs) %>%
+    monkeyr::who_threshold_chart(from_timestamp = params$fromTimeStamp, to_timestamp = params$toTimeStamp)
+  
+  who_chart
+```
+
+### World Health Organisation Guidelines
+
+Low indoor temperatures are associated with increased risks of respiratory and cardiovascular diseases. The below table summarises the impact of indoor temperature on health, and the graph opposite shows the the percentage of time each of your rooms spends below each of the temperature thresholds defined. He Kainga Oranga recommends that we look at night time temperatures when we are considering health impact. The night-time is defined as between 11 pm and 7 am.
+
+----------
+
+```{r}
+  who_guidance_kable()
+```
+
+----------
+
+## Column 2
+
+### Hours each night below 18 °C
+
+```{r}
+  totals <-
+    monkeyr::who_threshold_data(observations = wrangled_obs) %>%
+    monkeyr::get_who_totals()
+  
+  below_12 <- totals$below_12
+  below_16 <- totals$below_16
+  below_18 <- totals$below_18
+  
+  palette <- monkeyr::get_heat_palette(6)
+  
+  flexdashboard::valueBox(paste0(round(8 * below_18, 1), " hrs (",scales::percent(below_18),")"),
+                          icon = "fa-thermometer-half",
+                          # color = ifelse(below_18 > 0.40, "warning", "primary"),
+                          color = palette[4])
+```
+
+### Hours each night below 16 °C
+
+```{r}
+  flexdashboard::valueBox(paste0(round(8 * below_16, 1) , " hrs (", scales::percent(below_16), ")"),
+                        icon = "fa-thermometer-quarter",
+                        # color = color = ifelse(below_16 > 0.20, "warning", "primary")
+                        color = palette[5])
+```
+
+### Hours each night below 12 °C
+
+```{r}
+  flexdashboard::valueBox(paste0(
+    round(8 * below_12, 1) ,
+    " hrs (",
+    scales::percent(below_12),
+    ")"
+  ),
+  icon = "fa-thermometer-empty",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = palette[6])
+```
+
+
+<!-- PAGE 2: VENTILATION CODE -->
+<!-- ------------------------ -->
+```{r, echo=FALSE, results='asis'}
+  if ("co2" %in% wrangled_obs$reading) {
+    res <- knitr::knit_child('ventilation.rmd', quiet = TRUE)
+    cat(res, sep = '\n')
+  }
+```
+
+
+<!-- PAGE 3: PM CODE -->
+<!-- --------------- -->
+```{r, echo=FALSE, results='asis'}
+  if ("pm2_5" %in% wrangled_obs$reading) {
+    res <- knitr::knit_child('pm.rmd', quiet = TRUE)
+    cat(res, sep = '\n')
+  }
+```
+
+
+<!-- PAGE 4: HCHO CODE -->
+<!-- --------------- -->
+```{r, echo=FALSE, results='asis'}
+  if ("hcho" %in% wrangled_obs$reading) {
+    res <- knitr::knit_child('hcho.rmd', quiet = TRUE)
+    cat(res, sep = '\n')
+  }
+```
+
+
+<!-- PAGE 5: TIME SERIES CODE -->
+<!-- ------------------------ -->
+
+# `r fa("chart-line", fill = "white")`  Raw Timeseries Data
+
+## Column 1 {.tabset}
+
+### Temperature
+
+```{r}
+  if (getOption("temp")) {
+    monkeyr::ts_chart(
+      observations = wrangled_obs,
+      from_timestamp = params$fromTimeStamp,
+      to_timestamp = params$toTimeStamp,
+      target_variable = "temp"
+    )
+  } else {
+    cat("No Temperature Data Available!")
+  }
+```
+
+### Humidity
+
+```{r}
+  if (getOption("hum")) {
+    monkeyr::ts_chart(
+      observations = wrangled_obs,
+      from_timestamp = params$fromTimeStamp,
+      to_timestamp = params$toTimeStamp,
+      target_variable = "hum"
+    ) 
+  } else {
+    cat("No Humidity Data Available!")
+  }
+```
+
+```{r echo=FALSE, results="asis"}
+
+  ## All the rest are present when data is available!
+  ## ------------------------------------------------
+  
+  valid_readings <- monkeyr::filter_list(unique_readings, permitted_readings())
+  valid_readings <- valid_readings[valid_readings != "temp"]
+  valid_readings <- valid_readings[valid_readings != "hum"]
+  
+  if (length(valid_readings) > 0) {
+    plotlist = list()
+    for (i in 1 : length(valid_readings)) {
+      cat("\n", "\n### ", toupper(valid_readings[i]), "\n")
+      ts_chart <- monkeyr::ts_chart(
+        observations = wrangled_obs,
+        from_timestamp = params$fromTimeStamp,
+        to_timestamp = params$toTimeStamp,
+        target_variable = valid_readings[i]
+      ) 
+      
+      plotlist[[2*i]] = ts_chart
+      print(htmltools::tagList(ts_chart))
+      plotlist[[2*i+1]] = ts_chart
+      print(htmltools::tagList(ts_chart))
+    }
+  }
+```
+
+
+## Column 2
+
+### Highest Ever Temperature
+
+```{r}
+  extremes_temp <- monkeyr::get_extreme_vals(
+    observations = wrangled_obs,
+    target_variable = "temp")
+  
+  flexdashboard::valueBox(extremes_temp$highest_val,
+           icon = "fa-thermometer-full",
+           color = ifelse(extremes_temp$highest_val > 29, "warning", "primary"))
+```
+
+### Lowest Ever Temperature
+
+```{r}
+  flexdashboard::valueBox(extremes_temp$lowest_val,
+         icon = "fa-thermometer-empty",
+         color = ifelse(extremes_temp$lowest_val < 12, "warning", "primary"))
+```
+
+### Mean Temperature
+
+```{r}
+  flexdashboard::valueBox(extremes_temp$mean_val,
+         icon = "fa-thermometer-half",
+         color = ifelse(extremes_temp$mean_val < 16, "warning", "primary"))
+```

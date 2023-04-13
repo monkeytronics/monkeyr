@@ -1,0 +1,92 @@
+---
+title: "Technical Guide - Intervention Analysis"
+author: "Morton Analytics LLC"
+date: '2022-12-19'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+This document serves as technical documentation for the intervention analysis that uses a linear regression to evaluate one or more interventions. It reviews the mathematical and programming items to make the analysis run properly. 
+
+## Linear Regression
+
+Linear regression provides a **test for evaluating interventions** by finding the average effect or correlation between two or more variables. This regression model generates a series of coefficient estimates by minimizing the squared error between actual outputs and fitted outputs. By using multiple variables to predict temperature, we're also able to control for certain variables and estimate how much each intervention moderates the indoor temperature.
+
+The intervention analysis uses the `lm` function to fit a linear regression model on the data. This produces a model object with coefficients that **estimate the effect or correlation of each input variable on the indoor temperature**. It also produces some model statistics and residuals (error terms).
+
+The intervention analysis uses the **coefficient table to produce the scorecard**. If the estimated coefficient is above 0 and the p-value is less than 0.05, it's interpreted as improving the indoor temperature. Anything is else is likely inconclusive or indicating a bias. Could an intervention have a negative effect or correlation, yes, but that seems unlikely.
+
+The coefficient table represents each input's (plus the intercept) effect or correlation with the indoor temperature, all else being equal. **"All else being equal"** means that if you hold everything else to be the same, the estimated coefficient is the weight given to that variable.
+
+For technical readers, the residual plot and test for heteroskedasticity are provided as model diagnostics to evaluate whether the estimate should be trusted or not.
+
+Some notes to keep in mind:
+
+- Small data sets/samples may result in random results. This could be from too few observations or too few devices with interventions.
+
+- To isolate the effects/correlations, we need variation across each variable.
+
+- Linear regression is a model of the data only - it cannot "out perform" what's already in the data.
+
+## RMD Structure
+
+The RMD file may be used as a child document to any other document. Any outer R objects are accessible to the child document. The first chunk represents the workhorse of the document preparing the data, fitting the model, and extracting results. The remaining chunks are meant to summarise results only.
+
+### First Chunk
+
+The first chunk indicates all the dependencies for the child document to run. Feel free to add these to the library's `DESCRIPTION` file once this gets deployed.
+
+This chunk also has parameters near the top to define the model and put some filters around the data:
+
+- `output_var` is the variable the model is predicting, in this case temperature.
+
+- `control_vars` are the control variables - these ensure that similar situations are compared when generating the estimate.
+
+- `hours_greater_than` and `hours_less_than` provide filters to observations greater than or less than those hours based on a 24 hour cycle.
+
+- `temps_greater_than` and `temps_less_than` provide filters to observations greater than or less than those temperatures in Celsius.
+
+The final piece of this puzzle is the intervention data. Interventions are identified uniquely and combined with the control variables.
+
+From there, `get_intervention_sample` applies the filters needed to the observations.
+
+`get_clean_model_data` narrows the data set to the columns provided and limits the variation for rooms that are bedrooms. Instead of `bedroom_1` it would become just `bedroom`.
+
+After we have the right data, there's a simple data validation that none of the input variables are of a single value:
+
+```{r eval=FALSE}
+data_to_check <- clean_data_list[[2]]
+data_check_results <- purrr::map_lgl(data_to_check, function(d){
+  unique_count <- length(unique(d))
+  if(unique_count > 1) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+})
+```
+
+If it passes this test, `get_model` will fit a model and `get_model_coef` will get the coefficients. Everything else is just parsing the results of those functions.
+
+If the data validation doesn't pass the test, it will print a message directing the uses to correct the data or remove the variable.
+
+### Summary of Results - Scorecard
+
+This section and the one chunk inside combines some summary data and the coefficient table to produce a simple scorecard using `reactable`.
+
+There is also a statement about how much variation the model was able to capture.
+
+### Coefficient Statistics - Technical Results
+
+This is a simple `kable` table of the coefficient table meant for technical users/readers.
+
+### Model Diagnostics and Residual Plot
+
+This is a simple ggplot comparing fitted values to their residuals from the model object. Ideally, this would appear random. To complement the visual inspection, the Breusch-Pagan Test for heteroscedasticity is used to identify any bias in the estimate - you want this to be FALSE ideally, but it's not a hard and fast rule. There are functions to attempt a correction, but with the r-squared being as low as it was it is currently left out.
+
+**~ fin ~ **

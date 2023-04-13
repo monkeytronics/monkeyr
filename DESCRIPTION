@@ -1,0 +1,60 @@
+Package: monkeyr
+Type: Package
+Title: Analytics with Monkeytronics Sensor Node data
+Version: 0.1.0
+Authors@R:
+    person("Al", "Brennan", , "al@monkeytronics.co.nz", role = c("aut", "cre"))
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description:
+    R Package {monkeyr} contains the code needed to consume and use Sensor Node
+    data for flex dashboards and RMarkdown analytics reports
+License: `use_mit_license()`
+Imports:
+    aws.s3 (>= 0.3.21),
+    checkmate,
+    data.table,
+    dplyr,
+    extrafont,
+    flexdashboard,
+    forcats,
+    formattable,
+    ggnewscale,
+    ggplot2,
+    ggpmisc,
+    hrbrthemes,
+    janitor,
+    kableExtra,
+    knitr,
+    lubridate,
+    magrittr,
+    nord,
+    paws,
+    pixiedust,
+    plotly,
+    purrr,
+    readr,
+    rlang,
+    stringi,
+    tidyr,
+    unikn,
+    sf,
+    lutz,
+    Rcpp,
+    rgdal,
+    geojson,
+    cowplot,
+    ggrepel,
+    distill,
+    rmarkdown,
+    htmltools
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder:
+	  knitr
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
+Config/testthat/edition: 3

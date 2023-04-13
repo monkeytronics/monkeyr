@@ -1,0 +1,490 @@
+---
+title: "Indoor Environment Monitoring"
+date: '`r format(Sys.time(), "%b %d %Y")`'
+
+# author:
+#   - name: "Saera Chun"
+#     affiliation: "He Kāinga Oranga, University of Otago"
+#     affiliation_url: https://www.healthyhousing.org.nz/
+#   - name: "Al Brennan"
+#     affiliation: "Monkeytronics, Wellington, NZ"
+#     affiliation_url: https://www.monkeytronics.co.nz/    
+
+# orcid_id: 0000-0003-0645-5666
+# bibliography: biblio.bib
+
+output: 
+  distill::distill_article:
+    toc: true
+    toc_depth: 2
+    theme: theme.css
+    pandoc_args: [
+      "+RTS", "-K32m",
+      "-RTS"
+    ]
+
+# paths with `inst` will only work in `dev` setting.
+# in `production` setting, please use real data
+# or call installed files with `system.file`
+# see example in `?knit_report()`
+params:
+  filtered_obs:             "../dummy-data/wise/obs.csv"
+  filtered_weather:         "../dummy-data/wise/weather.csv"
+  filtered_devices:         "../dummy-data/wise/dev.csv"
+  filtered_interventions:   "../dummy-data/wise/interv.csv"
+  report_params:            "intro,intervention anlys,show deployment map,room_type anlys, tenure anlys"                                            
+  fromTimeStamp:            1663242659   
+  toTimeStamp:              1668509459
+---
+
+```{r setup, include=FALSE}
+  ENABLE_DEBUG <- FALSE
+
+  # load monkeyr package
+  library(monkeyr)
+  library(dplyr)
+  library(magrittr)
+  library(kableExtra)
+  library(ggplot2)
+  library(unikn)
+
+  # CloudWatch Logs
+  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : params = ", params), resource="setup")
+  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : working dir = ", getwd()), resource="setup")
+  monkey_knit_msg(msg = paste0("\nMESSAGE OUT : params$filtered_devices in rmd = ", params$filtered_devices), resource="setup")
+  
+  # other dependencies loaded through namespace
+```
+
+
+```{r WRANGLE_DATA, echo=FALSE}
+
+  ## STANDARD DATA WRANGLING & JOINING
+  ## ---------------------------------
+
+  tryCatch(
+    { 
+      wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
+      
+      # fudge energymate
+      # wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices) %>%
+      #   dplyr::filter(device_id != "82460E") %>%
+      #   dplyr::filter(device_id != "48E66D") %>%
+      #   # dplyr::filter(device_id != "488672")
+      #   dplyr::filter(grepl("Whipit", cluster, fixed = TRUE))
+      
+            
+      # extract report_params data segments from 1) device groups & 2) device columns
+      param_list        <- param_list(params$report_params, split_char = ",")
+      wrangled_devices  <- monkeyr::extract_group_target_vars(wrangled_devices, param_list)
+      target_var_list   <- target_var_list(wrangled_devices, param_list)
+      data_segments_max <- data_segments_max(wrangled_devices, target_var_list)
+      
+      # fudge to generate SusOptions devices
+      # wrangled_devices <- wrangled_devices %>%
+        # dplyr::filter(grepl("Energymate", cluster, fixed = TRUE))
+        # dplyr::filter(grepl("WBOP Energy", cluster, fixed = TRUE))
+        # dplyr::filter(grepl("Unknown", cluster, fixed = TRUE))
+        
+      wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
+      monkey_knit_msg(msg = paste0("wrangled_weather nrow = ", nrow(wrangled_weather)), resource="WRANGLE_DATA")
+      
+      wrangled_obs <- monkeyr::wrangle_observations(
+        filtered_obs   = params$filtered_obs,
+        devices        = wrangled_devices,
+        weather        = wrangled_weather
+      )
+      utils::object.size(wrangled_obs)
+      
+      wrangled_obs <- monkeyr::memory_saver_obs(wrangled_obs)
+      utils::object.size(wrangled_obs)
+      
+    
+      
+      # Fudge to adjust time-period for DID analysis!
+      wrangled_obs <- wrangled_obs %>%
+        filter(ts > params$fromTimeStamp) %>%
+        filter(ts < params$toTimeStamp)
+      
+      # # Fudge Random Number - Corellation should be 0.
+      # wrangled_obs$val <- sample(100, size = nrow(wrangled_obs), replace = TRUE)
+      # # Fudge Random Number - Corellation should be 1.
+      # wrangled_obs <- wrangled_obs %>%
+      #   dplyr::mutate(outdoor_temp = val + 10)
+      
+      data_volume <- monkeyr::get_data_volume(
+        observations   = wrangled_obs,
+        from_timestamp = params$fromTimeStamp,
+        to_timestamp   = params$toTimeStamp
+      )
+      
+      devices_for_map <- monkeyr::get_devices_for_map(
+        devices        = wrangled_devices,
+        data_volume    = data_volume
+      )
+      
+      wrangled_devices <- monkeyr::remove_excluded_devices(
+        target_data    = wrangled_devices,
+        data_volume    = data_volume
+      )
+      
+      wrangled_obs <- monkeyr::remove_excluded_devices(
+        target_data    = wrangled_obs,
+        data_volume    = data_volume
+      )
+      
+      ## TODO: add interv data to the example data set
+      wrangled_obs_interv <- monkeyr::wrangle_interv(
+        filtered_interv = params$filtered_interventions
+        ,obs = wrangled_obs
+      )
+      
+      nrow_vals <- nrow_values(wrangled_devices, wrangled_obs)
+      
+      # set R options for monkey reports
+      monkeyr::set_options(wrangled_obs = wrangled_obs)
+      # monkeyr::monkey_palettes(devices = wrangled_devices) # doesn't work - use get_palettes instead
+      
+      
+      # test for CEN Top Level Report
+      unique_owners     <- monkeyr::unique_owners(wrangled_devices = wrangled_devices)
+      cen_top_level     <- (length(unique_owners) > 1) # Boolean
+      org_string        <- monkeyr::org_string(wrangled_devices, cen_top_level)
+  
+    },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "WRANGLE_DATA chunk")
+    }
+  )
+  
+
+
+```
+
+### Reporting period : `r date_string(params$fromTimeStamp)` - `r date_string(params$toTimeStamp)`
+
+---
+# Wait til wrangled devices avail to create title
+title: "`r org_string` Indoor Air Quality Report"
+---
+
+```{r check_data, include=FALSE}
+  # Bail if nothing in data. Returns empty report.
+  
+  if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
+    cat("No data present for the requested devices and timespan. Aborting report.")
+    knitr::knit_exit("</body></html>")
+  }
+```
+
+
+
+## 1. Deployment Summary
+
+<!------------------>
+
+```{r echo=FALSE, results="asis", out.width="100%"}
+  hhi_list_kable(devices_for_map, cen_top_level)
+```
+
+`r device_summary_string(devices_for_map) `
+
+
+### 1.1. Data Segments Included
+In this report, we will segment the data `r length(target_var_list)` different ways. For each, we provide a brief summary (Table 1.1.1 to 1.1. `r length(target_var_list)`) showing how many monitors are present, how many are in each data set and how many provide usable data. Please take into account the size of the data sets when interpreting the conclusions. Sets with 10 or more monitors will carry more statistical significance. 
+
+```{r echo=FALSE, results="asis", out.width="100%"}
+
+  section_number <- 1
+  i = 1
+  
+  while (i <= length(target_var_list)) {
+    target_var       <- target_var_list[i]
+    target_var_Title <- gsub('_',' ',target_var)
+    target_var_Title <- stringi::stri_trans_totitle(target_var_Title)
+    
+    
+  ## Summary of Requested Data Set
+  ## --------------
+    summary_kable <- summary_kable_by_var(
+      wrangled_devices  = devices_for_map,
+      target_var        = {target_var}, 
+      target_var_string = target_var_Title,
+      unique_owners     = unique_owners
+    )
+    
+  ## Stuff to display in report
+    cat(paste0("\n\n", "### 1.1.", section_number, " Data Segment ", i, " : ", 
+                target_var_Title), "\n")
+    print(summary_kable)
+    cat(paste0("\n\n", "##### Table 1.1.", i, " Number of Monitors placed by ", 
+                target_var_Title, " (n = ", nrow_vals$included_n, ")", "\n"))
+    
+    
+  ## Break After Section
+  ## -------------------
+    # section_number <- section_number + 1
+    cat("\n\n\n")
+    i <- i + 1
+  }
+```
+
+
+
+```{r echo=FALSE, results="asis", out.width="100%"} 
+  device_excluded_kable(devices_for_map)
+```
+
+
+
+```{r, echo=FALSE, results='asis', out.width="100%"}
+  if ("show deployment map" %in% param_list) {
+    res <- knitr::knit_child('map.rmd', quiet = TRUE)
+    cat(res, sep = '\n')
+  }
+```
+
+<br />
+
+## 2. Temperature Analysis Introduction
+
+<!------------------------------------>
+
+### 2.1   The Health Standards
+Low indoor temperatures are associated with increased risks of respiratory and cardiovascular diseases. The below table summarises the impact of indoor temperature on health The night-time is defined as between 11 pm and 7 am.
+<br />
+
+```{r echo=FALSE}
+  monkeyr::who_guidance_kable()
+```
+##### Table 2.1.1. Impact of Indoor Temperature on Health
+<br />
+
+### 2.2. Purpose of this Report
+By examining the temperature data, we would like to answer the following questions:
+
+<ol>
+  <li>What are the likely health impacts in the home? By comparing the night-time temperatures experienced against the WHO guidelines.</li>
+  <li>How well is the building performing? By preforming an Indoor Vs Outdoor Regression Test to see how well the building protects from the elements.</li>
+  <li>What is the 'Worst Case' experienced in each room? By looking at the lowest temperature recorded- at night.</li>
+</ol>
+
+To explain this is more detail, we will look at some artificial data set to show what various homes might look like - from the ideal case to homes which performs progressively more poorly. 
+
+#### 2.2.1 What is the Likely Health Impact of the Home?
+To determine the likely health impact of the home, we compare the temperature data against the WHO guidelines, as given in table 2.1.1 above. In the ideal case, every home should remain above 18 °C all the time. The following example data set shows a range of scenarios from the ideal where the temperature is consistently above 18 °C to a home where the temperature falls below 12 °C for significant periods, which constitutes a potentially serious risk to children's health.
+
+```{r echo=FALSE, out.width="100%", fig.height = 3.25}
+
+  ## Demo Exposure Plot
+  example_exposure_data <- readr::read_csv(system.file("dummy-data", "example/example_exposure.csv", package = "monkeyr"))
+  example_exposure_plot <- monkeyr::get_exposure_plot(example_exposure_data, "room_type")
+  print(example_exposure_plot)
+  
+```
+
+##### Figure 2.2.1 Likely Health Impact - Night-time Temperature Below Threshold
+
+#### 2.2.2 How Well Does the Building Perform?
+A linear regression analysis of night time data is used to estimate the relationship between the indoor and outdoor temperatures. We'll call the result the ‘Model Relationship Coefficient’. This can be positive, zero or negative, where a positive value indicates that the outdoor temperature is affecting the indoor temperature. The higher the Model Relationship Coefficient, the stronger this effect. A lower Model Relationship Coefficient means that the building is performing well by providing shelter from the effects of the outdoor weather.
+
+To compare the Model Relationship Coefficient for different test cases, we use box plots. The thick line across the centre of the box indicates the median value. We use the median value to reduce the impact of outliers and obtain a more representative result than the mean.
+
+To interpret the Model Relationship Coefficient: below 0.4 is good; below 0.7 is average; below 1.0 is poor; above 1.0 is very poor. The following example plot should help to illustrates this.
+
+```{r echo=FALSE, out.width="100%", fig.height = 5}
+
+  ## Demo Box Plot
+  example_boxplot_data  <- readr::read_csv(system.file("dummy-data", "example/example_boxplot.csv",  package = "monkeyr"))
+  example_boxplot       <- monkeyr::get_reg_boxplot(example_boxplot_data, "performance")
+  print(example_boxplot)
+  
+```
+
+##### Figure 2.2.2 Building Performance - Indoor-Outdoor Model Relationship Coefficient
+
+#### 2.2.3 What is the 'worst case' experienced in each room?
+The 'Worst Case' experienced corresponds to the lowest temperatures recorded. This metric shows us the lowest temperature experienced, not the average. 
+
+```{r echo=FALSE, out.width="100%", fig.height = 3.25}
+
+  ### Demo Lowest Ever
+  example_lowest_ever_data  <- readr::read_csv(system.file("dummy-data", "example/example_exposure.csv",  package = "monkeyr"), show_col_types = FALSE)
+  example_lowest_ever_data  <- 
+    readr::read_csv(
+      system.file("dummy-data", "example/example_lowest_ever.csv",  package = "monkeyr"),
+      show_col_types = FALSE
+    )
+  example_lowest_ever       <- monkeyr::get_exposure_plot(example_lowest_ever_data, "performance")
+  print(example_lowest_ever)
+    
+```
+
+##### Figure 2.2.2 Building Performance - Indoor-Outdoor Model Relationship Coefficient
+
+```{r  echo=FALSE, results="asis", out.width="100%"}
+  ## fig.height=(6+2*ceiling(6/4))
+
+  section_number <- 3
+
+  i = 1 ## for testing
+  while (i <= length(target_var_list)) {
+    
+    target_var       <- target_var_list[i]
+    data_segments    <- data_segments(wrangled_devices, target_var)
+    target_var_Title <- gsub('_',' ',target_var)
+    target_var_Title <- stringi::stri_trans_totitle(target_var_Title)
+    
+    cat(paste0("\n", "## ", section_number, ". Temperature Analysis by ", target_var_Title))
+    
+    
+    
+  ### Intro
+  ### -----
+    cat("\n\n In this section we will try to answer the following questions, ")
+    cat("focussing specifically on how the results are affected by the ") 
+    cat(paste0( target_var_Title, " variable.\n\n"))
+    
+    cat("1. What are the likely health impacts in the home?\n")
+    cat("2. How well is the building performing?\n")
+    cat("3. What is the 'worst case' experienced in each room?\n\n")
+    
+    
+    
+  ### WHO Thresholds
+  ### --------------
+    
+  ### Figure X.1.1
+    cat(paste0("\n", "### ", section_number, ".1 Likely Health Impacts in the Home by ", target_var_Title), "\n")
+    cat("\n\n The following chart shows the percentage of night-time hours spent in each temperature band. ")
+    cat("This allow us to determine the likely health impacts of each category, by comparing these results ")
+    cat("to the WHO guidelines, as given above in table 2.1.1. \n\n")
+    
+    ### Plot Code  
+    exposure_chart_data <- monkeyr::get_exposure_chart_data(wrangled_obs, wrangled_devices, target_var)
+    exposure_plot       <- monkeyr::get_exposure_plot(exposure_chart_data, target_var)
+    # knitr::opts_chunk$set(fig.height=(6+2*ceiling(data_segments/4))) ## changes default settings for later chunks!
+    # print(exposure_plot)
+    
+  ### Use resizePlot.rmd to apply per-plot height etc.
+    resizePlot <- exposure_plot
+    resizeHeight <- 3.25*ceiling(data_segments/4)
+    res <- knitr::knit_child('resizePlot.rmd', quiet = TRUE)
+    cat(res, sep = '\n')
+  ###
+    
+    cat(paste0("\n\n", "##### Figure ", section_number, ".1.1 Night-time Temperature Below Threshold by ", 
+                target_var_Title, " (n = ", nrow_vals$included_n, ")", "\n"))
+    
+    
+  ### Table X.1.2
+    cat("\n\n In the following table, we show the same information in tabular form. ")
+    cat("The table is sorted from worst to best. \n\n")
+
+    temp_exposure      <- monkeyr::get_temp_exposure(wrangled_obs, wrangled_devices, target_var)
+    exposure_kable_var <- monkeyr::get_exposure_kable_var(temp_exposure, target_var)
+    print(exposure_kable_var)
+    cat(paste0("\n", "##### Figure ", section_number, ".1.2 Time Spent Below the Minimum Health Standard by ", 
+                target_var_Title, " (n = ", nrow_vals$included_n, ")", "\n"))
+    
+    
+  ### Table X.1.3
+    cat("\n\n In this table, we separate out the data to show how each individual monitor ")
+    cat("performs. This list is sorted from worst to best. \n\n")
+
+    exposure_kable_dev <- monkeyr::get_exposure_kable_dev(temp_exposure, target_var)
+    print(exposure_kable_dev)
+    cat(paste0("\n", "##### Figure ", section_number, ".1.3 Summary of All Devices ", "\n"))
+    
+    
+    
+  ### Regression
+  ### ----------  
+    
+  ### Figure X.2.1
+    cat(paste0("\n", "### ", section_number, ".2 Building Performance by ", target_var_Title), "\n")
+    cat("\n\n The box plot is designed to tell us how well the building responds to low outdoor temperature. ")
+    cat("We measure this with a model relationship coefficient. This tells us how strongly the indoor temperature ")
+    cat("are affected by outdoor temperature. \n\n")
+      
+    reg_data   <- monkeyr::get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
+    boxplot    <- monkeyr::get_reg_boxplot(reg_data, target_var)
+    # knitr::opts_chunk$set(fig.height=(6+2*ceiling(data_segments/4)))
+    # print(boxplot)
+    
+    
+  ### Use resizePlot.rmd to apply per-plot height etc.
+    resizePlot <- boxplot
+    resizeHeight <- 0.75 * data_segments + 2
+    res <- knitr::knit_child('resizePlot.rmd', quiet = TRUE)
+    cat(res, sep = '\n')
+  ###
+    
+    cat(paste0("\n\n", "##### Figure ", section_number, ".2.1 Model Relationship Coefficient by ", 
+                target_var_Title, " (n = ", nrow_vals$included_n, ")", "\n")) 
+    
+  ### Table X.2.2
+    cat("\n\n We have calculated the Model Relationship Coefficient for each individual device,  ")
+    cat("sorted by city and then by the Model Relationship Coefficient, from worst to best. \n\n")
+    
+    reg_kable  <- monkeyr::get_reg_kable(reg_data, target_var)
+    print(reg_kable)
+    cat(paste0("\n", "##### Figure ", section_number, ".2.2 Model Relationship Coefficient for all Devices", "\n"))
+    
+  
+    
+  ### Lowest Temp Ever
+  ### ----------------
+    
+  ### Figure X.3.1
+    cat(paste0("\n", "### ", section_number, ".3 Lowest Temperature Experienced by ", target_var_Title, "\n"))
+    cat("\n\n This is a very different metric to the one we showed above. ")
+    cat("Figure", section_number, ".1. showed us the percentage of time spent below each threshold. ")
+    cat("Here we are looking t the lowest temperature ever expienced. \n\n")
+    
+    lowtemp_chart_data <- monkeyr::get_lowtemp_chart_data(wrangled_obs, wrangled_devices, target_var)
+    lowtemp_chart      <- monkeyr::get_exposure_plot(lowtemp_chart_data, target_var, chart_type = "bar") # donut is shit
+    # print(lowtemp_chart)
+    
+    
+  ### Use resizePlot.rmd to apply per-plot height etc.
+    resizePlot <- lowtemp_chart
+    resizeHeight <- 3.25*ceiling(data_segments/4)
+    res <- knitr::knit_child('resizePlot.rmd', quiet = TRUE)
+    cat(res, sep = '\n')
+  ###
+    
+    
+    cat(paste0("\n\n", "##### Figure ", section_number, ".3.1 Lowest ever night-time temperature by ", 
+                target_var_Title, " (n = ", nrow_vals$included_n, ")", "\n")) 
+        
+    
+  ### Table X.3.2
+    cat("\n\n And finally summarising for each individual device, sorting from worst to best. \n\n")
+
+    lowest_ever            <- monkeyr::get_temp_lowest_ever(wrangled_obs, wrangled_devices, target_var)
+    lowest_ever_kable_var  <- monkeyr::get_lowest_ever_kable_var(lowest_ever, target_var)
+    print(lowest_ever_kable_var)
+    cat(paste0("\n", "##### Figure ", section_number, ".3.2 Lowest ever night-time temperature for all Devices", "\n"))
+
+    
+    
+  ### Break After Section
+  ### -------------------
+    section_number <- section_number + 1
+    cat("\n\n\n")
+    i <- i + 1
+  }
+
+  ### BAIL TO FOCUS ON TEST
+  # knitr::knit_exit("</body></html>")
+```
+
+
+
+```{r  echo=FALSE, results="asis", out.width="100%", child="interv_regression.Rmd"}
+
+    cat(paste0("\n", "## ", section_number, ". Intervention Analysis"))
+
+```
+

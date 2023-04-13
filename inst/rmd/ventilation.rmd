@@ -1,0 +1,94 @@
+# `r fa("virus", fill = "white")`  Ventilation & Co2
+
+## Column 1
+
+### Ventilation Assessment based on Carbon Dioxide Concentration
+
+```{r}
+  ventilation_chart <- 
+    monkeyr::ventilation_data(observations = wrangled_obs) %>%
+    monkeyr::ventilation_chart(from_timestamp = params$fromTimeStamp, to_timestamp = params$toTimeStamp)
+  
+  ventilation_chart
+```
+
+
+### Ventilation Guidelines
+
+Imagine a room full of kids at school. They've all got a copy of a big old book about string theory. The teacher is reading aloud. So everybody is having a good time. 
+
+If it's a bit chilly outside, maybe they've closed the windows to keep the heat in. After a few hours, the concentration of carbon dioxide in the classroom may rise up to say 2000 parts per million (2000 ppm). This is common place. It plays out in schools all across New Zealand, every winter. The problem is that when the CO2 concentration goes over about 1500 ppm, people will start experiencing headaches, dizziness, restlessness, difficulty breathing, tiredness and an increased heart rate. And while it affects different people to different degrees, some of us can get really cranky. It has also been shown that it can significantly affect concentration and cognitive function. A Harvard study monitored students' performance in a wide range of cognitive areas, and found a decrease in performance by anywhere from 20% to 70%. In the context of our kids performance in school and exams, this could easily make the difference between an A grade and a C grade.  
+
+In the context of Covid-19, carbon dioxide is also being used as a proxy to measure ventilation to reduce the spread of infectious diseases. There is a logical correlation between the amount of exhaled breathe in a room and the carbon dioxide concentration. It cannot directly measure the presence of corona virus, but it can tell you when a space is inadequately ventilated. This is particularly important in classrooms and other shared spaces such as workplaces, hospitality and event venues.
+
+----------
+
+```{r}
+  ventilation_kable()
+```
+
+----------
+
+## Column 2
+
+### Hours spent above 800 ppm
+
+```{r}
+
+ totals <-
+    monkeyr::ventilation_data(observations = wrangled_obs) %>%
+    monkeyr::get_ventilation_totals()
+  
+  above_2000 <- totals$above_2000
+  above_1250 <- totals$above_1250
+  above_800  <- totals$above_800
+  
+  highest_co2 <- 
+    wrangled_obs %>%
+    dplyr::filter(reading == "co2") %>%
+    dplyr::select(val) %>%
+    unlist() %>%
+    unname() %>%
+    max()
+    
+    
+  
+  palette <- monkeyr::get_heat_palette(4)
+  
+  flexdashboard::valueBox(paste0(
+    round(24 * above_800, 1) ,
+    " hrs (",
+    scales::percent(above_800),
+    ")"
+  ),
+  icon = "fa-viruses",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = palette[2])
+```
+
+### Hours spent above 1250 ppm
+
+```{r}
+  flexdashboard::valueBox(paste0(
+    round(24 * above_1250, 1) ,
+    " hrs (",
+    scales::percent(above_1250),
+    ")"
+  ),
+  icon = "fa-shield-virus",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = palette[3])
+```
+
+### Highest ever CO2 reading
+
+```{r}
+  flexdashboard::valueBox(paste0(
+    highest_co2,
+    " ppm"
+  ),
+  icon = "fa-lungs",
+  # color = ifelse(below_12 > 0.01, "danger", "primary")
+  color = palette[4])
+```
+

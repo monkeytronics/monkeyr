@@ -1,0 +1,131 @@
+```{r echo=FALSE, include=FALSE}
+
+
+tryCatch(
+  {
+    monkey_knit_msg(msg = "MAPPING : Entering child Rmd File", resource = "map.rmd")
+      
+  ### 0. Libraries (Shared)
+    library(rgdal);        message(paste0("\nMAPPING : rgdal"))
+    library(dplyr);        message(paste0("\nMAPPING : dplyr"))
+
+    library(stringi);      message(paste0("\nMAPPING : stringi "))
+    library(sf);           message(paste0("\nMAPPING : sf "))
+    library(cowplot);      message(paste0("\nMAPPING : cowplot "))
+    library(ggrepel);      message(paste0("\nMAPPING : ggrepel "))
+    library(ggspatial);    message(paste0("\nMAPPING : ggspatial "))
+
+    library(maps);         message(paste0("\nMAPPING : maps "))
+    library(mapdata);      message(paste0("\nMAPPING : mapdata "))
+    library(RColorBrewer); message(paste0("\nMAPPING : RColorBrewer "))
+    library(countrycode);  message(paste0("\nMAPPING : countrycode "))
+    data(world.cities);    message(paste0("\nMAPPING : data(world.cities) "))
+
+
+
+  ### 1. Grab some vital numbers
+    count_all       <- nrow(devices_for_map)
+    count_connected <- nrow(devices_for_map %>% filter(connected == TRUE))
+    count_no_coords <- nrow(devices_for_map %>% filter(has_coords == FALSE))
+
+
+
+  ### 2. CountryName & Code from Devices (New Zealand -> NZ; Australia -> AU, Ireland -> IE; etc. )
+    countryName     <- names(which.max(table(wrangled_devices$country)))
+    countryCode     <- countrycode::countrycode(countryName, origin = 'country.name', destination = 'iso2c')
+    print(countryName)
+    message(paste0("\nMAPPING : Entering child Rmd File"))
+    monkey_knit_msg(msg = paste0("countryName = ", countryName), resource = "map.rmd")
+    monkey_knit_msg(msg = paste0("countryCode = ", countryCode), resource = "map.rmd")
+
+  ### Spherical Geometry OFF (or else some geojson files fail)
+    sf::sf_use_s2(FALSE)
+
+
+
+  ### 3. monkey map functions :
+    map_params      <- get_map_params(countryCode)
+
+    ### read geojson main
+    geojson_main  <- read_geojson(
+      geojson_file = map_params$main.geojson
+    )
+
+    ### read geojson inset
+    geojson_inset  <- read_geojson(
+      geojson_file = map_params$inset.geojson
+    )
+
+    ### colour fill main
+    geojson_main  <- geojson_verify_colour_col(
+      geojson = geojson_main,
+      map_params = map_params,
+      map_layer = "main"
+    )
+
+    ### colour fill inset
+    geojson_inset  <- geojson_verify_colour_col(
+      geojson = geojson_inset,
+      map_params = map_params,
+      map_layer = "inset"
+    )
+
+    ### Add admin districts to main data set
+    devices_for_map  <- update_devices_for_map(
+      devices_for_map = devices_for_map,
+      map_geojson     = geojson_main,
+      admin_distr_col = map_params$main.admin_distr_col,
+      map_layer       = "main"
+    )
+
+    ### Add admin districts to inset data set
+    devices_for_map  <- update_devices_for_map(
+      devices_for_map = devices_for_map,
+      map_geojson     = geojson_inset,
+      admin_distr_col = map_params$inset.admin_distr_col,
+      map_layer       = "inset"
+    )
+
+    ### Gen modal values for admin district cols
+    map_params  <- update_map_params(
+      devices_for_map = devices_for_map,
+      map_params = map_params
+    )
+
+
+
+  ### 4. Draw Map
+    message(paste0("\nMAPPING : 4. Draw Map "))
+    map <- get_map(
+      devices_for_map   =  devices_for_map,
+      map_params        =  map_params,
+      geojson_main      =  geojson_main, 
+      geojson_inset     =  geojson_inset
+    )
+  
+  },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "mapping", debug = TRUE)
+  }
+)
+  
+```
+
+
+### 1.2 Deployment & Coverage Map
+
+```{r echo=FALSE} 
+  # count_all       <- nrow(devices_for_map)
+  # count_connected <- nrow(devices_for_map %>% filter(connected == TRUE))
+  # count_no_coords <- nrow(devices_for_map %>% filter(has_coords == FALSE))
+```
+
+Of `r count_all` deployed devices, `r count_connected` (shown in green) connected well, with approximate locations. Those in red connected very poorly or not at all.  `r count_no_coords` devices could not be shown on the map due to missing location data.
+
+
+```{r echo=FALSE, fig.dim=c(8,8)}
+  map
+```
+
+
+##### Figure 1.2: Device Map

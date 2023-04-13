@@ -1,0 +1,167 @@
+---
+title: ''
+output: html_document
+---
+
+```{r include=FALSE}
+library(monkeyr)
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(lmtest)
+library(ggplot2)
+library(reactable)
+
+#### parameters for intervention analysis ####
+output_var <- "val"
+control_vars <- c("room", "direction", "outdoor_temp") ## intervention columns get added later
+hours_greater_than <- 19
+hours_less_than <- 7
+temps_greater_than <- -4
+temps_less_than <- 16
+#### parameters end ####
+
+filtered_interv <- params$filtered_interventions
+
+if (checkmate::test_character(filtered_interv)) {
+    interv_data <- readr::read_csv(filtered_interv, col_types = "cicic")
+  } else {
+    interv_data <- filtered_interv
+  }
+
+interventions <- interv_data %>% distinct(job)
+intervention <- interventions$job
+intervention <- unique(unlist(strsplit(intervention, split = "-")))
+
+input_vars <- c(control_vars, intervention)
+
+filtered_obs <- get_intervention_sample(
+  wrangled_obs_interv
+  ,interv_data
+  ,TRUE
+  ,hours_greater_than
+  ,hours_less_than
+  ,temps_greater_than
+  ,temps_less_than
+  )
+
+clean_data_list <- get_clean_model_data(filtered_obs, input_vars, output_var)
+
+data_to_check <- clean_data_list[[2]]
+data_check_results <- purrr::map_lgl(data_to_check, function(d){
+  unique_count <- length(unique(d))
+  if(unique_count > 1) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+})
+
+if(sum(data_check_results) == ncol(data_to_check)){
+  tryCatch({ 
+    
+    model <- get_model(clean_data_list) 
+
+    coefs <- get_model_coef(model) 
+    rownames(coefs) <- gsub("`","", rownames(coefs))
+    interv_coefs <- coefs[row.names(coefs) %in% intervention, c(1,4)]
+    pos_interv_coefs <- interv_coefs[interv_coefs[,1] > 0, 1:2 ]
+    
+    pos_interv_names <- rownames(pos_interv_coefs)
+    pos_interv_names <- gsub("`","",pos_interv_names)
+    
+    r_squared_list <- get_model_rsquared(model) 
+    r_squared <- round( r_squared_list[[1]], digits = 4)
+    
+    het_test <- bptest(model)
+    het_result <- ifelse(het_test$p.value < 0.05, "True", "False")
+  },
+      error = function(cond) {
+        monkeyr::monkey_knit_error(err = cond, resource = "intervention_analysis")
+    }
+  )
+  print_error <- FALSE
+} else {
+ print_error <- TRUE
+}
+
+```
+
+## Intervention Results
+
+```{r eval=print_error}
+cat("The data sent to the intervention analysis lacks variation on one or more variables. Please take a look at your data. Any data element that only has one value will throw an error. If you can't correct the data, you may want to turn off the intervention analysis")
+
+knitr::knit_exit()
+```
+
+To evaluate interventions, a linear regression model is applied to multiple variables and interventions where outdoor temperature, room type, and room exposure direction are control variables. The goal is to tease out the effect or correlation between interventions and indoor temperature. The results will show whether specific interventions increase indoor temperature or not, along with additional information to evaluate whether we trust the model's results. If we see positive effects and we trust the model, that's great! If not, it may be worthwhile to consider other data elements to include in the model, the trustworthiness of the underlying data, or the interventions themselves.
+
+Potential concerns:
+
+- too few data - small samples may result in random results;
+
+- too few variables or data elements - there may be other, possibly unknown variables;
+
+- interventions that reflect poor conditions rather than the effect of the intervention.
+
+### Summary of Results
+
+Using Linear Regression, the following interventions had positive results with reliable estimates: `r paste(pos_interv_names, sep = ",")`
+
+```{r}
+#### generate intervention summary stats ####
+df_summary_interv <- map_df(intervention, function(d){
+  devices <- filtered_obs %>%
+    select(device_id, all_of(d)) %>%
+    filter(if_all(all_of(d), ~ .x ==1)) %>%
+    summarise(
+      Devices = n_distinct(device_id)
+    ) %>%
+    mutate(Intervention = d)
+})
+
+#### convert inferential stats to simple table ####
+df_interv <- as.data.frame(interv_coefs, stringsAsFactors = FALSE)
+
+df_interv$Intervention <- row.names(interv_coefs)
+
+colnames(df_interv) <- c("Estimate", "p.value", "Intervention")
+
+df_interv$Result <- if_else(df_interv$Estimate > 0 & df_interv$p.value <= 0.5, "yes", "no")
+
+df_interv <- df_interv %>%
+  select(Intervention, Result) %>%
+  left_join(df_summary_interv, by = "Intervention")
+
+reactable(
+  df_interv
+  ,rownames = FALSE
+  ,striped = TRUE
+  ,columns = list(
+    Result = colDef(cell = function(value) {
+    # Render as an X mark or check mark
+    if (value == "no") "\u274c No Difference or Inconclusive" else "\u2705 Increased Temperature"
+    })
+  )
+  )
+```
+
+The model could explain about `r paste(100 * r_squared, '%', sep = "")` of the variance in the data - based on the r-squared.
+
+### Coefficient Statistics - Technical Results
+
+The following table summarizes the Linear Regression model used to test the interventions applied to the rooms.
+
+```{r}
+kable(coefs)
+```
+
+### Model Diagnostics and Residual Plot
+
+The residual plot should appear random else there may be bias in the estimates above. The Breusch-Pagan Test for heteroscedasticity to evaluate such bias came back as: `r het_result`.
+
+```{r}
+plot <- ggplot(model, aes(x = .fitted, y = .resid)) + geom_point()
+plot
+```
