@@ -6,7 +6,7 @@ tryCatch(
     monkey_knit_msg(msg = "MAPPING : Entering child Rmd File", resource = "map.rmd")
       
   ### 0. Libraries (Shared)
-    library(rgdal);        message(paste0("\nMAPPING : rgdal"))
+    #library(rgdal);        message(paste0("\nMAPPING : rgdal"))
     library(dplyr);        message(paste0("\nMAPPING : dplyr"))
 
     library(stringi);      message(paste0("\nMAPPING : stringi "))

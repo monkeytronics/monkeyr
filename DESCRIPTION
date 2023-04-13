@@ -40,7 +40,6 @@ Imports:
     sf,
     lutz,
     Rcpp,
-    rgdal,
     geojson,
     cowplot,
     ggrepel,
