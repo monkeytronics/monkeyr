@@ -2,13 +2,14 @@
 .Rhistory
 .RData
 .Ruserdata
+
 *.html
 html/
 inst/rmd/*.html
 
 s3_report_stash/
 
-inst/dummy-data
+inst/dummy-data/*
 !inst/dummy-data/example
 !inst/dummy-data/co2_demo
 !inst/dummy-data/maps-au

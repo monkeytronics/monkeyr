@@ -1,0 +1,121 @@
+hhi,term,performance,device_id,estimate,p.value,significance,city
+AWHI,outdoor_temp,Ideal,1,0.219269228,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Ideal,2,-0.078549064,1.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,3,0.122995208,9.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,4,-0.265700894,6.40E-06,***,Auckland
+AWHI,outdoor_temp,Ideal,5,0.047098826,2.50E-06,***,Auckland
+AWHI,outdoor_temp,Ideal,6,-0.41166312,5.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,7,-0.448460078,0.003,**,Auckland
+AWHI,outdoor_temp,Ideal,8,-0.004879546,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Ideal,9,-0.054055418,4.80E-06,***,Auckland
+AWHI,outdoor_temp,Ideal,10,0.225718729,7.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,41,0.223247307,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Ideal,42,-0.28594467,1.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,43,0.043577251,9.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,44,-0.367682661,6.40E-06,***,Auckland
+AWHI,outdoor_temp,Ideal,45,-0.023523341,2.50E-06,***,Auckland
+AWHI,outdoor_temp,Ideal,46,0.206453801,5.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,47,-0.238823004,0.003,**,Auckland
+AWHI,outdoor_temp,Ideal,48,-0.062100779,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Ideal,49,-0.410758921,4.80E-06,***,Auckland
+AWHI,outdoor_temp,Ideal,50,0.153153954,7.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,81,0.140828545,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Ideal,82,0.169698083,1.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,83,-0.392195004,9.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,84,-0.111911769,6.40E-06,***,Auckland
+AWHI,outdoor_temp,Ideal,85,0.370347362,2.50E-06,***,Auckland
+AWHI,outdoor_temp,Ideal,86,-0.247895782,5.00E-07,***,Auckland
+AWHI,outdoor_temp,Ideal,87,-0.110592267,0.003,**,Auckland
+AWHI,outdoor_temp,Ideal,88,-0.157576796,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Ideal,89,0.465322213,4.80E-06,***,Auckland
+AWHI,outdoor_temp,Ideal,90,0.491505938,7.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,11,-0.605290365,0.00E+00,***,Auckland
+AWHI,outdoor_temp,OK,12,0.623226616,1.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,13,0.027910685,9.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,14,0.841573529,6.40E-06,***,Auckland
+AWHI,outdoor_temp,OK,15,0.135153068,2.50E-06,***,Auckland
+AWHI,outdoor_temp,OK,16,0.448081183,5.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,17,-0.573441683,0.003,**,Auckland
+AWHI,outdoor_temp,OK,18,-0.289946418,0.00E+00,***,Auckland
+AWHI,outdoor_temp,OK,19,-0.441550909,4.80E-06,***,Auckland
+AWHI,outdoor_temp,OK,20,0.645778447,7.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,51,-0.224178457,0.00E+00,***,Auckland
+AWHI,outdoor_temp,OK,52,0.389715864,1.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,53,-0.491212169,9.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,54,-0.598050485,6.40E-06,***,Auckland
+AWHI,outdoor_temp,OK,55,0.577420784,2.50E-06,***,Auckland
+AWHI,outdoor_temp,OK,56,-0.260582011,5.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,57,0.427871379,0.003,**,Auckland
+AWHI,outdoor_temp,OK,58,0.011102348,0.00E+00,***,Auckland
+AWHI,outdoor_temp,OK,59,0.237920911,4.80E-06,***,Auckland
+AWHI,outdoor_temp,OK,60,1.227435751,7.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,91,-0.197352342,0.00E+00,***,Auckland
+AWHI,outdoor_temp,OK,92,-0.035108632,1.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,93,0.536455891,9.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,94,-0.55447979,6.40E-06,***,Auckland
+AWHI,outdoor_temp,OK,95,0.10990612,2.50E-06,***,Auckland
+AWHI,outdoor_temp,OK,96,0.329566655,5.00E-07,***,Auckland
+AWHI,outdoor_temp,OK,97,-0.250591063,0.003,**,Auckland
+AWHI,outdoor_temp,OK,98,0.296138654,0.00E+00,***,Auckland
+AWHI,outdoor_temp,OK,99,0.379329097,4.80E-06,***,Auckland
+AWHI,outdoor_temp,OK,100,1.22133943,7.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,21,1.969494371,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Poor,22,1.58961632,1.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,23,0.691880847,9.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,24,0.57915824,6.40E-06,***,Auckland
+AWHI,outdoor_temp,Poor,25,1.752556935,2.50E-06,***,Auckland
+AWHI,outdoor_temp,Poor,26,0.116693753,5.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,27,0.743036524,0.003,**,Auckland
+AWHI,outdoor_temp,Poor,28,0.020954063,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Poor,29,0.139464829,4.80E-06,***,Auckland
+AWHI,outdoor_temp,Poor,30,1.541800951,7.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,61,1.301124321,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Poor,62,0.498337958,1.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,63,0.973209386,9.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,64,1.670507065,6.40E-06,***,Auckland
+AWHI,outdoor_temp,Poor,65,1.161682534,2.50E-06,***,Auckland
+AWHI,outdoor_temp,Poor,66,1.004527266,5.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,67,1.200648114,0.003,**,Auckland
+AWHI,outdoor_temp,Poor,68,0.400626106,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Poor,69,1.401042565,4.80E-06,***,Auckland
+AWHI,outdoor_temp,Poor,70,0.719187384,7.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,101,1.170921591,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Poor,102,1.805686892,1.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,103,0.959161482,9.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,104,0.756346605,6.40E-06,***,Auckland
+AWHI,outdoor_temp,Poor,105,0.741928908,2.50E-06,***,Auckland
+AWHI,outdoor_temp,Poor,106,0.367999516,5.00E-07,***,Auckland
+AWHI,outdoor_temp,Poor,107,1.046550351,0.003,**,Auckland
+AWHI,outdoor_temp,Poor,108,0.028691311,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Poor,109,0.965086048,4.80E-06,***,Auckland
+AWHI,outdoor_temp,Poor,110,1.017479201,7.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,31,0.668177789,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Very Poor,32,2.121584125,1.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,33,0.825425815,9.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,34,0.714972793,6.40E-06,***,Auckland
+AWHI,outdoor_temp,Very Poor,35,2.064153537,2.50E-06,***,Auckland
+AWHI,outdoor_temp,Very Poor,36,1.14486467,5.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,37,2.384446175,0.003,**,Auckland
+AWHI,outdoor_temp,Very Poor,38,2.480625811,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Very Poor,39,2.014108127,4.80E-06,***,Auckland
+AWHI,outdoor_temp,Very Poor,40,1.045819315,7.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,71,2.419080253,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Very Poor,72,1.160952274,1.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,73,1.759913672,9.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,74,1.344576694,6.40E-06,***,Auckland
+AWHI,outdoor_temp,Very Poor,75,1.938142763,2.50E-06,***,Auckland
+AWHI,outdoor_temp,Very Poor,76,0.708993708,5.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,77,0.627013855,0.003,**,Auckland
+AWHI,outdoor_temp,Very Poor,78,2.39569998,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Very Poor,79,0.809341348,4.80E-06,***,Auckland
+AWHI,outdoor_temp,Very Poor,80,2.356107692,7.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,111,2.028913686,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Very Poor,112,2.136821833,1.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,113,2.067212593,9.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,114,1.37611081,6.40E-06,***,Auckland
+AWHI,outdoor_temp,Very Poor,115,0.857381282,2.50E-06,***,Auckland
+AWHI,outdoor_temp,Very Poor,116,2.282149446,5.00E-07,***,Auckland
+AWHI,outdoor_temp,Very Poor,117,1.947077768,0.003,**,Auckland
+AWHI,outdoor_temp,Very Poor,118,1.372906,0.00E+00,***,Auckland
+AWHI,outdoor_temp,Very Poor,119,0.976294526,4.80E-06,***,Auckland
+AWHI,outdoor_temp,Very Poor,120,2.049194677,7.00E-07,***,Auckland
