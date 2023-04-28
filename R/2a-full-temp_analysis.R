@@ -394,8 +394,9 @@ get_exposure_kable_dev <- function(temp_exposure, target_var) {
 #' exposure_chart_data <- get_exposure_chart_data(wrangled_obs, wrangled_devices, target_var)
 #' exposure_plot <- get_exposure_plot(exposure_chart_data, target_var)
 #'
+#'# target_var = "room_type" (for test)
+#'
 #' @export
-#' # target_var = "room_type" (for test)
 get_exposure_chart_data <- function(wrangled_obs, wrangled_devices, target_var) {
   tryCatch (
     {

@@ -10,7 +10,6 @@ Description:
     data for flex dashboards and RMarkdown analytics reports
 License: `use_mit_license()`
 Imports:
-    aws.s3 (>= 0.3.21),
     checkmate,
     data.table,
     dplyr,

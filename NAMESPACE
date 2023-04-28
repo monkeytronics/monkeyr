@@ -2,6 +2,8 @@
 
 export("%>%")
 export(bp_results)
+export(conn_summary)
+export(conn_wrangle)
 export(data_segments)
 export(data_segments_max)
 export(date_string)

@@ -18,13 +18,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/energymate_home/obs.csv"
-  filtered_weather:         "../dummy-data/energymate_home/weather.csv"
-  filtered_devices:         "../dummy-data/energymate_home/dev.csv"
-  filtered_interventions:   "../dummy-data/energymate_home/interv.csv"
+  filtered_obs:             "../dummy-data/monkey_c/obs.csv"
+  filtered_weather:         "../dummy-data/monkey_c/weather.csv"
+  filtered_devices:         "../dummy-data/monkey_c/dev.csv"
+  filtered_interventions:   "../dummy-data/monkey_c/interv.csv"
   report_params:            "-map-"                                            
-  fromTimeStamp:            1662958317
-  toTimeStamp:              1665546717
+  fromTimeStamp:            1681420822
+  toTimeStamp:              1681766422
 ---
 
 ```{r}
@@ -53,10 +53,9 @@ ENABLE_DEBUG <- FALSE
       wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices)
       
       # fudge to generate WISE devices
-      wrangled_devices <- wrangled_devices %>%
-        #dplyr::filter(grepl("Whipit", cluster, fixed = TRUE))
-        dplyr::filter(grepl("HPA/Whipit", cluster, fixed = TRUE))
-      
+      # wrangled_devices <- wrangled_devices %>%
+      #   dplyr::filter(grepl("Whipit", cluster, fixed = TRUE))
+      #   dplyr::filter(grepl("HPA/Whipit", cluster, fixed = TRUE))
       
       
       # local_tz         <- monkeyr::get_local_tz(wrangled_devices)
@@ -118,6 +117,11 @@ title: "`r report_type ` Report"
 ---
 
 ```{r check_data, results='asis'}
+  ## Bail if nothing in weather. Means user hasn't entered any address data.
+  if ( is.null(wrangled_weather) ) { ## We agressively set it to NULL in wrangle_weather!
+    cat("Hi There!\n\n The monkey-report-generator wasn't able to link up with our outdoor weather database. Could you check that you have added address information for your devices before trying again. We need to know what region you are in to get representative outdoor data. \n\nAborting report.")
+    knitr::knit_exit("</body></html>")
+  }
   ## Bail if nothing in data. Returns empty report.
   if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
     cat("No data present for the requested devices and timespan. Aborting report.")

@@ -140,35 +140,35 @@ report_period <- function(from_timestamp, to_timestamp) {
 #'
 #' @export
 wrangle_devices <- function(
-            filtered_devices,
-            data_type_filter = c("CD", "TH", "PM", "FO", "CL"), # not really used.
-            na.strings = c("",NA),
-            integer_columns = c("floor"),
-            double_columns = c("long", "lat"),
-            character_columns =
-              c("device_owner",
-                "device_id",
-                "data_type",
-                "comms_type",
-                "locationCode",
-                "addr",
-                "name",
-                "suburb",
-                "city",
-                "country",
-                "room",
-                "hhi",
-                "cluster",
-                "privacy",
-                "risk",
-                "buildingType",
-                "tenure",
-                "height",
-                "direction",
-                "school",
-                "building",
-                "classRoom",
-                "deployment_id")) {
+  filtered_devices,
+  data_type_filter = c("CD", "TH", "PM", "FO", "CL"), # not really used.
+  na.strings = c("",NA),
+  integer_columns = c("floor"),
+  double_columns = c("long", "lat"),
+  character_columns =
+    c("device_owner",
+      "device_id",
+      "data_type",
+      "comms_type",
+      "locationCode",
+      "addr",
+      "name",
+      "suburb",
+      "city",
+      "country",
+      "room",
+      "hhi",
+      "cluster",
+      "privacy",
+      "risk",
+      "buildingType",
+      "tenure",
+      "height",
+      "direction",
+      "school",
+      "building",
+      "classRoom",
+      "deployment_id")) {
   # checkmate::assert_class(x = filtered_devices, classes = c("data.frame", "character"))
   # filtered_devices <-  paste0("inst/dummy-data/", params$filtered_devices)
 
@@ -177,9 +177,10 @@ wrangle_devices <- function(
       data.table::fread(
         filtered_devices,
         na.strings = na.strings,
-        colClasses = list(character = character_columns,
-                          numeric = double_columns,
-                          integer = integer_columns)
+        colClasses = list(
+          character = character_columns,
+          numeric   = double_columns,
+          integer   = integer_columns)
       )
   }
 
@@ -289,6 +290,7 @@ get_local_tz <- function(wrangled_devices) {
 wrangle_weather <- function(filtered_weather) {
   # checkmate::assert_choice(x = class(filtered_weather), choices = c("data.frame", "character"))
 
+  # FOR TEST : filtered_weather <-  paste0("inst/dummy-data/", params$filtered_weather)
   tryCatch(
     {
       if (checkmate::test_character(filtered_weather)) {

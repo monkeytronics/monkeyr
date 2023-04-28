@@ -10,7 +10,10 @@ memory_saver_obs(wrangled_obs)
 \item{wrangle_obs}{from \code{wrangle_observations}}
 }
 \description{
-Cut out unnecessary data to reduce memory by factor of 3-4
+Cut out unnecessary data
+orig size   = 777647056  = 100\%
+filter size = 388841984  =  50\%
+select size = 218039344  =  28\%
 }
 \examples{
 wrangle_obs <- memory_saver_obs(wrangle_obs)

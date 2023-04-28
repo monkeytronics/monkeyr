@@ -1,0 +1,316 @@
+---
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  flexdashboard::flex_dashboard:
+    social: [ "menu" ]
+    logo: !expr system.file("app/www", "logo.png", package = "monkeyr")
+    favicon: !expr system.file("app/www", "favicon.png", package = "monkeyr")
+    # logo: "../www/logo.png"
+    # favicon: "../www/favicon.png"
+    orientation: rows
+    pandoc_args: [
+      "+RTS", "-K16m",
+      "-RTS"
+    ]
+runtime: shiny
+
+# paths with `inst` will only work in `dev` setting. 
+# in `production` setting, please use real data
+# or call installed files with `system.file`
+# see example in `?knit_report()`
+params:
+  filtered_obs:             "../dummy-data/Schools-RolloutB/obs.csv"
+  filtered_weather:         "../dummy-data/Schools-RolloutB/weather.csv"
+  filtered_devices:         "../dummy-data/Schools-RolloutB/dev.csv"
+  filtered_interventions:   "../dummy-data/Schools-RolloutB/interv.csv"
+  report_params:            "-map-"                                            
+  fromTimeStamp:            1680647122
+  toTimeStamp:              1681856722
+---
+
+```{r}
+ENABLE_DEBUG <- FALSE
+options(shiny.error = recover)
+```
+
+
+```{r setup }
+  ## load monkeyr package
+  library(monkeyr)
+  library(dplyr)
+  library(magrittr)
+  library(fontawesome)
+  library(shiny)
+  # use fontawesome::fa_metadata() to see avail icons!
+
+## other dependencies loaded through namespace
+```
+
+
+```{css}
+
+
+
+.custom-plot {
+  width: 80%;
+  height: 216px;
+}
+
+
+.custom-input {
+  width: 80%;
+  height: 40px; /* Adjust the height as needed */
+  margin: 0 auto;
+  /* Adjust other CSS properties as needed */
+}
+
+```
+
+
+```{r wrangle_data}
+
+  ## STANDARD DATA WRANGLING & JOINING
+  ## ---------------------------------
+  
+  tryCatch(
+    {
+      ## Get from files
+      wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices) %>%
+        dplyr::select(c(school_name = school, city, device_id, country, classRoom, long, lat, fw_ver, status))
+      
+      wrangled_obs <- readr::read_csv(params$filtered_obs, col_types = "ciiicd") %>%
+        group_by(ts, device_id, seq) %>%
+        summarise()   
+      
+      
+      ## Join
+      wrangled_devices_1 <-
+        wrangled_devices %>%
+
+        ## Join obs data
+        dplyr::full_join(
+          dplyr::select(
+            wrangled_obs
+          ),
+          by = "device_id"
+        ) %>%
+        dplyr::mutate(
+          ts = tidyr::replace_na(ts, 1)   # put value in empty obs created from full join
+        ) 
+      
+      
+      ## How many records should there be?
+      fullvol = reactive (
+        {
+          interval <- 15 * 60 # 15 minutes
+      
+          toTimeStamp = as.POSIXct(
+            input$toTimeStamp, origin = "1970-01-01", tz = "Pacific/Auckland"
+            ) %>% as.numeric()
+          
+          fromTimeStamp = as.POSIXct(
+            input$fromTimeStamp, origin = "1970-01-01", tz = "Pacific/Auckland"
+            ) %>% as.numeric()
+     
+          timespan <- toTimeStamp - fromTimeStamp
+          fullvol  <- (timespan / interval) + 1
+          fullvol
+        }
+      )
+      
+      
+      # ## Get intitial min & max ts
+      maxTs   <- max(wrangled_obs$ts)
+      minTs   <- min(wrangled_obs$ts)
+
+      
+      ## Summarise by device
+      wrangled_devices_2 <- reactive({
+        
+        f_vol =  fullvol()
+        # from <- as.numeric(as.POSIXct(input$fromTimeStamp, origin = "1970-01-01", tz = "Pacific/Auckland"))
+        to   <- as.numeric(as.POSIXct(input$toTimeStamp,   origin = "1970-01-01", tz = "Pacific/Auckland"))
+        
+        # print(from)
+        print(to)
+        #wrangled_devices_11 <-
+        wrangled_devices_1 %>%
+          # dplyr::filter(ts >= from) %>% # xxxx from
+          dplyr::filter(ts <= to) %>%   # xxxx to
+          dplyr::group_by(across(c(-ts))) %>%
+          dplyr::summarise(
+            last_conn = max(ts),
+            data_vol = n() /f_vol
+            ) %>%
+          dplyr::ungroup() %>%
+          dplyr::mutate(
+            last_conn = tidyr::replace_na(last_conn, 0)
+          ) %>%
+          dplyr::mutate(conn = (to - last_conn) < 3600*input$threshold) %>%
+          dplyr::select(-c(device_id, last_conn, country))
+      })
+      
+      
+      ## Conn by FW
+      output$chart_conn <- renderPlot({
+        wrangled_devices_2() %>%
+        group_by(conn, fw_ver) %>%
+        summarise(count = n()) %>% 
+      
+        ggplot2::ggplot(ggplot2::aes(fill=conn, x=fw_ver, y=count)) + 
+        ggplot2::geom_bar(position="stack", stat="identity") + 
+        ggplot2::scale_fill_brewer(palette = "Blues")
+      })
+      
+      
+        
+      ## DataVol by FW
+      output$chart_data_vol <- renderPlot({
+         wrangled_devices_2() %>%
+        mutate(data_vol = case_when(
+          data_vol > 0.98 ~ "100%",
+          data_vol > 0.90 ~ ">90%",
+          data_vol > 0.80 ~ ">80%",
+          data_vol > 0.50 ~ ">50%",
+          data_vol < 0.50 ~ "<50%",
+        )) %>%
+        group_by(data_vol, fw_ver) %>%
+        summarise(count = n()) %>%
+        ggplot2::ggplot(ggplot2::aes(fill=data_vol, x=fw_ver, y=count)) + 
+        ggplot2::geom_bar(position="stack", stat="identity") + 
+        ggplot2::scale_fill_brewer(palette = "Blues")
+      })
+        
+       
+      
+        
+      ## Summarise by School
+      wrangled_devices_3 <- reactive({
+        wrangled_devices_2() %>%
+        dplyr::group_by(across(c(school_name, city))) %>%
+        dplyr::summarise(
+          iem_installed = n(),
+          online = sum(conn),
+          percent = paste0(ceiling(100 * online / iem_installed), "%")
+          ) %>%
+        dplyr::ungroup()
+      })
+        
+      
+      
+      output$kable_summary <- function (){
+        wrangled_devices_3() %>%
+        kableExtra::kbl(col.names = c("School Name", "City / Region", "IEMs Installed", "Qnty Connecting", "% Connecting"),
+                        format = "html",
+                        align = "lcccc") %>%
+        kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
+                       html_font = "sans-serif") %>%
+        kableExtra::column_spec(1:5, width = c("25em","24em","17em","17em","17em"))
+      }
+      
+#       output$summary_table <- renderUI({
+#   kable_summary()
+# })
+      
+        
+
+        # ## Scroll if long
+        #   if (nrow(wrangled_devices_3()) > 14) {
+        #     kable_summary <- kable_summary %>%
+        #       kableExtra::scroll_box(height = "800px")
+        #   }
+
+    },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "wrangle_data")
+    }
+  )
+```
+
+---
+title: "Te Haratau Connectivity Report"
+---
+
+```{r check_data, results='asis'}
+  ## Bail if nothing in data. Returns empty report.
+  if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
+    cat("No data present for the requested devices and timespan. Aborting report.")
+    knitr::knit_exit("</body></html>")
+  }
+```
+
+
+
+
+
+
+<!-- PAGE 1: Summary Grouped  -->
+<!-- ------------------------ -->
+
+# Summary {data-icon="fa-wifi"}
+
+## Column 1
+
+### Connectivity Summary by School {data-width=600}
+
+```{r}
+  
+#kable_summary
+htmlOutput("kable_summary") 
+```
+
+### Connectivity & Data Volume by Firmware Version {data-width=400}
+
+#### Connectivity By Firmware Version
+
+<div class="custom-plot">
+
+```{r fig.align="center"}
+  plotOutput('chart_conn')
+```
+
+</div>
+
+#### Data Volume by Firmware Version
+
+
+<div class="custom-plot">
+
+```{r fig.align="center"}
+ plotOutput('chart_data_vol')
+```
+
+
+
+
+
+
+```{r}
+sliderInput("threshold",
+                  "Hours Since Last Pkt:", # xxxx
+                  min   = 1,
+                  max   = 24,
+                  value = 2)
+```
+
+
+
+```{r}
+dateInput("fromTimeStamp", "Select from Date:",
+          value = as.POSIXct(minTs, origin = "1970-01-01", tz = "Pacific/Auckland"),
+          min   = as.POSIXct(minTs, origin = "1970-01-01", tz = "Pacific/Auckland"),
+          max   = as.POSIXct(maxTs, origin = "1970-01-01", tz = "Pacific/Auckland"),
+          format = "yyyy-mm-dd")
+```
+
+
+
+```{r}
+dateInput("toTimeStamp", "Select to Date:",
+          value = as.POSIXct(maxTs, origin = "1970-01-01", tz = "Pacific/Auckland"),
+          min   = as.POSIXct(minTs, origin = "1970-01-01", tz = "Pacific/Auckland"),
+          max   = as.POSIXct(maxTs, origin = "1970-01-01", tz = "Pacific/Auckland"),
+          format = "yyyy-mm-dd")
+```
+
+

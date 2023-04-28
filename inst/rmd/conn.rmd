@@ -1,0 +1,219 @@
+---
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  flexdashboard::flex_dashboard:
+    social: [ "menu" ]
+    logo: !expr system.file("app/www", "logo.png", package = "monkeyr")
+    favicon: !expr system.file("app/www", "favicon.png", package = "monkeyr")
+    # logo: "../www/logo.png"
+    # favicon: "../www/favicon.png"
+    orientation: rows
+    pandoc_args: [
+      "+RTS", "-K16m",
+      "-RTS"
+    ]
+
+# paths with `inst` will only work in `dev` setting. 
+# in `production` setting, please use real data
+# or call installed files with `system.file`
+# see example in `?knit_report()`
+params:
+  filtered_obs:             "../dummy-data/Schools-RolloutB/obs.csv"
+  filtered_weather:         "../dummy-data/Schools-RolloutB/weather.csv"
+  filtered_devices:         "../dummy-data/Schools-RolloutB/dev.csv"
+  filtered_interventions:   "../dummy-data/Schools-RolloutB/interv.csv"
+  report_params:            "-map-"                                            
+  fromTimeStamp:            1680647122
+  toTimeStamp:              1681856722
+---
+
+```{r}
+ENABLE_DEBUG <- FALSE
+```
+
+
+```{r setup }
+  ## load monkeyr package
+  library(monkeyr)
+  library(dplyr)
+  library(magrittr)
+  library(fontawesome)
+  # use fontawesome::fa_metadata() to see avail icons!
+
+## other dependencies loaded through namespace
+```
+
+```{r wrangle_data}
+
+  ## STANDARD DATA WRANGLING & JOINING
+  ## ---------------------------------
+  
+  tryCatch(
+    {
+      ## Get from files
+      wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices) %>%
+        dplyr::select(c(school_name = school, city, device_id, country, classRoom, long, lat, fw_ver, status))
+      
+      wrangled_obs <- readr::read_csv(params$filtered_obs, col_types = "ciiicd") %>%
+        group_by(ts, device_id, seq) %>%
+        summarise()      
+      
+      
+      #
+      #   Status Registers - uint32t (32 bit registers)
+      #
+      #   define STAT_REG_HT   4   // SCD30   : 0 / HCHO     : 1 / SHT30 : 2
+      #   define STAT_REG_LUX  5   // OPT3001 : 0 / TSL75721 : 1
+      #   define STAT_REG_DBA  6   // ICS43434: 0
+      #
+      #   define STAT_REG_SYS  9   // 
+      
+      
+      
+      
+      
+      ## Join
+      wrangled_devices_1 <-
+        wrangled_devices %>%
+
+        ## Join obs data
+        dplyr::full_join(
+          dplyr::select(
+            wrangled_obs
+          ),
+          by = "device_id"
+        )
+      
+      
+      ## How many records should there be?
+      interval <- 15 * 60
+      timespan <- params$toTimeStamp - params$fromTimeStamp
+      fullvol  <- (timespan / interval) + 1
+      
+      ## Get min & max ts
+      maxTs   <- max(wrangled_obs$ts)
+      minTs   <- min(wrangled_obs$ts)
+      fullvol <- (maxTs - minTs) / interval + 1 
+
+      
+      ## Summarise by device
+      wrangled_devices_2 <-
+        wrangled_devices_1 %>%
+        dplyr::group_by(across(c(-ts))) %>%
+        dplyr::summarise(
+          last_conn = max(ts),
+          data_vol = n() / fullvol
+          ) %>%
+        dplyr::ungroup() %>%
+        dplyr::mutate(
+          last_conn = tidyr::replace_na(last_conn, 0)
+        ) %>%
+        dplyr::mutate(conn = (maxTs - last_conn) < (3600*24*13)) %>%
+        dplyr::select(-c(device_id, last_conn, country))
+      
+      
+      ## Conn by FW
+      chart_conn <- wrangled_devices_2 %>%
+        group_by(conn, fw_ver) %>%
+        summarise(count = n()) %>%
+        ggplot2::ggplot(ggplot2::aes(fill=conn, x=fw_ver, y=count)) + 
+        ggplot2::geom_bar(position="stack", stat="identity") + 
+        ggplot2::scale_fill_brewer(palette = "Blues")
+      
+        
+      ## DataVol by FW
+      chart_data_vol <- wrangled_devices_2 %>%
+        mutate(data_vol = case_when(
+          data_vol > 0.98 ~ "100%",
+          data_vol > 0.90 ~ ">90%",
+          data_vol > 0.80 ~ ">80%",
+          data_vol > 0.50 ~ ">50%",
+          data_vol < 0.50 ~ "<50%",
+        )) %>%
+        group_by(data_vol, fw_ver) %>%
+        summarise(count = n()) %>%
+
+        
+        
+        ggplot2::ggplot(ggplot2::aes(fill=data_vol, x=fw_ver, y=count)) + 
+        ggplot2::geom_bar(position="stack", stat="identity") + 
+        ggplot2::scale_fill_brewer(palette = "Blues")
+      
+        
+      ## Summarise by School
+      wrangled_devices_3 <-
+        wrangled_devices_2 %>%
+        dplyr::group_by(across(c(school_name, city))) %>%
+        dplyr::summarise(
+          iem_installed = n(),
+          online = sum(conn),
+          percent = paste0(ceiling(100 * online / iem_installed), "%")
+          ) %>%
+        dplyr::ungroup()
+      
+      
+      kable_summary <-
+        wrangled_devices_3 %>%
+        kableExtra::kbl(col.names = c("School Name", "City / Region", "IEMs Installed", "Qnty Connecting", "% Connecting"),
+                        format = "html",
+                        align = "lcccc") %>%
+        kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
+                       html_font = "sans-serif") %>%
+        kableExtra::column_spec(1:5, width = c("25em","24em","17em","17em","17em"))
+
+        ## Scroll if long
+          if (nrow(wrangled_devices_3) > 14) {
+            kable_summary <- kable_summary %>%
+              kableExtra::scroll_box(height = "800px")
+          }
+
+    },
+    error = function(cond) {
+      monkeyr::monkey_knit_error(err = cond, resource = "wrangle_data")
+    }
+  )
+```
+
+---
+title: "Te Haratau Connectivity Report"
+---
+
+```{r check_data, results='asis'}
+  ## Bail if nothing in data. Returns empty report.
+  if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
+    cat("No data present for the requested devices and timespan. Aborting report.")
+    knitr::knit_exit("</body></html>")
+  }
+```
+
+
+
+
+
+
+<!-- PAGE 1: Summary Grouped  -->
+<!-- ------------------------ -->
+
+# Summary {data-icon="fa-wifi"}
+
+## Column 1
+
+### Connectivity Summary by School {data-width=600}
+
+```{r}
+  kable_summary
+```
+
+### Connectivity & Data Volume by Firmware Version {data-width=400}
+
+#### Connectivity By Firmware Version
+
+```{r out.width='80%', fig.align="center", fig.height=3}
+chart_conn
+```
+
+#### Data Volume by Firmware Version
+
+```{r out.width='80%', fig.align="center", fig.height=3}
+chart_data_vol
+```

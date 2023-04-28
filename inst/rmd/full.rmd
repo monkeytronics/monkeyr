@@ -28,13 +28,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/wise/obs.csv"
-  filtered_weather:         "../dummy-data/wise/weather.csv"
-  filtered_devices:         "../dummy-data/wise/dev.csv"
-  filtered_interventions:   "../dummy-data/wise/interv.csv"
-  report_params:            "intro,intervention anlys,show deployment map,room_type anlys, tenure anlys"                                            
-  fromTimeStamp:            1663242659   
-  toTimeStamp:              1668509459
+  filtered_obs:             "../dummy-data/Schools-Wellyx3/obs.csv"
+  filtered_weather:         "../dummy-data/Schools-Wellyx3/weather.csv"
+  filtered_devices:         "../dummy-data/Schools-Wellyx3/dev.csv"
+  filtered_interventions:   "../dummy-data/Schools-Wellyx3/interv.csv"
+  report_params:            "intro,intervention anlys,show deployment map"                                            
+  fromTimeStamp:            1677801610   
+  toTimeStamp:              1680220810
 ---
 
 ```{r setup, include=FALSE}
@@ -106,7 +106,7 @@ params:
         filter(ts > params$fromTimeStamp) %>%
         filter(ts < params$toTimeStamp)
       
-      # # Fudge Random Number - Corellation should be 0.
+      # # Fudge Random Number - Corellation should be 0. My code works!
       # wrangled_obs$val <- sample(100, size = nrow(wrangled_obs), replace = TRUE)
       # # Fudge Random Number - Corellation should be 1.
       # wrangled_obs <- wrangled_obs %>%
