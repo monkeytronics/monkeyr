@@ -23,6 +23,7 @@ Imports:
     hrbrthemes,
     janitor,
     lmtest,
+    reactable,
     kableExtra,
     knitr,
     lubridate,
