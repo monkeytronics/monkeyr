@@ -1,19 +1,19 @@
-device_owner,device_id,pac,name,data_type,comms_type,long,lat,last_comm,locationCode,addr,suburb,city,country,room,hhi,cluster,privacy,risk,buildingType,tenure,height,direction,school,building,floor,classRoom,deployment_id,share
-info@helpauckland.org.nz,C000119,5CCC417BDD4AA8A3,Taraire,CD,W,0,0,1658279701,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000121,57F62ADF470AA495,Mikimiki,CD,W,0,0,0,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000123,0EFD33937321ADC9,Cabbage Tree,CD,W,0,0,1658279701,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000131,DB4C849571BF3839,Hinau,CD,W,0,0,1658279701,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000141,D74E11C8B416B268,Akapuka,CD,W,0,0,1658115001,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000142,F5A7937962B28024,Horopito,CD,W,0,0,1658279702,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000144,224CBEAA5A0FA03D,Karaka,CD,W,0,0,1658279701,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000145,F88E1DB1C48BA68E,Kotukutuku,CD,W,0,0,1658279702,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000148,2ED9A66757080EE6,Kohekohe,CD,W,0,0,1658279701,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000149,075581D495CF6085,Tawa,CD,W,0,0,1658119501,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000152,35B183EAE53E3628,Kanuka,CD,W,0,0,1658279701,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000153,055EA031FEBD0C45,Pohutukawa,CD,W,0,0,1653540302,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000157,5D892FC7D87FA4FD,Koru,CD,W,0,0,1658120400,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000159,6BCEC1E292FBB608,Kowhai,CD,W,0,0,1658121302,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000162,5FAE2A22D5871ECF,Mahoe,CD,W,0,0,1658279701,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000165,57B4748338E91FED,Kakimako,CD,W,0,0,1658279701,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000169,CF42CA20139B96F1,Manuka,CD,W,0,0,1658279701,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
-info@helpauckland.org.nz,C000170,6C8B8B9D3A06913F,Matipo,CD,W,0,0,1658120401,,,,,,,,,Do Not Share,Low,,,,,,,0,,, 
+device_owner,device_id,pac,name,data_type,comms_type,long,lat,last_comm,locationCode,addr,suburb,city,country,room,hhi,cluster,privacy,risk,buildingType,tenure,height,direction,school,building,floor,classRoom,deployment_id,share,fw_ver,status
+info@helpauckland.org.nz,C000119,5CCC417BDD4AA8A3,Maikuku,CD,W,0,0,1671041700,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, , ,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000121,57F62ADF470AA495,Karopapa,CD,W,0,0,0,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, , , 
+info@helpauckland.org.nz,C000123,0EFD33937321ADC9,Poroporo,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000131,DB4C849571BF3839,Admin 2,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000141,D74E11C8B416B268,Clematis,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000142,F5A7937962B28024,Small Lounge,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|16|0|0]
+info@helpauckland.org.nz,C000144,224CBEAA5A0FA03D,Waitroom,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000145,F88E1DB1C48BA68E,Reception,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|16|0|0]
+info@helpauckland.org.nz,C000148,2ED9A66757080EE6,Staffroom,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000149,075581D495CF6085,Fundraising,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000152,35B183EAE53E3628,Admin 1,CD,W,0,0,1682054100,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000153,055EA031FEBD0C45,Pohutukawa,CD,W,0,0,1682552700,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000157,5D892FC7D87FA4FD,Koru,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000159,6BCEC1E292FBB608,Kowhai,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000162,5FAE2A22D5871ECF,Playroom,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000165,57B4748338E91FED,BSM Office,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]
+info@helpauckland.org.nz,C000169,CF42CA20139B96F1,TSM Office,CD,W,0,0,1682888400,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|16|0|0]
+info@helpauckland.org.nz,C000170,6C8B8B9D3A06913F,ED Office,CD,W,0,0,1682658900,|NZ,,,,New Zealand,,,,Do Not Share,Low,,,,,,,0,,, ,V1.0.0,[65536|131072|3|4|3|0|0|0|0|0]

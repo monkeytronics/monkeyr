@@ -28,13 +28,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/Schools-Wellyx3/obs.csv"
-  filtered_weather:         "../dummy-data/Schools-Wellyx3/weather.csv"
-  filtered_devices:         "../dummy-data/Schools-Wellyx3/dev.csv"
-  filtered_interventions:   "../dummy-data/Schools-Wellyx3/interv.csv"
+  filtered_obs:             "../dummy-data/co2_demo/obs.csv"
+  filtered_weather:         "../dummy-data/co2_demo/weather.csv"
+  filtered_devices:         "../dummy-data/co2_demo/dev.csv"
+  filtered_interventions:   "../dummy-data/co2_demo/interv.csv"
   report_params:            "intro,intervention anlys,show deployment map"                                            
-  fromTimeStamp:            1677801610   
-  toTimeStamp:              1680220810
+  fromTimeStamp:            1682282766   
+  toTimeStamp:              1682887566
 ---
 
 ```{r setup, include=FALSE}
