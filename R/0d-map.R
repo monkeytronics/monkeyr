@@ -715,7 +715,8 @@ get_map <- function(devices_for_map, map_params, geojson_main, geojson_inset) {
     ## Error Handler
     },
     error = function(cond) {
-      monkeyr::monkey_knit_error(err = cond, resource = "get_map", debug = TRUE)
+      # monkeyr::monkey_knit_error(err = cond, resource = "get_map", debug = TRUE) ## Completely Bail!
+      monkeyr::monkey_knit_msg(msg = cond, resource = "get_map", debug = TRUE)     ## Handle Error
     }
   )
 }

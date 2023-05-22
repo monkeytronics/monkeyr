@@ -32,7 +32,7 @@ params:
   filtered_weather:         "../dummy-data/co2_demo/weather.csv"
   filtered_devices:         "../dummy-data/co2_demo/dev.csv"
   filtered_interventions:   "../dummy-data/co2_demo/interv.csv"
-  report_params:            "intro,intervention anlys,show deployment map"                                            
+  report_params:            "intro,intervention anlys,show deployment map,room_type anlys"                                            
   fromTimeStamp:            1682282766   
   toTimeStamp:              1682887566
 ---
@@ -406,31 +406,35 @@ The 'Worst Case' experienced corresponds to the lowest temperatures recorded. Th
     cat("\n\n The box plot is designed to tell us how well the building responds to low outdoor temperature. ")
     cat("We measure this with a model relationship coefficient. This tells us how strongly the indoor temperature ")
     cat("are affected by outdoor temperature. \n\n")
+    
+    if (is.null(wrangled_weather)) {
+      cat(paste0("\n", "Skipping Indoor / Outdoor Regression Analysis because no weather data present.", "\n"))
+    } else {
       
-    reg_data   <- monkeyr::get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
-    boxplot    <- monkeyr::get_reg_boxplot(reg_data, target_var)
-    # knitr::opts_chunk$set(fig.height=(6+2*ceiling(data_segments/4)))
-    # print(boxplot)
+      reg_data   <- monkeyr::get_reg_data(wrangled_devices, wrangled_obs, target_reading = "temp")
+      boxplot    <- monkeyr::get_reg_boxplot(reg_data, target_var)
+      # knitr::opts_chunk$set(fig.height=(6+2*ceiling(data_segments/4)))
+      # print(boxplot)
+      
+      
+    ### Use resizePlot.rmd to apply per-plot height etc.
+      resizePlot <- boxplot
+      resizeHeight <- 0.75 * data_segments + 2
+      res <- knitr::knit_child('resizePlot.rmd', quiet = TRUE)
+      cat(res, sep = '\n')
+    ###
+      
+      cat(paste0("\n\n", "##### Figure ", section_number, ".2.1 Model Relationship Coefficient by ", 
+                  target_var_Title, " (n = ", nrow_vals$included_n, ")", "\n")) 
     
-    
-  ### Use resizePlot.rmd to apply per-plot height etc.
-    resizePlot <- boxplot
-    resizeHeight <- 0.75 * data_segments + 2
-    res <- knitr::knit_child('resizePlot.rmd', quiet = TRUE)
-    cat(res, sep = '\n')
-  ###
-    
-    cat(paste0("\n\n", "##### Figure ", section_number, ".2.1 Model Relationship Coefficient by ", 
-                target_var_Title, " (n = ", nrow_vals$included_n, ")", "\n")) 
-    
-  ### Table X.2.2
-    cat("\n\n We have calculated the Model Relationship Coefficient for each individual device,  ")
-    cat("sorted by city and then by the Model Relationship Coefficient, from worst to best. \n\n")
-    
-    reg_kable  <- monkeyr::get_reg_kable(reg_data, target_var)
-    print(reg_kable)
-    cat(paste0("\n", "##### Figure ", section_number, ".2.2 Model Relationship Coefficient for all Devices", "\n"))
-    
+    ### Table X.2.2
+      cat("\n\n We have calculated the Model Relationship Coefficient for each individual device,  ")
+      cat("sorted by city and then by the Model Relationship Coefficient, from worst to best. \n\n")
+      
+      reg_kable  <- monkeyr::get_reg_kable(reg_data, target_var)
+      print(reg_kable)
+      cat(paste0("\n", "##### Figure ", section_number, ".2.2 Model Relationship Coefficient for all Devices", "\n"))
+    }
   
     
   ### Lowest Temp Ever
@@ -481,10 +485,19 @@ The 'Worst Case' experienced corresponds to the lowest temperatures recorded. Th
 ```
 
 
+```{r echo=FALSE}
+  if (is.null(wrangled_weather)) {
+    interv_child <- NULL
+  } else {
+    interv_child <- "interv_regression.Rmd"
+  }
+```
 
-```{r  echo=FALSE, results="asis", out.width="100%", child="interv_regression.Rmd"}
+```{r echo=FALSE, results="asis", out.width="100%", child=interv_child}
+  cat(paste0("\n", "## ", section_number, ". Intervention Analysis"))
 
-    cat(paste0("\n", "## ", section_number, ". Intervention Analysis"))
-
+  if (is.null(wrangled_weather)) {
+    cat(paste0("\n", "Skipping Intervention Analysis because no weather data present.", "\n"))
+  }
 ```
 

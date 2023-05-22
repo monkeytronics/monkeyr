@@ -18,13 +18,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/Schools-RolloutB/obs.csv"
-  filtered_weather:         "../dummy-data/Schools-RolloutB/weather.csv"
-  filtered_devices:         "../dummy-data/Schools-RolloutB/dev.csv"
-  filtered_interventions:   "../dummy-data/Schools-RolloutB/interv.csv"
+  filtered_obs:             "../dummy-data/conn/obs.csv"
+  filtered_weather:         "../dummy-data/conn/weather.csv"
+  filtered_devices:         "../dummy-data/conn/dev.csv"
+  filtered_interventions:   "../dummy-data/conn/interv.csv"
   report_params:            "-map-"                                            
-  fromTimeStamp:            1680647122
-  toTimeStamp:              1681856722
+  fromTimeStamp:            1684209507
+  toTimeStamp:              1684295907
 ---
 
 ```{r}
@@ -39,6 +39,9 @@ ENABLE_DEBUG <- FALSE
   library(magrittr)
   library(fontawesome)
   # use fontawesome::fa_metadata() to see avail icons!
+
+
+  LATEST_FW <- "V1.5.9"
 
 ## other dependencies loaded through namespace
 ```
@@ -143,23 +146,30 @@ ENABLE_DEBUG <- FALSE
       ## Summarise by School
       wrangled_devices_3 <-
         wrangled_devices_2 %>%
+        dplyr::mutate(old_fw = (fw_ver < LATEST_FW)) %>%
+        dplyr::mutate(need_attn = case_when(
+          fw_ver < LATEST_FW ~ paste0(classRoom, " "),
+          fw_ver >= LATEST_FW ~ ""
+        )) %>%
         dplyr::group_by(across(c(school_name, city))) %>%
         dplyr::summarise(
-          iem_installed = n(),
-          online = sum(conn),
-          percent = paste0(ceiling(100 * online / iem_installed), "%")
+          installed = n(),
+          old_fw = sum(old_fw),
+          percent = paste0(ceiling(100 * old_fw / installed), "%"),
+          need_attn = paste0(need_attn, collapse = "")
           ) %>%
-        dplyr::ungroup()
+        dplyr::ungroup() %>%
+        dplyr::arrange(desc(old_fw))
       
       
       kable_summary <-
         wrangled_devices_3 %>%
-        kableExtra::kbl(col.names = c("School Name", "City / Region", "IEMs Installed", "Qnty Connecting", "% Connecting"),
+        kableExtra::kbl(col.names = c("School", "City / Region", "IEM (Installed)", "IEM (Old FW)", "% (Old FW)", "Need Attn"),
                         format = "html",
-                        align = "lcccc") %>%
+                        align = "lccccr") %>%
         kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
                        html_font = "sans-serif") %>%
-        kableExtra::column_spec(1:5, width = c("25em","24em","17em","17em","17em"))
+        kableExtra::column_spec(1:6, width = c("25em","24em","17em","17em","17em","35em"))
 
         ## Scroll if long
           if (nrow(wrangled_devices_3) > 14) {

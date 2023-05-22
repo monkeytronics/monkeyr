@@ -1,9 +1,11 @@
 ```{r echo=FALSE, include=FALSE}
 
+mapFailed <- FALSE
 
 tryCatch(
   {
     monkey_knit_msg(msg = "MAPPING : Entering child Rmd File", resource = "map.rmd")
+    
       
   ### 0. Libraries (Shared)
     #library(rgdal);        message(paste0("\nMAPPING : rgdal"))
@@ -105,7 +107,9 @@ tryCatch(
   
   },
     error = function(cond) {
-      monkeyr::monkey_knit_error(err = cond, resource = "mapping", debug = TRUE)
+      # monkeyr::monkey_knit_error(err = cond, resource = "mapping", debug = TRUE)    ## Completely Bail!
+      monkeyr::monkey_knit_msg(msg = cond, resource = "mapping", debug = TRUE)        ## Handle Error
+      mapFailed <- TRUE
   }
 )
   
@@ -124,7 +128,9 @@ Of `r count_all` deployed devices, `r count_connected` (shown in green) connecte
 
 
 ```{r echo=FALSE, fig.dim=c(8,8)}
-  map
+  if(!mapFailed) {
+    map
+  }
 ```
 
 

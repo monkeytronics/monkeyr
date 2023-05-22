@@ -573,7 +573,8 @@ downsample_obs <- function(wrangle_obs, rate) {
 #'
 #' @export
 memory_saver_obs <- function(wrangled_obs) {
-  #wrangled_obs <-
+
+   wrangled_obs_v <-
     wrangled_obs %>%
 
     # 50% Reduction in Memory
@@ -590,23 +591,34 @@ memory_saver_obs <- function(wrangled_obs) {
       building,
       classRoom,
       deployment_id,
-      share,
-      feels_like,
-      temp_min,
-      temp_max,
-      pressure,
-      wind_speed,
-      rain_1h,
-      snow_1h,
-      clouds_all,
-      weather_id,
-      weather_main,
-      weather_description,
-      weather_icon,
-      country_code,
-      country.y,
-      outdoor_hum
-      ))
+      share
+    ))
+
+   # only do if weather data was present (else fails)
+   if ("feels_like" %in% colnames(wrangled_obs_v)) {
+     wrangled_obs_v <-
+       wrangled_obs_v %>%
+       # 44% Reduction in Memory
+       dplyr::select(-c(
+         feels_like,
+         temp_min,
+         temp_max,
+         pressure,
+         wind_speed,
+         rain_1h,
+         snow_1h,
+         clouds_all,
+         weather_id,
+         weather_main,
+         weather_description,
+         weather_icon,
+         country_code,
+         country.y,
+         outdoor_hum
+       ))
+   }
+   return (wrangled_obs_v)
+
 }
 
 
