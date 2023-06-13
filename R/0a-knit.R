@@ -188,20 +188,20 @@ make_params_list <- function(.list = NULL, ...) {
 #'
 #' @export
 knit_report <-
-  function(param_list,
-           output_file = paste0("home-", as.numeric(Sys.time()), ".html"),
-           output_dir  = getwd(),
-           rmd_file    = "home.rmd",
-           ...
-           ) {
+  function(
+    param_list,
+    output_file = paste0("home-", as.numeric(Sys.time()), ".html"),
+    output_dir  = getwd(),
+    rmd_file    = "home.rmd",
+    ...
+  ) {
     ## Get directory of report markdown template
-    report_rmd <-
-      system.file("/rmd/", rmd_file, package = "monkeyr")
+    report_rmd <- system.file("/rmd/", rmd_file, package = "monkeyr")
 
     ## Render report into html
     rmarkdown::render(
-      input  = report_rmd,
-      params = param_list,
+      input       = report_rmd,
+      params      = param_list,
       output_file = output_file,
       output_dir  = output_dir,
       ...
