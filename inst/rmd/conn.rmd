@@ -1,5 +1,5 @@
 ---
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+d ate: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     social: [ "menu" ]
@@ -23,8 +23,8 @@ params:
   filtered_devices:         "../dummy-data/conn/dev.csv"
   filtered_interventions:   "../dummy-data/conn/interv.csv"
   report_params:            "-map-"                                            
-  fromTimeStamp:            1684209507
-  toTimeStamp:              1684295907
+  fromTimeStamp:            1686608691
+  toTimeStamp:              1686695091
 ---
 
 ```{r}
@@ -55,7 +55,19 @@ ENABLE_DEBUG <- FALSE
     {
       ## Get from files
       wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices) %>%
-        dplyr::select(c(school_name = school, city, device_id, country, classRoom, long, lat, fw_ver, status))
+        dplyr::select(c(school_name = school, device_id, country, classRoom, long, lat, fw_ver, status, name, last_comm)) %>%
+      ## Flag missing info
+        dplyr::mutate(fw_ver           = tidyr::replace_na(fw_ver,      "NC")) %>%
+        dplyr::mutate(status           = tidyr::replace_na(status,      "NC")) %>%
+        dplyr::mutate(school_name      = tidyr::replace_na(school_name, "missing")) %>%
+        dplyr::mutate(classRoom        = tidyr::replace_na(classRoom,   "missing")) %>%
+      ## Separate school & class info from name
+        dplyr::mutate(school_code = stringr::str_split_i(name, "/", 1))  %>%
+        dplyr::mutate(class_code  = stringr::str_split_i(name, "/", -1)) %>%
+      ## Flag test devices
+        dplyr::mutate(test = FALSE) %>%
+        dplyr::mutate(test = if_else(school_code > 9999, TRUE, test)) %>%
+        dplyr::mutate(test = if_else(startsWith(school_code, "10000"), TRUE, test)) 
       
       wrangled_obs <- readr::read_csv(params$filtered_obs, col_types = "ciiicd") %>%
         group_by(ts, device_id, seq) %>%
@@ -70,9 +82,6 @@ ENABLE_DEBUG <- FALSE
       #   define STAT_REG_DBA  6   // ICS43434: 0
       #
       #   define STAT_REG_SYS  9   // 
-      
-      
-      
       
       
       ## Join
@@ -151,7 +160,7 @@ ENABLE_DEBUG <- FALSE
           fw_ver < LATEST_FW ~ paste0(classRoom, " "),
           fw_ver >= LATEST_FW ~ ""
         )) %>%
-        dplyr::group_by(across(c(school_name, city))) %>%
+        dplyr::group_by(across(c(school_name))) %>%
         dplyr::summarise(
           installed = n(),
           old_fw = sum(old_fw),
@@ -164,18 +173,18 @@ ENABLE_DEBUG <- FALSE
       
       kable_summary <-
         wrangled_devices_3 %>%
-        kableExtra::kbl(col.names = c("School", "City / Region", "IEM (Installed)", "IEM (Old FW)", "% (Old FW)", "Need Attn"),
+        kableExtra::kbl(col.names = c("School", "IEM (Installed)", "IEM (Old FW)", "% (Old FW)", "Need Attn"),
                         format = "html",
-                        align = "lccccr") %>%
+                        align = "lcccr") %>%
         kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
                        html_font = "sans-serif") %>%
-        kableExtra::column_spec(1:6, width = c("25em","24em","17em","17em","17em","35em"))
+        kableExtra::column_spec(1:5, width = c("25em","17em","17em","17em","35em"))
 
-        ## Scroll if long
-          if (nrow(wrangled_devices_3) > 14) {
-            kable_summary <- kable_summary %>%
-              kableExtra::scroll_box(height = "800px")
-          }
+    ## Scroll if long
+      if (nrow(wrangled_devices_3) > 14) {
+        kable_summary <- kable_summary %>%
+          kableExtra::scroll_box(height = "800px")
+      }
 
     },
     error = function(cond) {
@@ -204,7 +213,7 @@ title: "Te Haratau Connectivity Report"
 <!-- PAGE 1: Summary Grouped  -->
 <!-- ------------------------ -->
 
-# Summary {data-icon="fa-wifi"}
+# Connectivity Summary {data-icon="fa-wifi"}
 
 ## Column 1
 
@@ -226,4 +235,161 @@ chart_conn
 
 ```{r out.width='80%', fig.align="center", fig.height=3}
 chart_data_vol
+```
+
+
+# Database Corruption & Test/Install Artifacts {data-icon="fa-thumbs-o-down"}
+
+## Column 1
+
+### Duplicate Installs {data-width=600}
+
+```{r}
+
+## Get Duplicate devices
+  devices_dup <- wrangled_devices %>%
+    dplyr::group_by(name) %>%
+    dplyr::filter(n()>1) %>%
+    dplyr::ungroup() %>%
+    dplyr::arrange(desc(name)) %>%
+    dplyr::select(c(device_id, school_code, class_code, last_comm)) %>%
+    dplyr::group_by(school_code, class_code) %>%
+    dplyr::mutate(duplicate = ifelse(last_comm == max(last_comm), FALSE, TRUE)) %>%
+    dplyr::ungroup()
+    
+## Kable of Duplicated devices
+  kable_devices_dup <-
+    devices_dup %>%
+    # arrange(`school_code`, `class_code`, `last_comm`) %>%
+    kableExtra::kbl(col.names = c("Device Id", "School Code", "Class Code", "Last Comm", "Duplicate"),
+                    format = "html",
+                    align = "lllll") %>%
+    kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
+                   html_font = "sans-serif") %>%
+    kableExtra::column_spec(1:5, width = c("20em","20em","20em","20em","20em"))
+  
+## Scroll if long
+  if (nrow(devices_dup) > 14) {
+    kable_devices_dup <- kable_devices_dup %>%
+      kableExtra::scroll_box(height = "800px")
+  }
+   
+## Print Table   
+  kable_devices_dup
+  
+  
+## Set Duplicates to Unclaimed
+## Will Do this inside AWS Lambda - this is a horrible place to write this code!
+  
+```
+
+### Demo/Test Devices {data-width=400}
+
+```{r out.width='80%', fig.align="center", fig.height=3}
+
+## Get Test devices
+  devices_test <- wrangled_devices %>%
+    dplyr::filter(test == TRUE) %>%
+    dplyr::select(c(device_id, school_code, class_code))
+    
+## Kable of Test devices
+  kable_devices_test <-
+    devices_test %>%
+    kableExtra::kbl(col.names = c("Device Id", "School Code", "Class Code"),
+                    format = "html",
+                    align = "lll") %>%
+    kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
+                   html_font = "sans-serif") %>%
+    kableExtra::column_spec(1:3, width = c("20em","30em","30em"))
+      
+## Scroll if long
+  if (nrow(devices_test) > 14) {
+    kable_devices_test <- kable_devices_test %>%
+      kableExtra::scroll_box(height = "800px")
+  }
+  
+## Print Table
+  kable_devices_test
+  
+```
+
+
+# N4L Not Updated {data-icon="fa-refresh"}
+
+## Column 1
+
+### Missing School Info {data-width=600}
+
+```{r}
+      
+## Pull School Codes from Excel File
+  school_codes <-
+  data.table::fread(
+    "../schoolCodes/2023-School-Name-And-Number-Codes.csv",
+    na.strings = c("",NA),
+    skip = 3,
+    colClasses = list(
+      character = c("Name of School", "Notes Or Old Name"),
+      boolean   = c("Closed"),
+      integer   = c("Number"))
+    ) %>%
+    dplyr::mutate(Closed = case_when (
+      is.na(Closed) ~ FALSE,
+      Closed == "*" ~ TRUE,
+      TRUE ~ FALSE
+    )) %>%
+    dplyr::rename(school_code = Number)
+  
+  
+## Get devices missing Schools
+  devices_missing_school <- wrangled_devices %>%
+    dplyr::filter(school_name == "missing") %>%
+    dplyr::filter(test == FALSE) %>%
+    dplyr::mutate(school_code = as.integer(school_code)) %>%
+    dplyr::select(c(device_id, school_code, class_code)) %>%
+  ## Join Suspected School from School Codes
+    dplyr::left_join(
+      dplyr::select( # remove addr & email addr!
+        school_codes,
+        school_code,
+        "Name of School"
+      ),
+      by = "school_code"
+    ) %>%
+    dplyr::rename(matched_school = "Name of School")
+  
+  
+## Get devices Missing Classrooms
+  kable_missing_class <-
+    devices_missing_school %>%
+    kableExtra::kbl(col.names = c("Device Id", "School Code", "Class Code", "Matching School"),
+                    format = "html",
+                    align = "llll") %>%
+    kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
+                   html_font = "sans-serif") %>%
+    kableExtra::column_spec(1:4, width = c("20em","20em","20em","20em"))
+  
+## Scroll if long
+  if (nrow(devices_missing_school) > 14) {
+    kable_missing_class <- kable_missing_class %>%
+      kableExtra::scroll_box(height = "800px")
+  }
+  
+## Print Table  
+  kable_missing_class  
+  
+  
+## Actually Update with Missing Schools
+## Will Do this inside AWS Lambda - this is a horrible place to write this code!
+  
+```
+
+### Devices / Schools Expiring Soonest {data-width=400}
+
+```{r out.width='80%', fig.align="center", fig.height=3}
+
+## Get Expiry for each device
+
+
+
 ```

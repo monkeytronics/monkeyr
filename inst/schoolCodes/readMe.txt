@@ -1,0 +1,1 @@
+public information from https://www.educationcounts.govt.nz/data-services/code-sets-and-classifications/school_name_and_number_codes
