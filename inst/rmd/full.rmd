@@ -28,13 +28,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/co2_demo/obs.csv"
-  filtered_weather:         "../dummy-data/co2_demo/weather.csv"
-  filtered_devices:         "../dummy-data/co2_demo/dev.csv"
-  filtered_interventions:   "../dummy-data/co2_demo/interv.csv"
+  filtered_obs:             "../dummy-data/customer/obs.csv"
+  filtered_weather:         "../dummy-data/customer/weather.csv"
+  filtered_devices:         "../dummy-data/customer/dev.csv"
+  filtered_interventions:   "../dummy-data/customer/interv.csv"
   report_params:            "intro,intervention anlys,show deployment map,room_type anlys"                                            
-  fromTimeStamp:            1682282766   
-  toTimeStamp:              1682887566
+  fromTimeStamp:            1685996784   
+  toTimeStamp:              1688588784
 ---
 
 ```{r setup, include=FALSE}
@@ -87,7 +87,7 @@ params:
         # dplyr::filter(grepl("Unknown", cluster, fixed = TRUE))
         
       wrangled_weather <- monkeyr::wrangle_weather(params$filtered_weather)
-      monkey_knit_msg(msg = paste0("wrangled_weather nrow = ", nrow(wrangled_weather)), resource="WRANGLE_DATA")
+      monkey_knit_msg(msg = paste0("wrangled_weather nrow = ", nrow(wrangled_weather)), resource="full.rmd, WRANGLE_DATA")
       
       wrangled_obs <- monkeyr::wrangle_observations(
         filtered_obs   = params$filtered_obs,
@@ -99,18 +99,25 @@ params:
       wrangled_obs <- monkeyr::memory_saver_obs(wrangled_obs)
       utils::object.size(wrangled_obs)
       
-    
       
-      # Fudge to adjust time-period for DID analysis!
+      ## Fudge to adjust time-period for DID analysis! 
+      ## No effect in prod - from & to ts are exact)
+      ## ---------------------------------------------
       wrangled_obs <- wrangled_obs %>%
         filter(ts > params$fromTimeStamp) %>%
         filter(ts < params$toTimeStamp)
+      utils::object.size(wrangled_obs)
       
-      # # Fudge Random Number - Corellation should be 0. My code works!
+      
+      ## Use Random Numbers to Verify Results
+      ## Did this and looked fine!
+      ## ------------------------------------
+      ## 1. Fudge with white noise - Corellation should be 0. Works!
       # wrangled_obs$val <- sample(100, size = nrow(wrangled_obs), replace = TRUE)
-      # # Fudge Random Number - Corellation should be 1.
+      ## 2. Fudge with exact offset - Corellation should be 1. Works!
       # wrangled_obs <- wrangled_obs %>%
       #   dplyr::mutate(outdoor_temp = val + 10)
+      
       
       data_volume <- monkeyr::get_data_volume(
         observations   = wrangled_obs,

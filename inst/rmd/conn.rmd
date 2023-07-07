@@ -18,13 +18,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/conn/obs.csv"
-  filtered_weather:         "../dummy-data/conn/weather.csv"
-  filtered_devices:         "../dummy-data/conn/dev.csv"
-  filtered_interventions:   "../dummy-data/conn/interv.csv"
+  filtered_obs:             "../dummy-data/conn_29June/obs.csv"
+  filtered_weather:         "../dummy-data/conn_29June/weather.csv"
+  filtered_devices:         "../dummy-data/conn_29June/dev.csv"
+  filtered_interventions:   "../dummy-data/conn_29June/interv.csv"
   report_params:            "-map-"                                            
-  fromTimeStamp:            1686815272 
-  toTimeStamp:              1686901672
+  fromTimeStamp:            1687939839
+  toTimeStamp:              1688026239
 ---
 
 ```{r}
@@ -42,6 +42,7 @@ ENABLE_DEBUG <- FALSE
 
 
   LATEST_FW <- "V1.5.9"
+  NC_FW     <- "V0.0.0"
 
 ## other dependencies loaded through namespace
 ```
@@ -57,7 +58,7 @@ ENABLE_DEBUG <- FALSE
       wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices) %>%
         dplyr::select(c(school_name = school, device_id, country, classRoom, long, lat, fw_ver, status, name, last_comm)) %>%
       ## Flag missing info
-        dplyr::mutate(fw_ver           = tidyr::replace_na(fw_ver,      "NC")) %>%
+        dplyr::mutate(fw_ver           = tidyr::replace_na(fw_ver,      "V0.0.0")) %>%
         dplyr::mutate(status           = tidyr::replace_na(status,      "NC")) %>%
         dplyr::mutate(school_name      = tidyr::replace_na(school_name, "missing")) %>%
         dplyr::mutate(classRoom        = tidyr::replace_na(classRoom,   "missing")) %>%
@@ -67,7 +68,9 @@ ENABLE_DEBUG <- FALSE
       ## Flag test devices
         dplyr::mutate(test = FALSE) %>%
         dplyr::mutate(test = if_else(school_code > 9999, TRUE, test)) %>%
-        dplyr::mutate(test = if_else(startsWith(school_code, "10000"), TRUE, test)) 
+        dplyr::mutate(test = if_else(startsWith(school_code, "10000"), TRUE, test)) %>%
+        dplyr::mutate(school_name = if_else(school_code > 9999, "test", school_name)) %>%
+        dplyr::mutate(school_name = if_else(startsWith(school_code, "10000"), "test", school_name))
       
       wrangled_obs <- readr::read_csv(params$filtered_obs, col_types = "ciiicd") %>%
         group_by(ts, device_id, seq) %>%
@@ -155,17 +158,25 @@ ENABLE_DEBUG <- FALSE
       ## Summarise by School
       wrangled_devices_3 <-
         wrangled_devices_2 %>%
-        dplyr::mutate(old_fw = (fw_ver < LATEST_FW)) %>%
-        dplyr::mutate(need_attn = case_when(
-          fw_ver < LATEST_FW ~ paste0(classRoom, " "),
-          fw_ver >= LATEST_FW ~ ""
+        dplyr::mutate(nc_fw = (last_comm == 0)) %>%
+        dplyr::mutate(old_fw = (fw_ver < LATEST_FW & (!nc_fw))) %>%
+        dplyr::mutate(latest_fw = (fw_ver == LATEST_FW)) %>%
+        dplyr::mutate(off_on = case_when(
+          old_fw  ~ paste0(" -", classRoom, "- "),
+          !old_fw ~ ""
+        )) %>%
+        dplyr::mutate(nc = case_when(
+          nc_fw  ~ paste0(" -", classRoom, "- "),
+          !nc_fw ~ ""
         )) %>%
         dplyr::group_by(across(c(school_name))) %>%
         dplyr::summarise(
           installed = n(),
+          latest_fw = sum(latest_fw),
           old_fw = sum(old_fw),
-          percent = paste0(ceiling(100 * old_fw / installed), "%"),
-          need_attn = paste0(need_attn, collapse = "")
+          nc_fw = sum(nc_fw),
+          off_on = paste0(off_on, collapse = ""),
+          nc = paste0(nc, collapse = "")
           ) %>%
         dplyr::ungroup() %>%
         dplyr::arrange(desc(old_fw))
@@ -173,7 +184,7 @@ ENABLE_DEBUG <- FALSE
       
       kable_summary <-
         wrangled_devices_3 %>%
-        kableExtra::kbl(col.names = c("School", "IEM (Installed)", "IEM (Old FW)", "% (Old FW)", "Need Attn"),
+        kableExtra::kbl(col.names = c("School", "Total", "OK", "Needs Off/on", "Failed Install", "List-Off/On", "List-NC"),
                         format = "html",
                         align = "lcccr") %>%
         kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
@@ -248,6 +259,8 @@ chart_data_vol
 
 ## Get Duplicate devices
   devices_dup <- wrangled_devices %>%
+    dplyr::mutate(name = stringr::str_squish(tolower(name))) %>% ## make all white spce into spaces.
+    dplyr::mutate(name = stringr::str_replace_all(name, "[ .,-]", "")) %>% ## remove spaces & punctuation
     dplyr::group_by(name) %>%
     dplyr::filter(n()>1) %>%
     dplyr::ungroup() %>%
@@ -256,7 +269,7 @@ chart_data_vol
     dplyr::group_by(school_code, class_code) %>%
     dplyr::mutate(duplicate = ifelse(last_comm == max(last_comm), FALSE, TRUE)) %>%
     dplyr::ungroup()
-    
+
 ## Kable of Duplicated devices
   if (nrow(devices_dup) > 0) {
     kable_devices_dup <-
@@ -265,10 +278,11 @@ chart_data_vol
       kableExtra::kbl(col.names = c("Device Id", "School Code", "Class Code", "Last Comm", "Duplicate"),
                       format = "html",
                       align = "lllll") %>%
-      kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
-                     html_font = "sans-serif") %>%
+      kableExtra::kable_material(
+                      lightable_options = c("striped", "hover", "condensed"),
+                      html_font = "sans-serif") %>%
       kableExtra::column_spec(1:5, width = c("20em","20em","20em","20em","20em"))
-  
+
 ## Scroll if long
     if (nrow(devices_dup) > 14) {
       kable_devices_dup <- kable_devices_dup %>%
@@ -277,10 +291,10 @@ chart_data_vol
   } else {
     kable_devices_dup <- "No Duplicate Devices detected!"
   }
-   
-## Print Table   
+
+## Print Table
   kable_devices_dup
-  
+
   
 ## Set Duplicates to Unclaimed
 ## Will Do this inside AWS Lambda - this is a horrible place to write this code!

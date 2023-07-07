@@ -8,14 +8,14 @@ tryCatch(
     
       
   ### 0. Libraries (Shared)
-    #library(rgdal);        message(paste0("\nMAPPING : rgdal"))
+    #library(rgdal);        message(paste0("\nMAPPING : rgdal"))  ## not ACTUALLY Needed?!
     library(dplyr);        message(paste0("\nMAPPING : dplyr"))
 
     library(stringi);      message(paste0("\nMAPPING : stringi "))
     library(sf);           message(paste0("\nMAPPING : sf "))
     library(cowplot);      message(paste0("\nMAPPING : cowplot "))
     library(ggrepel);      message(paste0("\nMAPPING : ggrepel "))
-    library(ggspatial);    message(paste0("\nMAPPING : ggspatial "))
+    #library(ggspatial);    message(paste0("\nMAPPING : ggspatial "))  ## not ACTUALLY Needed?!
 
     library(maps);         message(paste0("\nMAPPING : maps "))
     library(mapdata);      message(paste0("\nMAPPING : mapdata "))
