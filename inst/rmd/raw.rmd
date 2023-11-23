@@ -63,7 +63,7 @@ ENABLE_DEBUG <- FALSE
       ## Flag unknown info
         dplyr::mutate(fw_ver           = tidyr::replace_na(fw_ver,      "V0.0.0")) %>%
         dplyr::mutate(status           = tidyr::replace_na(status,      "NC")) %>%
-        dplyr::mutate(school           = tidyr::replace_na(school, "unknown")) %>%
+        dplyr::mutate(school           = tidyr::replace_na(school,      "unknown")) %>%
         dplyr::mutate(classRoom        = tidyr::replace_na(classRoom,   "unknown")) %>%
       ## Separate school & class info from name
         dplyr::mutate(school_code = stringr::str_split_i(name, "/", 1))  %>%
@@ -108,7 +108,7 @@ ENABLE_DEBUG <- FALSE
       }
       
       
-    ## Grab Obs 
+    ## Grab Obs Temp only (to work out connectivity metrics)
       wrangled_obs <- readr::read_csv(params$filtered_obs, col_types = "ciiicd") %>%
         dplyr::filter(reading == "temp") %>%
         dplyr::mutate(temp = val) %>%
@@ -268,7 +268,7 @@ chart_conn
 
 ```{r out.width='80%', fig.align="center", fig.height=3}
 chart_data_vol
-library(lubridate)
+##library(lubridate)
 
 ```
 
@@ -278,60 +278,145 @@ library(lubridate)
 <!-- PAGE 2: RAW DATA LINKS   -->
 <!-- ------------------------ -->
 
-```{r}
-  expiry_date <- format(Sys.time() + days(7), '%d %B, %Y')
+# Raw data Download {data-icon="fa-save-ol"}
+
+## Column 3 {data-height=150}
+
+```{r setup_downloads}
+  ## https://cran.r-project.org/web/packages/downloadthis/vignettes/downloadthis.html
+  library(downloadthis)
+
+# Empty dataframe for when there is no data
+empty_df <- data.frame(
+  "Unicorn_Name" = c("Sparkle", "Rainbow", "Starlight", "Twilight", "Moonbeam"),
+  "Favorite_Food" = c("Glitter Grapes", "Sunshine Strawberries", "Dreamy Donuts", "Magical Macarons", "Stardust Spaghetti"),
+  "Hobby" = c("Cloud Racing", "Star Gazing", "Rainbow Painting", "Dream Weaving", "Moon Dancing"),
+  stringsAsFactors = FALSE
+)
+
 ```
 
-# Raw data {data-icon="fa-list-ol"}
-
-The follow links are valid until `r expiry_date`
-
-## Column 1
-
-### Devices Data Set
-
-```{r}
-  palette <- monkeyr::get_heat_palette(6)
-
-  flexdashboard::valueBox(paste0("Device Data"),
-                          icon = "fa-tablet",
-                          href = paste0(params$s3_folder_url, "/dev.csv"),
-                          # color = ifelse(below_18 > 0.40, "warning", "primary"),
-                          color = palette[6])
+```{css}
+.button_green {
+  background: #B7DFCB;
+  color: black;
+  width: 50%;
+  font-size: 32px;
+  
+  border-style: solid;
+  border-color: white;
+  border-radius: 10px;
+  border-width: 5px;
+}
+.button_light {
+  background: #5ABAD1;
+  color: black;
+  width: 50%;
+  font-size: 32px;
+  
+  border-style: solid;
+  border-color: white;
+  border-radius: 10px;
+  border-width: 5px;
+}
+.button_medium {
+  background: #3984B6;
+  color: white;
+  width: 50%;
+  font-size: 32px;
+  
+  border-style: solid;
+  border-color: white;
+  border-radius: 10px;
+  border-width: 5px;
+}
+.button_dark {
+  background: #275a7c;
+  color: white;
+  width: 50%;
+  font-size: 32px;
+  
+  border-style: solid;
+  border-color: white;
+  border-radius: 10px;
+  border-width: 5px;
+}
 ```
 
+```{r downloads_1}
+  raw_devices <- monkeyr::wrangle_devices(params$filtered_devices)
 
-### Observation Data set
+  if (is.null(raw_devices)) {
+    raw_devices <- empty_df
+  }
 
-```{r}
-  flexdashboard::valueBox(paste0("Observation Data"),
-                          icon = "fa-list-ol",
-                          href = paste0(params$s3_folder_url, "/obs"),
-                          # color = ifelse(below_18 > 0.40, "warning", "primary"),
-                          color = palette[4])
+  raw_devices %>%
+    download_this(
+      output_name = "devices",
+      output_extension = ".csv",
+      button_label = "Devices",
+      button_type = "primary",
+      has_icon = TRUE,
+      icon = "fa fa-save",
+      class = "button_dark"
+  )
+  
+  raw_weather <- monkeyr::wrangle_weather(params$filtered_weather)
+  
+  if (is.null(raw_weather)) {
+    raw_weather <- empty_df
+  }
+  
+  raw_weather %>%
+    download_this(
+      output_name = "weather",
+      output_extension = ".csv",
+      button_label = "Weather",
+      button_type = "primary",
+      has_icon = TRUE,
+      icon = "fa fa-save",
+      class = "button_medium"
+  )
 ```
 
-## Column 2
+## Column 4 {data-height=150}
 
-### Weather Data Set
+```{r downloads_2}
+  raw_observations <- readr::read_csv(params$filtered_obs, col_types = "ciiicd")
 
-```{r}
-  flexdashboard::valueBox(paste0("Weather Data"),
-                          icon = "fa-thermometer-half",
-                          href = paste0(params$s3_folder_url, "/weather.csv"),
-                          # color = ifelse(below_18 > 0.40, "warning", "primary"),
-                          color = palette[5])
+  if (is.null(raw_observations)) {
+    raw_observations <- empty_df
+  }
+
+  raw_observations %>%
+    download_this(
+      output_name = "observations",
+      output_extension = ".csv",
+      button_label = "Observations",
+      button_type = "primary",
+      has_icon = TRUE,
+      icon = "fa fa-save",
+      class = "button_green"
+  )
+  
+  raw_interventions <- readr::read_csv(params$filtered_interventions, col_types = "cicic")
+  
+  if (is.null(raw_interventions)) {
+    raw_interventions <- empty_df
+  }
+  
+  raw_interventions %>%
+    download_this(
+      output_name = "interventions",
+      output_extension = ".csv",
+      button_label = "Interventions",
+      button_type = "primary",
+      has_icon = TRUE,
+      icon = "fa fa-save",
+      class = "button_light"
+    )
 ```
 
-### Intervention Data Set
-
-```{r}
-  flexdashboard::valueBox(paste0("Intervention Data"),
-                          icon = "fa-wrench",
-                          href = paste0(params$s3_folder_url, "/interv.csv"),
-                          # color = ifelse(below_18 > 0.40, "warning", "primary"),
-                          color = palette[6])
-```
 
 
 ## Tools {.tabset}
@@ -419,7 +504,7 @@ We haven't got any code yet for excel users. If you've got any you'd like to sha
 
 ### Installed Duplicate Devices {data-width=600}
 
-```{r}
+```{r dedup_devs}
 
 ## Get Duplicate devices
   devices_dup <- wrangled_devices %>%
@@ -467,7 +552,7 @@ We haven't got any code yet for excel users. If you've got any you'd like to sha
 
 ### Demo/Test Devices {data-width=400}
 
-```{r out.width='80%', fig.align="center", fig.height=3}
+```{r test_devs, out.width='80%', fig.align="center", fig.height=3}
 
 ## Get Test devices
   devices_test <- wrangled_devices %>%
@@ -506,7 +591,7 @@ We haven't got any code yet for excel users. If you've got any you'd like to sha
 
 ### unknown School Info {data-width=600}
 
-```{r}
+```{r unknown_schools}
       
 ## Pull School Codes from Excel File
   school_codes <-
@@ -577,7 +662,7 @@ We haven't got any code yet for excel users. If you've got any you'd like to sha
 
 ### Devices with Zero Readings {data-width=400}
 
-```{r out.width='80%', fig.align="center", fig.height=3}
+```{r zero_readings, out.width='80%', fig.align="center", fig.height=3}
 
 ## Get Expiry for each device
   zero_readings <-

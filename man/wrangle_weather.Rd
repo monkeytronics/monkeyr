@@ -4,7 +4,16 @@
 \alias{wrangle_weather}
 \title{wrangle_weather}
 \usage{
-wrangle_weather(filtered_weather)
+wrangle_weather(
+  filtered_weather,
+  na.strings = c("", NA),
+  integer_columns = c("dt", "timezone", "pressure", "humidity", "wind_deg", "clouds_all",
+    "weather_id"),
+  double_columns = c("lon", "lat", "temp", "feels_like", "temp_min", "temp_max",
+    "sea_level", "gnd_level", "wind_speed", "rain_1h", "rain_3h", "snow_1h", "snow_3h"),
+  character_columns = c("dt_iso", "city_name", "weather_main", "weather_description",
+    "weather_icon", "city", "country_code")
+)
 }
 \arguments{
 \item{weather}{data.frame or path to file}

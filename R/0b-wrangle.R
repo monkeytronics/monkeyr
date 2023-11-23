@@ -287,7 +287,46 @@ get_local_tz <- function(wrangled_devices) {
 #' wrangle_weather(filtered_weather = test_params("monkey_a")$weather)
 #'
 #' @export
-wrangle_weather <- function(filtered_weather) {
+
+# wrangle_weather <- function(filtered_weather) {
+wrangle_weather <- function(
+  filtered_weather,
+  na.strings = c("",NA),
+  integer_columns = c(
+    "dt",
+    "timezone",
+    "pressure",
+    "humidity",
+    "wind_deg",
+    "clouds_all",
+    "weather_id"
+  ),
+  double_columns = c(
+    "lon",
+    "lat",
+    "temp",
+    "feels_like",
+    "temp_min",
+    "temp_max",
+    "sea_level",
+    "gnd_level",
+    "wind_speed",
+    "rain_1h",
+    "rain_3h",
+    "snow_1h",
+    "snow_3h"
+  ),
+  character_columns =c(
+    "dt_iso",
+    "city_name",
+    "weather_main",
+    "weather_description",
+    "weather_icon",
+    "city",
+    "country_code"
+    )
+) {
+
   # checkmate::assert_choice(x = class(filtered_weather), choices = c("data.frame", "character"))
 
   # FOR TEST : filtered_weather <-  paste0("inst/dummy-data/", params$filtered_weather)
@@ -303,6 +342,7 @@ wrangle_weather <- function(filtered_weather) {
         wrangled_weather %>%
           janitor::clean_names() %>%
           dplyr::filter(!is.na(dt)) %>%
+          dplyr::mutate(dt = as.numeric(dt)) %>%                   ## Send in wrong format!
           dplyr::mutate(city = as.character(city_name)) %>%        ## prevents crash in hourly data, when empty data set
           dplyr::mutate(country = as.character(country_code)) %>%  ## might be needed...
 
