@@ -100,13 +100,13 @@ params:
       utils::object.size(wrangled_obs)
       
       
-      ## Fudge to adjust time-period for DID analysis! 
-      ## No effect in prod - from & to ts are exact)
-      ## ---------------------------------------------
-      wrangled_obs <- wrangled_obs %>%
-        filter(ts > params$fromTimeStamp) %>%
-        filter(ts < params$toTimeStamp)
-      utils::object.size(wrangled_obs)
+      ## Check min & max ts (in case missing in test case)
+      maxTs   <- max(wrangled_obs$ts)
+      maxTs   <- max(maxTs, params$toTimeStamp)
+      
+      minTs   <- min(wrangled_obs$ts)
+      minTs   <- min(minTs, params$fromTimeStamp)
+      
       
       
       ## Use Random Numbers to Verify Results
@@ -121,8 +121,8 @@ params:
       
       data_volume <- monkeyr::get_data_volume(
         observations   = wrangled_obs,
-        from_timestamp = params$fromTimeStamp,
-        to_timestamp   = params$toTimeStamp
+        from_timestamp = minTs,
+        to_timestamp   = maxTs
       )
       
       devices_for_map <- monkeyr::get_devices_for_map(
@@ -168,7 +168,7 @@ params:
 
 ```
 
-### Reporting period : `r date_string(params$fromTimeStamp)` - `r date_string(params$toTimeStamp)`
+### Reporting period : `r date_string(minTs)` - `r date_string(maxTs)`
 
 ---
 # Wait til wrangled devices avail to create title

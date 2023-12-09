@@ -71,10 +71,19 @@ ENABLE_DEBUG <- FALSE
       # end_time <- Sys.time()
       # end_time - start_time
       
+      
+      ## Check min & max ts (in case missing in test case)
+      maxTs   <- max(wrangled_obs$ts)
+      maxTs   <- max(maxTs, params$toTimeStamp)
+      
+      minTs   <- min(wrangled_obs$ts)
+      minTs   <- min(minTs, params$fromTimeStamp)
+      
+      
       data_volume <- monkeyr::get_data_volume(
         observations   = wrangled_obs,
-        from_timestamp = params$fromTimeStamp,
-        to_timestamp   = params$toTimeStamp
+        from_timestamp = minTs,
+        to_timestamp   = maxTs
       )
       
       devices_for_map <- monkeyr::get_devices_for_map(
@@ -138,7 +147,7 @@ title: "`r report_type ` Report"
 ```{r}
   who_chart <- 
     monkeyr::who_threshold_data(observations = wrangled_obs) %>%
-    monkeyr::who_threshold_chart(from_timestamp = params$fromTimeStamp, to_timestamp = params$toTimeStamp)
+    monkeyr::who_threshold_chart(from_timestamp = minTs, to_timestamp = maxTs)
   
   who_chart
 ```
@@ -243,8 +252,8 @@ Low indoor temperatures are associated with increased risks of respiratory and c
   if (getOption("temp")) {
     monkeyr::ts_chart(
       observations = wrangled_obs,
-      from_timestamp = params$fromTimeStamp,
-      to_timestamp = params$toTimeStamp,
+      from_timestamp = minTs,
+      to_timestamp = maxTs,
       target_variable = "temp"
     )
   } else {
@@ -258,8 +267,8 @@ Low indoor temperatures are associated with increased risks of respiratory and c
   if (getOption("hum")) {
     monkeyr::ts_chart(
       observations = wrangled_obs,
-      from_timestamp = params$fromTimeStamp,
-      to_timestamp = params$toTimeStamp,
+      from_timestamp = minTs,
+      to_timestamp = maxTs,
       target_variable = "hum"
     ) 
   } else {
@@ -282,8 +291,8 @@ Low indoor temperatures are associated with increased risks of respiratory and c
       cat("\n", "\n### ", toupper(valid_readings[i]), "\n")
       ts_chart <- monkeyr::ts_chart(
         observations = wrangled_obs,
-        from_timestamp = params$fromTimeStamp,
-        to_timestamp = params$toTimeStamp,
+        from_timestamp = minTs,
+        to_timestamp = maxTs,
         target_variable = valid_readings[i]
       ) 
       

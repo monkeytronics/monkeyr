@@ -18,10 +18,10 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/conn_29June/obs.csv"
-  filtered_weather:         "../dummy-data/conn_29June/weather.csv"
-  filtered_devices:         "../dummy-data/conn_29June/dev.csv"
-  filtered_interventions:   "../dummy-data/conn_29June/interv.csv"
+  filtered_obs:             "../dummy-data/conn_6December/obs.csv"
+  filtered_weather:         "../dummy-data/conn_6December/weather.csv"
+  filtered_devices:         "../dummy-data/conn_6December/dev.csv"
+  filtered_interventions:   "../dummy-data/conn_6December/interv.csv"
   report_params:            "-map-"                                            
   fromTimeStamp:            1687939839
   toTimeStamp:              1688026239
@@ -107,8 +107,9 @@ ENABLE_DEBUG <- FALSE
       
       ## How many records should there be?
       interval <- 15 * 60
-      timespan <- params$toTimeStamp - params$fromTimeStamp
-      fullvol  <- (timespan / interval) + 1
+      
+      # timespan <- params$toTimeStamp - params$fromTimeStamp ## use maxTs & minTs instead!
+      # fullvol  <- (timespan / interval) + 1
       
       ## Get min & max ts
       maxTs   <- max(wrangled_obs$ts)
@@ -121,16 +122,16 @@ ENABLE_DEBUG <- FALSE
         wrangled_devices_1 %>%
         dplyr::group_by(across(c(-ts, -temp))) %>%
         dplyr::summarise(
-          last_conn = max(ts),
+          newest_mgs_ts = max(ts),
           temp = max(temp),
           data_vol = n() / fullvol
           ) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(
-          last_conn = tidyr::replace_na(last_conn, 0)
+          newest_mgs_ts = tidyr::replace_na(newest_mgs_ts, 0)
         ) %>%
-        dplyr::mutate(conn = (maxTs - last_conn) < (3600*24*13)) %>%
-        dplyr::select(-c(device_id, last_conn, country))
+        dplyr::mutate(conn = (maxTs - newest_mgs_ts) < (3600*24*2)) %>%   ## last 2 days
+        dplyr::select(-c(device_id, newest_mgs_ts, country))
       
       
       ## Conn by FW
@@ -139,6 +140,7 @@ ENABLE_DEBUG <- FALSE
         summarise(count = n()) %>%
         ggplot2::ggplot(ggplot2::aes(fill=conn, x=fw_ver, y=count)) + 
         ggplot2::geom_bar(position="stack", stat="identity") + 
+        geom_text(aes(label=count), position=position_stack(vjust=0.5), size=3) + 
         ggplot2::scale_fill_brewer(palette = "Blues")
       
         
@@ -157,46 +159,71 @@ ENABLE_DEBUG <- FALSE
         
         
         ggplot2::ggplot(ggplot2::aes(fill=data_vol, x=fw_ver, y=count)) + 
-        ggplot2::geom_bar(position="stack", stat="identity") + 
+        ggplot2::geom_bar(position="stack", stat="identity") +
+        geom_text(aes(label=count), position=position_stack(vjust=0.5), size=3) + 
         ggplot2::scale_fill_brewer(palette = "Blues")
       
         
       ## Summarise by School
       wrangled_devices_3 <-
         wrangled_devices_2 %>%
-        dplyr::mutate(nc_fw = (last_comm == 0)) %>%
-        dplyr::mutate(old_fw = (fw_ver < LATEST_FW & (!nc_fw))) %>%
-        dplyr::mutate(latest_fw = (fw_ver == LATEST_FW)) %>%
-        dplyr::mutate(off_on = case_when(
-          old_fw  ~ paste0(" -", classRoom, "- "),
-          !old_fw ~ ""
+        ## Running latest Firmware & connected - Assume cert rotation complete! (OK)
+        dplyr::mutate(ok = (fw_ver == LATEST_FW) & conn) %>%
+        ## 1) NEVER connected (Failed Install)
+        dplyr::mutate(nc = (last_comm == 0 | last_comm == 1681892100)) %>%
+        ## 2) have connected, but did not get latest firmware (need OFF/ON)
+        dplyr::mutate(offline = (fw_ver < LATEST_FW & (!nc))) %>%
+        ## 3) switched off at mains (but has latest FW and prob. certs)
+        dplyr::mutate(power_off = (fw_ver == LATEST_FW) & !conn) %>%
+        
+        ## offline -> add to off_on list
+        dplyr::mutate(offline_list = case_when(
+          offline  ~ paste0(" -", classRoom, "- "),
+          !offline ~ ""
         )) %>%
-        dplyr::mutate(nc = case_when(
-          nc_fw  ~ paste0(" -", classRoom, "- "),
-          !nc_fw ~ ""
+        
+        ## never_connected -> nc list
+        dplyr::mutate(nc_list = case_when(
+          nc  ~ paste0(" -", classRoom, "- "),
+          !nc ~ ""
         )) %>%
+        
+        ## power_off -> power_off list
+        dplyr::mutate(power_off_list = case_when(
+          power_off  ~ paste0(" -", classRoom, "- "),
+          !power_off ~ ""
+        )) %>%
+        
         dplyr::group_by(across(c(school_name))) %>%
         dplyr::summarise(
-          installed = n(),
+          total = n(),
           # temp = first(temp),
-          latest_fw = sum(latest_fw),
-          old_fw = sum(old_fw),
-          nc_fw = sum(nc_fw),
-          off_on = paste0(off_on, collapse = ""),
-          nc = paste0(nc, collapse = "")
+          ok = sum(ok),
+          not_ok = sum(offline) + sum(nc) + sum(power_off),
+          offline = sum(offline),
+          nc = sum(nc),
+          power_off = sum(power_off),
+          offline_list = paste0(offline_list, collapse = ""),
+          nc_list = paste0(nc_list, collapse = ""),
+          power_off_list = paste0(power_off_list, collapse = "")
           ) %>%
         dplyr::ungroup() %>%
-        dplyr::arrange(desc(old_fw))
+        dplyr::arrange(desc(offline))
       
       
+      ## Main Table
+      ## ----------    
+
       kable_summary <-
         wrangled_devices_3 %>%
-        kableExtra::kbl(col.names = c("School", "Total", "OK", "Needs Off/on", "Failed Install", "List-Off/On", "List-NC"),
-                        format = "html",
-                        align = "lcccr") %>%
-        kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
-                       html_font = "sans-serif") %>%
-        kableExtra::column_spec(1:5, width = c("25em","17em","17em","17em","35em"))
+        ## Add Column Totals on Numeric
+        summarise(across(where(is.numeric), sum)) %>% 
+        bind_rows(., wrangled_devices_3) %>% 
+        select(school_name, everything()) %>%
+        ## Format Kable
+        kableExtra::kbl(format = "html", align = "lcccccrr") %>%
+        kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"), html_font = "sans-serif") %>%
+        kableExtra::column_spec(1:5, width = c("25em","17em","17em","17em","17em","35em"))
 
     ## Scroll if long
       if (nrow(wrangled_devices_3) > 14) {
@@ -343,11 +370,8 @@ chart_data_vol
 ```
 
 
-# N4L Not Updated {data-icon="fa-refresh"}
+<!-- # Device Hardware Issues {data-icon="fa-refresh"} -->
 
-## Column 1
-
-### Missing School Info {data-width=600}
 
 ```{r}
       
@@ -410,7 +434,7 @@ chart_data_vol
   
 
 ## Print Table  
-  kable_missing_class  
+  ## kable_missing_class  
   
   
 ## Actually Update with Missing Schools
@@ -418,7 +442,7 @@ chart_data_vol
   
 ```
 
-### Devices with Zero Readings {data-width=400}
+# Zero Readings Heat Maps {data-width=700}
 
 ```{r out.width='80%', fig.align="center", fig.height=3}
 
@@ -439,24 +463,39 @@ chart_data_vol
     dplyr::filter(device_id > 6500) %>%
 
     ggplot2::ggplot( aes(x=device_id)) +
-    geom_histogram( binwidth=10, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
-    ggtitle("Bin size = 10") +
+    geom_histogram( binwidth=10, fill="#4953f2", color="#e9ecef", alpha=0.4) +
+    ggtitle("Zero Readings S00XXXX Range") +
     theme_ipsum() +
     theme(
-      plot.title = element_text(size=15)
-    )
+      plot.title = element_text(size=8),
+      axis.text.x = element_text(angle = 60, hjust = 1, size=6)
+    ) + 
+    scale_x_continuous(breaks=seq(floor(min(zero_readings$device_id)/100)*100, ceiling(max(zero_readings$device_id)/100)*100, by=100)) + # Adjust 'by' for resolution
+    scale_y_continuous(breaks=seq(0,10, by=1))
+  
+  
+  ## Print Table
+  zero_histogram_1
+  
   
   zero_histogram_2 <-
     zero_readings %>%
     dplyr::filter(device_id > 200000) %>%
     ggplot2::ggplot( aes(x=device_id)) +
-    geom_histogram( binwidth=10, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
-    ggtitle("Bin size = 10") +
+    geom_histogram( binwidth=10, fill="#4953f2", color="#e9ecef", alpha=0.4) +
+    ggtitle("Zero Readings S20XXXX Range") +
     theme_ipsum() +
     theme(
-      plot.title = element_text(size=15)
-    )
+      plot.title = element_text(size=8),
+      axis.text.x = element_text(angle = 60, hjust = 1, size=6),
+      axis.text.y = element_text(size=6)
+    ) +
+    scale_x_continuous(breaks=seq(floor(min(zero_readings$device_id)/100)*100, ceiling(max(zero_readings$device_id)/100)*100, by=100)) + # Adjust 'by' for resolution
+    scale_y_continuous(breaks=seq(0,10, by=1))
     
-
-
+  
+    ## Print Table
+    zero_histogram_2
+    
+    
 ```

@@ -19,14 +19,13 @@ output:
 # or call installed files with `system.file`
 # see example in `?knit_report()`
 params:
-  filtered_obs:             "../dummy-data/conn_29June/obs.csv"
-  filtered_weather:         "../dummy-data/conn_29June/weather.csv"
-  filtered_devices:         "../dummy-data/conn_29June/dev.csv"
-  filtered_interventions:   "../dummy-data/conn_29June/interv.csv"
+  filtered_obs:             "../dummy-data/co2_demo/obs.csv"
+  filtered_weather:         "../dummy-data/co2_demo/weather.csv"
+  filtered_devices:         "../dummy-data/co2_demo/dev.csv"
+  filtered_interventions:   "../dummy-data/co2_demo/interv.csv"
   report_params:            "-map-"  
-  s3_folder_url:            "s3://folder_url"                                        
-  fromTimeStamp:            1687939839
-  toTimeStamp:              1688026239
+  fromTimeStamp:            1682282766
+  toTimeStamp:              1682887566
 ---
 
 ```{r}
@@ -44,255 +43,49 @@ ENABLE_DEBUG <- FALSE
   library(ggplot2)
   # use fontawesome::fa_metadata() to see avail icons!
 
-
-  LATEST_FW <- "V1.5.9"
-  NC_FW     <- "V0.0.0"
-
 ## other dependencies loaded through namespace
 ```
 
-```{r wrangle_data}
-
-  ## STANDARD DATA WRANGLING & JOINING
-  ## ---------------------------------
-  
-  tryCatch(
-    {
-    ## Grab Devices
-      wrangled_devices <- monkeyr::wrangle_devices(params$filtered_devices) %>%
-      ## Flag unknown info
-        dplyr::mutate(fw_ver           = tidyr::replace_na(fw_ver,      "V0.0.0")) %>%
-        dplyr::mutate(status           = tidyr::replace_na(status,      "NC")) %>%
-        dplyr::mutate(school           = tidyr::replace_na(school,      "unknown")) %>%
-        dplyr::mutate(classRoom        = tidyr::replace_na(classRoom,   "unknown")) %>%
-      ## Separate school & class info from name
-        dplyr::mutate(school_code = stringr::str_split_i(name, "/", 1))  %>%
-        dplyr::mutate(class_code  = stringr::str_split_i(name, "/", -1)) %>%
-      ## Flag test devices (schools only)
-        dplyr::mutate(test = FALSE) %>%
-        dplyr::mutate(test = if_else(school_code > 9999, TRUE, test)) %>%
-        dplyr::mutate(test = if_else(startsWith(school_code, "10000"), TRUE, test)) %>%
-        dplyr::mutate(school = if_else(school_code > 9999, "test", school)) %>%
-        dplyr::mutate(school = if_else(startsWith(school_code, "10000"), "test", school))
-      
-      
-    ## Determine Report Type
-      # numDevs <- length(wrangled_devices$city)
-      # unknown <- length(which(wrangled_devices$city == "unknown"))
-      
-      ## 1. by City (default : in case none of the others apply)
-      mode    <- names(which.max(table(wrangled_devices$city)))
-      if (mode != "unknown") {
-        reportType = "City"
-        selectionBy = "city"
-      }
-      
-      ## 2. by School
-      mode    <- names(which.max(table(wrangled_devices$school)))
-      if (mode != "unknown") {
-        reportType = "School"
-        selectionBy = "school"
-      }
-      
-      ## 3. by HHI
-      mode    <- names(which.max(table(wrangled_devices$hhi)))
-      if (mode != "unknown") {
-        reportType = "HHI"
-        selectionBy = "hhi"
-      }  
-      
-      ## 4. by Device (less than 10 present)
-      if (length(wrangled_devices$device_id) < 20) {
-        reportType = "Device Id"
-        selectionBy = "device_id"
-      }
-      
-      
-    ## Grab Obs Temp only (to work out connectivity metrics)
-      wrangled_obs <- readr::read_csv(params$filtered_obs, col_types = "ciiicd") %>%
-        dplyr::filter(reading == "temp") %>%
-        dplyr::mutate(temp = val) %>%
-        group_by(ts, device_id, temp, seq) %>%
-        summarise()
-             
-    ## Join
-      wrangled_devices_1 <-
-        wrangled_devices %>%
-
-        ## Join obs data
-        dplyr::full_join(
-          dplyr::select(
-            wrangled_obs
-          ),
-          by = "device_id"
-        )
-      
-      
-      ## How many records should there be?
-      interval <- 15 * 60
-      timespan <- params$toTimeStamp - params$fromTimeStamp
-      fullvol  <- (timespan / interval) + 1
-      
-      ## Get min & max ts
-      maxTs   <- max(wrangled_obs$ts)
-      minTs   <- min(wrangled_obs$ts)
-      fullvol <- (maxTs - minTs) / interval + 1 
-
-      
-      ## Summarise by device
-      wrangled_devices_2 <-
-        wrangled_devices_1 %>%
-        dplyr::group_by(across(c(-ts, -temp))) %>%
-        dplyr::summarise(
-          last_conn = max(ts),
-          temp = max(temp),
-          data_vol = n() / fullvol
-          ) %>%
-        dplyr::ungroup() %>%
-        dplyr::mutate(
-          last_conn = tidyr::replace_na(last_conn, 0)
-        ) %>%
-        dplyr::mutate(conn = (maxTs - last_conn) < (3600*24*13)) %>%
-        dplyr::select(-c(device_id, last_conn, country))
-      
-      
-      ## Conn by FW
-      chart_conn <- wrangled_devices_2 %>%
-        group_by(conn, fw_ver) %>%
-        summarise(count = n()) %>%
-        ggplot2::ggplot(ggplot2::aes(fill=conn, x=fw_ver, y=count)) + 
-        ggplot2::geom_bar(position="stack", stat="identity") + 
-        ggplot2::scale_fill_brewer(palette = "Blues")
-      
-        
-      ## DataVol by FW
-      chart_data_vol <- wrangled_devices_2 %>%
-        mutate(data_vol = case_when(
-          data_vol > 0.98 ~ "100%",
-          data_vol > 0.90 ~ ">90%",
-          data_vol > 0.80 ~ ">80%",
-          data_vol > 0.50 ~ ">50%",
-          data_vol < 0.50 ~ "<50%",
-        )) %>%
-        group_by(data_vol, fw_ver) %>%
-        summarise(count = n()) %>%
-
-        
-        
-        ggplot2::ggplot(ggplot2::aes(fill=data_vol, x=fw_ver, y=count)) + 
-        ggplot2::geom_bar(position="stack", stat="identity") + 
-        ggplot2::scale_fill_brewer(palette = "Blues")
-      
-        
-      ## Summarise by School
-      wrangled_devices_3 <-
-        wrangled_devices_2 %>%
-        dplyr::mutate(nc_fw = (last_comm == 0)) %>%
-        dplyr::mutate(old_fw = (fw_ver < LATEST_FW & (!nc_fw))) %>%
-        dplyr::mutate(latest_fw = (fw_ver == LATEST_FW)) %>%
-        dplyr::mutate(off_on = case_when(
-          old_fw  ~ paste0(" -", classRoom, "- "),
-          !old_fw ~ ""
-        )) %>%
-        dplyr::mutate(nc = case_when(
-          nc_fw  ~ paste0(" -", classRoom, "- "),
-          !nc_fw ~ ""
-        )) %>%
-        dplyr::group_by(across(selectionBy)) %>%
-        dplyr::summarise(
-          installed = n(),
-          latest_fw = sum(latest_fw),
-          old_fw = sum(old_fw),
-          nc_fw = sum(nc_fw),
-          off_on = paste0(off_on, collapse = ""),
-          nc = paste0(nc, collapse = "")
-          ) %>%
-        dplyr::ungroup() %>%
-        dplyr::arrange(desc(old_fw))
-      
-      
-      kable_summary <-
-        wrangled_devices_3 %>%
-        kableExtra::kbl(col.names = c(reportType, "Total", "OK", "Needs Reset", "Failed Install", "List - Needs Reset", "List-NC"),
-                        format = "html",
-                        align = "lcccr") %>%
-        kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
-                       html_font = "sans-serif") %>%
-        kableExtra::column_spec(1:5, width = c("25em","17em","17em","17em","35em"))
-
-    ## Scroll if long
-      if (nrow(wrangled_devices_3) > 14) {
-        kable_summary <- kable_summary %>%
-          kableExtra::scroll_box(height = "800px")
-      }
-
-    },
-    error = function(cond) {
-      monkeyr::monkey_knit_error(err = cond, resource = "wrangle_data")
-    }
-  )
-```
-
-```{r check_data, results='asis'}
-  ## Bail if nothing in data. Returns empty report.
-  if ((nrow(wrangled_devices) == 0) | (nrow(wrangled_obs) == 0)) {
-    cat("No data present for the requested devices and timespan. Aborting report.")
-    knitr::knit_exit("</body></html>")
-  }
-```
-
-
-
-<!-- PAGE 1: CONNECTIVITY     -->
-<!-- ------------------------ -->
-
-# Connectivity Summary {data-icon="fa-wifi"}
-
-## Column 1
-
-### Connectivity Breakdown {data-width=600}
-
-```{r}
-  kable_summary
-```
-
-### Connectivity & Data Volume by Firmware Version {data-width=400}
-
-#### Connectivity By Firmware Version
-
-```{r out.width='80%', fig.align="center", fig.height=3}
-chart_conn
-```
-
-#### Data Volume by Firmware Version
-
-```{r out.width='80%', fig.align="center", fig.height=3}
-chart_data_vol
-##library(lubridate)
-
-```
 
 
 
 
-<!-- PAGE 2: RAW DATA LINKS   -->
-<!-- ------------------------ -->
+<!-- RAW DATA LINKS   -->
+<!-- ---------------- -->
 
 # Raw data Download {data-icon="fa-save-ol"}
 
-## Column 3 {data-height=150}
+## Column 1 {data-height=150}
 
 ```{r setup_downloads}
   ## https://cran.r-project.org/web/packages/downloadthis/vignettes/downloadthis.html
   library(downloadthis)
 
 # Empty dataframe for when there is no data
-empty_df <- data.frame(
-  "Unicorn_Name" = c("Sparkle", "Rainbow", "Starlight", "Twilight", "Moonbeam"),
-  "Favorite_Food" = c("Glitter Grapes", "Sunshine Strawberries", "Dreamy Donuts", "Magical Macarons", "Stardust Spaghetti"),
-  "Hobby" = c("Cloud Racing", "Star Gazing", "Rainbow Painting", "Dream Weaving", "Moon Dancing"),
-  stringsAsFactors = FALSE
-)
+  empty_df <- data.frame(
+    "Unicorn_Name" = c(
+      "Sparkle", 
+      "Rainbow", 
+      "Starlight", 
+      "Twilight", 
+      "Moonbeam"
+    ),
+    "Favorite_Food" = c(
+      "Glitter Grapes", 
+      "Sunshine Strawberries", 
+      "Dreamy Donuts", 
+      "Magical Macarons", 
+      "Stardust Spaghetti"
+    ),
+    "Hobby" = c(
+      "Cloud Racing", 
+      "Star Gazing", 
+      "Rainbow Painting", 
+      "Dream Weaving", 
+      "Moon Dancing"
+    ),
+    stringsAsFactors = FALSE
+  )
 
 ```
 
@@ -379,7 +172,7 @@ empty_df <- data.frame(
   )
 ```
 
-## Column 4 {data-height=150}
+## Column 2 {data-height=150}
 
 ```{r downloads_2}
   raw_observations <- readr::read_csv(params$filtered_obs, col_types = "ciiicd")
@@ -438,18 +231,16 @@ Monkeyr is structured as pure functions. The library dependencies are listed in 
 
 We start with a Monkeytronics Sensor Node data set :\cr
 
-* obs.csv
-* dev.csv
-* weather.csv
-* interv.csv
+* `obs.csv`
+* `dev.csv`
+* `weather.csv`
+* `interv.csv`
 
 And we use the wrangling functions to create the following sanitised, wrangled data :
 
 * `wrangled_obs`     : the joined data set
 * `wrangled_devices` : devices list minus excluded devices
 * `devices_for_map`  : a list used to populate a deployment map
-
-(If you need to copy and paste this, make sure you remove `eval = FALSE`!)
 
 ```{r, eval = FALSE, echo=TRUE}
 library(monkeyr)
@@ -495,210 +286,10 @@ We haven't got any code yet for python users. If you've got any you'd like to sh
 
 We haven't got any code yet for excel users. If you've got any you'd like to share to help other users, we'd be most grateful!
 
-<!-- PAGE 3: Corruption       -->
-<!-- ------------------------ -->
-
-# Installation Issues {data-icon="fa-thumbs-o-down"}
-
-## Column 1
-
-### Installed Duplicate Devices {data-width=600}
-
-```{r dedup_devs}
-
-## Get Duplicate devices
-  devices_dup <- wrangled_devices %>%
-    dplyr::mutate(name = stringr::str_squish(tolower(name))) %>% ## make all white spce into spaces.
-    dplyr::mutate(name = stringr::str_replace_all(name, "[ .,-]", "")) %>% ## remove spaces & punctuation
-    dplyr::group_by(name) %>%
-    dplyr::filter(n()>1) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(desc(name)) %>%
-    dplyr::select(c(device_id, school_code, class_code, last_comm)) %>%
-    dplyr::group_by(school_code, class_code) %>%
-    dplyr::mutate(duplicate = ifelse(last_comm == max(last_comm), FALSE, TRUE)) %>%
-    dplyr::ungroup()
-
-## Kable of Duplicated devices
-  if (nrow(devices_dup) > 0) {
-    kable_devices_dup <-
-      devices_dup %>%
-      # arrange(`school_code`, `class_code`, `last_comm`) %>%
-      kableExtra::kbl(col.names = c("Device Id", "School Code", "Class Code", "Last Comm", "Duplicate"),
-                      format = "html",
-                      align = "lllll") %>%
-      kableExtra::kable_material(
-                      lightable_options = c("striped", "hover", "condensed"),
-                      html_font = "sans-serif") %>%
-      kableExtra::column_spec(1:5, width = c("20em","20em","20em","20em","20em"))
-
-## Scroll if long
-    if (nrow(devices_dup) > 14) {
-      kable_devices_dup <- kable_devices_dup %>%
-        kableExtra::scroll_box(height = "800px")
-    }
-  } else {
-    kable_devices_dup <- "No Duplicate Devices detected!"
-  }
-
-## Print Table
-  kable_devices_dup
-
-  
-## Set Duplicates to Unclaimed
-## Will Do this inside AWS Lambda - this is a horrible place to write this code!
-  
-```
-
-### Demo/Test Devices {data-width=400}
-
-```{r test_devs, out.width='80%', fig.align="center", fig.height=3}
-
-## Get Test devices
-  devices_test <- wrangled_devices %>%
-    dplyr::filter(test == TRUE) %>%
-    dplyr::select(c(device_id, school_code, class_code))
-    
-## Kable of Test devices
-  if (nrow(devices_test) > 0) {
-    kable_devices_test <-
-      devices_test %>%
-      kableExtra::kbl(col.names = c("Device Id", "School Code", "Class Code"),
-                      format = "html",
-                      align = "lll") %>%
-      kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
-                     html_font = "sans-serif") %>%
-      kableExtra::column_spec(1:3, width = c("20em","30em","30em"))
-        
-  ## Scroll if long
-    if (nrow(devices_test) > 14) {
-      kable_devices_test <- kable_devices_test %>%
-        kableExtra::scroll_box(height = "800px")
-    }
-  } else {
-    kable_devices_test <- "No Test Devices detected!"
-  }
-    
-## Print Table
-  kable_devices_test
-  
-```
 
 
-# Not Updated {data-icon="fa-refresh"}
-
-## Column 1
-
-### unknown School Info {data-width=600}
-
-```{r unknown_schools}
-      
-## Pull School Codes from Excel File
-  school_codes <-
-  data.table::fread(
-    "../schoolCodes/2023-School-Name-And-Number-Codes.csv",
-    na.strings = c("",NA),
-    skip = 3,
-    colClasses = list(
-      character = c("Name of School", "Notes Or Old Name"),
-      boolean   = c("Closed"),
-      integer   = c("Number"))
-    ) %>%
-    dplyr::mutate(Closed = case_when (
-      is.na(Closed) ~ FALSE,
-      Closed == "*" ~ TRUE,
-      TRUE ~ FALSE
-    )) %>%
-    dplyr::rename(school_code = Number)
-  
-  
-## Get devices unknown Schools
-  devices_unknown_school <- wrangled_devices %>%
-    dplyr::filter(school == "unknown") %>%
-    dplyr::filter(test == FALSE) %>%
-    dplyr::mutate(school_code = as.integer(school_code)) %>%
-    dplyr::select(c(device_id, school_code, class_code)) %>%
-  ## Join Suspected School from School Codes
-    dplyr::left_join(
-      dplyr::select( # remove addr & email addr!
-        school_codes,
-        school_code,
-        "Name of School"
-      ),
-      by = "school_code"
-    ) %>%
-    dplyr::rename(matched_school = "Name of School")
-  
-  
-## Get devices unknown Classrooms
-  if (nrow(devices_unknown_school) > 0) {
-    kable_unknown_class <-
-      devices_unknown_school %>%
-      kableExtra::kbl(col.names = c("Device Id", "School Code", "Class Code", "Matching School"),
-                      format = "html",
-                      align = "llll") %>%
-      kableExtra::kable_material(lightable_options = c("striped", "hover", "condensed"),
-                     html_font = "sans-serif") %>%
-      kableExtra::column_spec(1:4, width = c("20em","20em","20em","20em"))
-  
-## Scroll if long
-    if (nrow(devices_unknown_school) > 14) {
-      kable_unknown_class <- kable_unknown_class %>%
-        kableExtra::scroll_box(height = "800px")
-    }
-  } else {
-    kable_unknown_class <- "No Devices detected unknown school & Class fields"
-  }
-  
-
-## Print Table  
-  kable_unknown_class  
-  
-  
-## Actually Update with unknown Schools
-## Will Do this inside AWS Lambda - this is a horrible place to write this code!
-  
-```
-
-### Devices with Zero Readings {data-width=400}
-
-```{r zero_readings, out.width='80%', fig.align="center", fig.height=3}
-
-## Get Expiry for each device
-  zero_readings <-
-    wrangled_devices_1 %>%
-    dplyr::group_by(school, classRoom, device_id, fw_ver) %>%
-    dplyr::summarise(
-      temp = max(temp)
-      ) %>%
-    dplyr::filter(temp == 0) %>%
-    dplyr::mutate(device_id = as.numeric(substring(device_id,2))) %>%
-    dplyr::arrange(device_id)
-
-  zero_histogram_1 <-
-    zero_readings %>%
-    dplyr::filter(device_id < 200000) %>%
-    dplyr::filter(device_id > 6500) %>%
-
-    ggplot2::ggplot( aes(x=device_id)) +
-    geom_histogram( binwidth=10, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
-    ggtitle("Bin size = 10") +
-    theme_ipsum() +
-    theme(
-      plot.title = element_text(size=15)
-    )
-  
-  zero_histogram_2 <-
-    zero_readings %>%
-    dplyr::filter(device_id > 200000) %>%
-    ggplot2::ggplot( aes(x=device_id)) +
-    geom_histogram( binwidth=10, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
-    ggtitle("Bin size = 10") +
-    theme_ipsum() +
-    theme(
-      plot.title = element_text(size=15)
-    )
-    
 
 
-```
+
+
+

@@ -25,11 +25,11 @@
 #' run_test_report("full", "customer",    "params_blank.txt")
 #' run_test_report("full", "monkey_32",   "params_full_map.txt")
 #' run_test_report("home", "monkey_32",   "params_blank.txt")
-#'
+#' run_test_report("conn", "conn_6December",   "params_blank.txt")
 #' @export
 run_test_report <- function (
     report       = "full",
-    dummy_data   = "customer",
+    dummy_data   = "conn_6December",
     dummy_params = "params_full_all.txt"
 ) {
 
@@ -79,13 +79,14 @@ run_test_report <- function (
 #'
 #' @export
 make_test_params <- function(
-    dummy_data   = "monkey_a",
+    dummy_data   = "conn_6December",
     dummy_params = "params_blank.txt",
     ...) {
 
   ## Pull customer info out of args file
-  args_file = system.file("dummy-data", paste0(dummy_data, "/args.csv"), package = "monkeyr")
-  args <- readr::read_csv(args_file, col_types = "iic")
+  cat("dummy_data folder = ", dummy_data, "\n")
+  args_file = system.file("dummy-data", paste0(dummy_data, "/args.csv"), package = "monkeyr", mustWork = TRUE)
+  cat("Debugging - args_file value:", args_file, "\n")
 
 
   ## Replicate Customer Report - NB - we save params / args with '-' separator for csv. Decode here.
@@ -198,6 +199,11 @@ knit_report <-
     ## Get directory of report markdown template
     report_rmd <- system.file("/rmd/", rmd_file, package = "monkeyr")
 
+    monkey_knit_msg(msg = paste0("report_rmd = ", report_rmd), resource="knit_report")
+    monkey_knit_msg(msg = paste0("param_list = ", param_list), resource="knit_report")
+    monkey_knit_msg(msg = paste0("output_file = ", output_file), resource="knit_report")
+    monkey_knit_msg(msg = paste0("output_dir = ", output_dir), resource="knit_report")
+
     ## Render report into html
     rmarkdown::render(
       input       = report_rmd,
@@ -266,5 +272,92 @@ monkey_knit_msg <- function(
     cat(paste0(msg, "\n"))
   }
 }
+
+
+
+#' monkey_remove_rmd_suffix
+#'
+#' @description Remove rmd from filename so it's just full, home etc.
+#'
+#' @param filename rmd file name (without rmd)
+#'
+#' @examples
+#' monkey_remove_rmd_suffix("home.rmd")
+#'
+#' @export
+monkey_remove_rmd_suffix <- function(filename) {
+  sub("\\.rmd$", "", filename)
+  return(filename)
+}
+
+
+#' monkey_knit_locally
+#'
+#' @description Run the report locally, as close to cloud implementation as possible
+#'              Need to run Build -> Clean and Install first to refresh data and rmd
+#'
+#' @param rmd_file          home, full, conn etc.
+#' @param dummy_data_folder the dummy data set saved from s3 run.
+#'
+#' @examples
+#' run_report_locally("full", "co2_demo")
+#' run_report_locally("home", "customer")
+#' run_report_locally("conn", "conn_6December")
+#' run_report_locally("raw", "co2_demo")
+#'
+#' @export
+monkey_knit_locally <- function(
+    rmd_file          = "full",
+    dummy_data_folder = "customer"
+) {
+  ## Make sure rmd file doesn't have rmd suffix
+  rmd_file <- monkey_remove_rmd_suffix(rmd_file)
+
+  ## Get args file from Dummy data
+  args_file = system.file("dummy-data", paste0(dummy_data_folder, "/args.csv"), package = "monkeyr", mustWork = TRUE)
+
+  # Load the data from the CSV file
+  args <- read.csv(args_file, header=TRUE, sep=",")
+
+  ## Check Args
+  print(args$fromTimeStamp)
+  print(args$toTimeStamp)
+  print(args$report_params)
+  #
+  ## check files paths
+  print(paste0("../dummy-data/", dummy_data_folder, "/obs.csv"))
+  print(paste0("../dummy-data/", dummy_data_folder, "/dev.csv"))
+  print(paste0("../dummy-data/", dummy_data_folder, "/weather.csv"))
+  print(paste0("../dummy-data/", dummy_data_folder, "/interv.csv"))
+
+  ## Generate parameter List
+  par_list_1 <- monkeyr::make_params_list(
+    filtered_obs           = paste0("../dummy-data/", dummy_data_folder, "/obs.csv"),
+    filtered_devices       = paste0("../dummy-data/", dummy_data_folder, "/dev.csv"),
+    filtered_weather       = paste0("../dummy-data/", dummy_data_folder, "/weather.csv"),
+    filtered_interventions = paste0("../dummy-data/", dummy_data_folder, "/interv.csv"),
+    report_params          = args$report_params,
+    fromTimeStamp          = args$fromTimeStamp,
+    toTimeStamp            = args$toTimeStamp
+  )
+
+  ## Blast Off!
+  monkeyr::knit_report(
+    param_list              = par_list_1,
+    rmd_file                = paste0(rmd_file, ".rmd"),
+    output_file             = paste0(dummy_data_folder, ".html"),
+    output_dir              = paste0("./html/", rmd_file),
+    intermediates_dir       = "./html/temp",
+    envir                   = new.env()
+  )
+}
+
+## run_report_locally("home", "co2_demo")
+## run_report_locally("home", "customer")
+## run_report_locally("conn", "conn_6December")
+## run_report_locally("raw", "co2_demo")
+
+
+
 
 
